@@ -94,10 +94,10 @@ in a terminal window, for examples,
 
 Examples: 
 
-   $ python UPbplot.py -g
-   $ python UPbplot.py -n -i data.csv -c data.cfg
-   $ python UPbplot.py -n -i data.csv -d pdf -f
-   $ python UPbplot.py -d qt4agg
+	   $ python UPbplot.py -g
+	   $ python UPbplot.py -n -i data.csv -c data.cfg
+	   $ python UPbplot.py -n -i data.csv -d pdf -f
+	   $ python UPbplot.py -d qt4agg
 
 
 The script assumes the configuration file name is "data.cfg" as
@@ -105,14 +105,12 @@ defaults, if the input data file name is "data.csv".
 
 Command-line options:
 
-Options:
-
-     -h, --help                  Show this help message and exit
-     -i FILE, --in=FILE          Name of input data file
-     -c FILE, --cfg=FILE         Name of configure file
-     -o FILE, --out=FILE         Name of output file (when pdf driver is used)
-     -g, --gui                   Use GUI
-     -n, --no-gui                Do not use GUI (default)
-     -d DRIVER, --driver=DRIVER  Choose from [pdf (default), qt4agg]
-     -f, --force-overwrite       Force overwrite the pre-existing pdf
+	-h, --help                  Show this help message and exit
+	-i FILE, --in=FILE          Name of input data file
+	-c FILE, --cfg=FILE         Name of configure file
+	-o FILE, --out=FILE         Name of output file (when pdf driver is used)
+	-g, --gui                   Use GUI
+	-n, --no-gui                Do not use GUI (default)
+	-d DRIVER, --driver=DRIVER  Choose from [pdf (default), qt4agg]
+	-f, --force-overwrite       Force overwrite the pre-existing pdf
 
