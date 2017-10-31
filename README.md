@@ -47,16 +47,16 @@ The author does not provide any support on the usage of Python and related libra
 
 1. When you use this script (UPbplot.py) from this source code, additional libraries (Numpy, SciPy, Matplotlib, pandas, and so on) will be required.  Install them in advance.
 
-	Numpy: http://www.numpy.org
-	Matplotlib: http://matplotlib.org
-	pandas: http://pandas.pydata.org
-	SciPy: https://www.scipy.org
+	   Numpy: http://www.numpy.org
+	   Matplotlib: http://matplotlib.org
+	   pandas: http://pandas.pydata.org
+	   SciPy: https://www.scipy.org
 
    If you want to use GUI mode, further additional libraries of
 
-	PySide (https://wiki.qt.io/PySide)
-	quickgui (https://pypi.python.org/pypi/quickgui)
-	wxPython (http://www.wxpython.org)
+	   PySide (https://wiki.qt.io/PySide)
+	   quickgui (https://pypi.python.org/pypi/quickgui)
+	   wxPython (http://www.wxpython.org)
 
    will be required.  Matplotlib must include Qt4Agg as the backend.
 
