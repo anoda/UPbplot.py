@@ -73,10 +73,10 @@ After installation of libraries listed above, you can run the script in a termin
 
 Examples: 
 
-	   $ python UPbplot.py -g
-	   $ python UPbplot.py -n -i data.csv -c data.cfg
-	   $ python UPbplot.py -n -i data.csv -d pdf -f
-	   $ python UPbplot.py -d qt4agg
+	$ python UPbplot.py -g
+	$ python UPbplot.py -n -i data.csv -c data.cfg
+	$ python UPbplot.py -n -i data.csv -d pdf -f
+	$ python UPbplot.py -d qt4agg
 
 
 The script assumes the configuration file name is "data.cfg" as defaults, if the input data file name is "data.csv".
