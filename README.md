@@ -7,7 +7,7 @@ This is a script for calculation and visualization tool of U-Pb age
 data.  It enables us to
 
 1. plot scattered data with error ellipses on conventional
-(207Pb/235U-206Pb/238U) and Terra--Wasserburg (238U/206Pb-207Pb/206Pb)
+(207Pb/235U-206Pb/238U) and Terra-Wasserburg (238U/206Pb-207Pb/206Pb)
 concordia diagrams, and
 
 2. calculate one- or two-dimensional weighted mean, concordia, and
