@@ -1,0 +1,78 @@
+ChangeLog: Atsushi Noda <a.noda@aist.go.jp>
+
+2017-10-30  Version 005
+
+	Main script:
+
+	* kde_multiplier: Correct for a proper use of kde_multiplier
+
+	* plotConcConv, plotConcTW: Specify markeredgecolor 
+
+	* plot_diagramse: Now plotted diagrams can be selected.
+
+	Configuration file: new variables
+
+	* plot_diagrams: Choose diagrams to be plotted
+
+
+2017-04-17  Version 004
+
+	Main script:
+
+	* calc_age_7Pb_6Pb: 207Pb/206Pb ages with errors can be calculated
+
+	* ConcAgeConv, ConcAgeTW: Output probability of concordia ages as
+	P(chi^2) with MSWDs
+
+	* myEllipse: Show a warning message, if error ellipses could not
+	be drawn.  This may be mainly caused by inappropriate correlation
+	coefficient between X and Y (rho_xy or rho_XY).
+
+
+	Configuration file: new variables
+
+	* digits_number_output: Set number of decimal digits (significant
+	figures)
+
+	* ca_mswd: Select one of MSWDs for concordia ages, which include
+	concordance (0), equivalence (1), and combined of them (2).
+
+
+2016-11-15  Version 003
+
+	Main script:
+
+	* Outputs have now two significant figures
+
+	* Remove assumption of Th/U errors (10%), if they are not given.
+
+	* Use equation (2a) in York (2004, Am. J. Phys., vol. 72,
+	p. 367-375) for uncertainties of regression lines to simplify the
+	equation
+
+
+2016-09-26  Version 002
+
+	Main script:
+
+	* Add comments for Python3 users
+
+	* Modify algorithm of calculations of regression lines
+
+	* Correct equation for correlation coefficient (rho_xy) in
+	Tera-Wasserburg diagram
+
+	* plot_2D_wm: name of function was renamed from plot_2D_wma
+
+
+	Configuration file:
+
+	* opt_2D_wm: name of variable was rename from opt_2D_wma
+
+	* oneD_band_alpha: a new variable to determine transparency of
+	confidence regions of regression lines
+
+
+2016-08-05  Version 001
+
+	* Initial release
