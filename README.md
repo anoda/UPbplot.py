@@ -93,8 +93,11 @@ After installation of libraries listed above, you can run the script
 in a terminal window, for examples,
 
 $ python UPbplot.py -g
+
 $ python UPbplot.py -n -i data.csv -c data.cfg
+
 $ python UPbplot.py -n -i data.csv -d pdf -f
+
 $ python UPbplot.py -d qt4agg
 
 
