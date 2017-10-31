@@ -92,6 +92,8 @@ websites if you need such help.
 After installation of libraries listed above, you can run the script
 in a terminal window, for examples,
 
+Examples: 
+
    $ python UPbplot.py -g
    $ python UPbplot.py -n -i data.csv -c data.cfg
    $ python UPbplot.py -n -i data.csv -d pdf -f
