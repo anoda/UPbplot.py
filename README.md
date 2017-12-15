@@ -22,7 +22,7 @@ This is a script for calculation and visualization tool of U-Pb age data.  It en
 
 Noda, Atsushi (2016) UPbplot.py: A python script for U-Pb age data analysis. Open-File Report, no. 634, Geological Survey of Japan, AIST.
 
-Noda, Atsushi (2017) A new tool for calculation and visualization of U-Pb age data: UPbplot.py.  Bulletin of the Geological Survey of Japan, 68(3), 131-140.
+Noda, Atsushi (2017) A new tool for calculation and visualization of U-Pb age data: UPbplot.py.  Bulletin of the Geological Survey of Japan, 68(3), 131-140, doi: 10.9795/bullgsj.68.131.
 
 
 [Development environment]
