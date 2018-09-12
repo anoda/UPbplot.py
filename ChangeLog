@@ -1,4 +1,16 @@
-ChangeLog: Atsushi Noda <a.noda@aist.go.jp>
+2018-09-12  Version 006
+
+	Main script:
+
+	* python3 is now default
+
+	* calc_age_7Pb_6Pb: Calculate and output 7Pb/6Pb ages with errors
+
+	* ConcAgeConv: Correct equations for MSWDs and P-values
+
+	* discordance: Add the fourth method of discordance
+
+	* accepted_data_points is a ew option
 
 2017-10-30  Version 005
 
@@ -6,7 +18,7 @@ ChangeLog: Atsushi Noda <a.noda@aist.go.jp>
 
 	* kde_multiplier: Correct for a proper use of kde_multiplier
 
-	* plotConcConv, plotConcTW: Specify markeredgecolor 
+	* plotConcConv, plotConcTW: Specify markeredgecolor
 
 	* plot_diagramse: Now plotted diagrams can be selected.
 
