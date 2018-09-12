@@ -6,21 +6,21 @@
 
 	* calc_age_7Pb_6Pb: Calculate and output 7Pb/6Pb ages with errors
 
-	* ConcAgeConv: Correct equations for MSWDs and P-values
+	* ConcAgeConv: Corrected equations for MSWDs and P-values
 
-	* discordance: Add the fourth method of discordance
+	* discordance: Added the fourth method of discordance
 
-	* accepted_data_points is a ew option
+	* accept_data_points is a new option
 
 2017-10-30  Version 005
 
 	Main script:
 
-	* kde_multiplier: Correct for a proper use of kde_multiplier
+	* kde_multiplier: Corrected for a proper use of kde_multiplier
 
 	* plotConcConv, plotConcTW: Specify markeredgecolor
 
-	* plot_diagramse: Now plotted diagrams can be selected.
+	* plot_diagramse: Now ploting diagrams can be selected.
 
 	Configuration file: new variables
 
