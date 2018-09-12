@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2018/09/12 11:57:26.
+# Last updated: 2018/09/12 17:47:35.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -1887,6 +1887,10 @@ if __name__ == '__main__':
             print(u'    Concordia age = %s ±%s %s [%d%% conf.]' % (format(
                 T_lsq / age_unit, dignum), format(
                     S_lsq / age_unit, dignum), age_unit_name, ca_cr * 100))
+            print(u'    Concordia age = %s ±%s %s [t√MSWD]' %
+                  (format(T_lsq / age_unit, dignum),
+                   format(S_lsq / age_unit * np.sqrt(MSWD), dignum),
+                   age_unit_name))
 
             legend_pos += 1
             plot_concordia_age_MSWD(ax, axn, MSWD, ca_mswd, Pvalue,
@@ -1999,6 +2003,10 @@ if __name__ == '__main__':
             print(u'    Concordia age = %s ±%s %s [%d%% conf.]' % (format(
                 t_lsq / age_unit, dignum), format(
                     s_lsq / age_unit, dignum), age_unit_name, ca_cr * 100))
+            print(u'    Concordia age = %s ±%s %s [t√MSWD]' %
+                  (format(T_lsq / age_unit, dignum),
+                   format(S_lsq / age_unit * np.sqrt(MSWD), dignum),
+                   age_unit_name))
 
             legend_pos += 1
             plot_concordia_age_MSWD(ax, axn, mswd, ca_mswd, pvalue,
