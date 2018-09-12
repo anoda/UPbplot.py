@@ -14,8 +14,7 @@ This is a script for calculation and visualization tool of U-Pb age data.  It en
 
 	License: Apache License, Version 2.0
 	Author: Atsushi Noda
-	Copyright: Geological Survey of Japan, AIST
-	Publication date: Oct 30, 2017 (ver 0.0.5)
+	Publication date: Oct 30, 2017
 
 
 [Citation]
