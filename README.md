@@ -26,8 +26,7 @@ Noda, Atsushi (2017) A new tool for calculation and visualization of U-Pb age da
 
 [Development environment]
 
-The script was written in Python 2.7.11 and tested on MacOSX (Yosemite) and Windows 10.  If you use it under Python 3, please
-modify lines using ``print'' function in the script.  Comments are added to the relevant lines.
+The script was written in Python 3.6.6 and tested on MacOSX (Yosemite) and Windows 10.  If you use it under Python 2, please modify lines using ``print'' function in the script.  Comments are added to the relevant lines.
 
 Mandatory and optional libraries are listed in [Preparation] section.
 
