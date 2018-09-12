@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2018/09/12 11:37:23.
+# Last updated: 2018/09/12 11:57:26.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -226,7 +226,7 @@ def set_filename_output(filename, driver, opt_force_overwrite):
     outfile = filename.replace(in_ext, ".pdf")
     if os.path.exists(outfile):
         if ("pdf" in driver):
-            print(('Output file %s exists.') % outfile)
+            # print(('Output file %s exists.') % outfile)
             if not (opt_force_overwrite):
                 # answer = raw_input('Do you set a new file name?: [y/N] ')  # python2
                 answer = input(
@@ -382,8 +382,7 @@ def myEllipse(i,
     vals, vecs = eigsorted(cov)
     theta = np.degrees(np.arctan2(*vecs[:, 0][::-1]))
     if (vals[0] < 0.0) | (vals[1] < 0.0):
-        # print('!!! Unable to draw an error ellipse [Data %s] !!!') % (str(i))
-        print(i)
+        print('!!! Unable to draw an error ellipse [Data %s] !!!' % str(i))
         width, height = [0., 0.]
     else:
         width, height = 2 * np.sqrt(stats.chi2.ppf(conf, 2)) * np.sqrt(vals)
@@ -1675,6 +1674,7 @@ if __name__ == '__main__':
         xprinter.on()
 
     # input file
+    print('============================================================')
     print(('Data filename is %s') % infile)
     print(('Configuration filename is %s') % conffile)
     print(('Output filename is %s') % outfile)
@@ -1743,6 +1743,11 @@ if __name__ == '__main__':
     # print('Accepted data points are [n = %d] are' % len(ind)),  # python2
     print('Accepted data points [n = %d] are' % len(ind), end=' '),  # python3
     print(ind)
+
+    # ------------------------------------------------
+    # exit if accepted data < 2
+    if len(ind) < 2:
+        sys.exit('Error: accepted data points are less than 2.')
 
     # Check correlation coefficient
     if (rho_XY[ind].max() > 1):
