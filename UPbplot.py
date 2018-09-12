@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2018/09/12 10:02:42.
+# Last updated: 2018/09/12 11:37:23.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -305,6 +305,22 @@ def PlotConcTW(ax, axn, Xtw, Ytw, time, age_unit, L, legend_font_size):
                 fontsize=legend_font_size - 2,
                 xytext=(3, 3),
                 textcoords='offset points')
+
+
+def TimeRangeConv(rX, rY):
+    tXmin = np.log(rX[0] + 1) / l235U
+    tXmax = np.log(rX[1] + 1) / l235U
+    xYmin = np.power(rY[0] + 1, 1 / (l238U / l235U)) - 1
+    xYmax = np.power(rY[1] + 1, 1 / (l238U / l235U)) - 1
+    tYmin = np.log(xYmin + 1) / l235U
+    tYmax = np.log(xYmax + 1) / l235U
+    return (tXmin, tXmax, tYmin, tYmax)
+
+
+def TimeRangeTW(rx):
+    txmax = np.log(1. / rx[0] + 1) / l238U
+    txmin = np.log(1. / rx[1] + 1) / l238U
+    return (txmin, txmax)
 
 
 # ------------------------------------------------
@@ -1785,9 +1801,6 @@ if __name__ == '__main__':
     mpl.rcParams['xtick.labelsize'] = legend_font_size
     mpl.rcParams['ytick.labelsize'] = legend_font_size
 
-    Xconv, Yconv = ConcLineConv(time)
-    Xtw, Ytw = ConcLineTW(time)
-
     ax = ax.ravel()
 
     fig.canvas.set_window_title('%s' % infile)
@@ -1795,6 +1808,20 @@ if __name__ == '__main__':
 
     # ------------------------------------------------
     # A: Conventional concordia plot
+
+    rX = [range_XY[0][0], range_XY[0][1]]
+    rY = [range_XY[1][0], range_XY[1][1]]
+    tX_min, tX_max, tY_min, tY_max = TimeRangeConv(rX, rY)
+    timeX = [t for t in time if t >= tX_min and t <= tX_max]
+    timeY = [t for t in time if t >= tY_min and t <= tY_max]
+    if len(timeX) < len(timeY):
+        timeXY = timeX + [tX_max]
+        timeXY.insert(0, tX_min)
+    else:
+        timeXY = timeY + [tY_max]
+        timeXY.insert(0, tY_min)
+
+    Xconv, Yconv = ConcLineConv(np.array(timeXY))
 
     if (plot_diagrams[0] == 1):
         axn = 0
@@ -1808,10 +1835,10 @@ if __name__ == '__main__':
             "$^{207}$Pb* / $^{235}$U", fontsize=legend_font_size + 4)
         ax[axn].set_ylabel(
             "$^{206}$Pb* / $^{238}$U", fontsize=legend_font_size + 4)
-        ax[axn].set_xlim(range_XY[0][0], range_XY[0][1])
-        ax[axn].set_ylim(range_XY[1][0], range_XY[1][1])
+        ax[axn].set_xlim(rX)
+        ax[axn].set_ylim(rY)
 
-        PlotConcConv(ax, axn, Xconv, Yconv, time, age_unit,
+        PlotConcConv(ax, axn, Xconv, Yconv, timeXY, age_unit,
                      int(graph_label_interval), legend_font_size)
 
         # Legend
@@ -1901,6 +1928,14 @@ if __name__ == '__main__':
     # ------------------------------------------------
     # B: Tera-Wasserburg concordia plot
 
+    rx = [range_xy[0][0], range_xy[0][1]]
+    ry = [range_xy[1][0], range_xy[1][1]]
+    tx_min, tx_max = TimeRangeTW(rx)
+    timexy = [float(t) for t in time if t >= tx_min and t <= tx_max]
+    timexy += [tx_max]
+    timexy.insert(0, tx_min)
+    Xtw, Ytw = ConcLineTW(np.array(timexy))
+
     if (plot_diagrams[1] == 1):
         if (plot_diagrams[0] == 1):
             axn = 1
@@ -1916,10 +1951,10 @@ if __name__ == '__main__':
             "$^{238}$U / $^{206}$Pb*", fontsize=legend_font_size + 4)
         ax[axn].set_ylabel(
             "$^{207}$Pb* / $^{206}$Pb*", fontsize=legend_font_size + 4)
-        ax[axn].set_xlim(range_xy[0][0], range_xy[0][1])
-        ax[axn].set_ylim(range_xy[1][0], range_xy[1][1])
+        ax[axn].set_xlim(rx)
+        ax[axn].set_ylim(ry)
 
-        PlotConcTW(ax, axn, Xtw, Ytw, time, age_unit,
+        PlotConcTW(ax, axn, Xtw, Ytw, timexy, age_unit,
                    int(graph_label_interval), legend_font_size)
 
         # Legend data number
