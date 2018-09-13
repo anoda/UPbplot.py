@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2018/09/12 17:47:35.
+# Last updated: 2018/09/14 08:22:11.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -512,11 +512,6 @@ def ConcAgeConv(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.**6, conf=0.95):
     P_value_eq = 1 - stats.chi2.cdf(S, df_equivalence)
     P_value_comb = 1 - stats.chi2.cdf(S_bar + S, df_combined)
     P_value_conc = 1 - stats.chi2.cdf(S_bar, df_concordance)
-    print('    MSWD concordance / equivalence / combined = %.2f / %.2f / %.2f'
-          % (MSWD_concordance, MSWD_equivalence, MSWD_combined))
-    print(
-        '    P-value concordance / equivalence / combined = %.2f / %.2f / %.2f'
-        % (P_value_conc, P_value_eq, P_value_comb))
 
     if (ca_mswd == 1):
         MSWD = MSWD_equivalence
@@ -528,7 +523,8 @@ def ConcAgeConv(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.**6, conf=0.95):
         MSWD = MSWD_concordance
         P_value = P_value_conc
 
-    return (T_leastsq, T_sigma, MSWD, P_value)
+    return (T_leastsq, T_sigma, MSWD_concordance, MSWD_equivalence,
+            MSWD_combined, P_value_conc, P_value_eq, P_value_comb)
 
 
 # Tera-Wasserburg concordia curve (p. 668 in Ludwig, 1998)
@@ -574,11 +570,6 @@ def ConcAgeTW(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.**6, conf=0.95):
     P_value_eq = 1 - stats.chi2.cdf(S, df_equivalence)
     P_value_comb = 1 - stats.chi2.cdf(S_bar + S, df_combined)
     P_value_conc = 1 - stats.chi2.cdf(S_bar, df_concordance)
-    print('    MSWD concordance / equivalence / combined = %.2f / %.2f / %.2f'
-          % (MSWD_concordance, MSWD_equivalence, MSWD_combined))
-    print(
-        '    P-value concordance / equivalence / combined = %.2f / %.2f / %.2f'
-        % (P_value_conc, P_value_eq, P_value_comb))
 
     if (ca_mswd == 1):
         MSWD = MSWD_equivalence
@@ -590,7 +581,8 @@ def ConcAgeTW(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.**6, conf=0.95):
         MSWD = MSWD_concordance
         P_value = P_value_conc
 
-    return (T_leastsq, T_sigma, MSWD, P_value)
+    return (T_leastsq, T_sigma, MSWD_concordance, MSWD_equivalence,
+            MSWD_combined, P_value_conc, P_value_eq, P_value_comb)
 
 
 # ------------------------------------------------
@@ -953,17 +945,18 @@ def plot_2D_wm(ax, axn, X, Y, sigma_X, sigma_Y, rho_XY, cr, legend_pos_x,
 # concordia ages on concordia lines
 def concordia_age(ctype, X, Y, sigma_X, sigma_Y, rho_XY, cr):
     if (ctype == 'conv'):
-        T_lsq, S_lsq, MSWD, P = ConcAgeConv(
+        T_lsq, S_lsq, MSWDconc, MSWDeq, MSWDcomb, Pconc, Peq, Pcomb = ConcAgeConv(
             X, Y, sigma_X, sigma_Y, rho_XY, Tinit=age_unit, conf=cr)
         X_lsq, Y_lsq = ConcLineConv(T_lsq)
     elif (ctype == 'tw'):
-        T_lsq, S_lsq, MSWD, P = ConcAgeTW(
+        T_lsq, S_lsq, MSWDconc, MSWDeq, MSWDcomb, Pconc, Peq, Pcomb = ConcAgeTW(
             X, Y, sigma_X, sigma_Y, rho_XY, Tinit=age_unit, conf=cr)
         X_lsq, Y_lsq = ConcLineTW(T_lsq)
 
     else:
         sys.exit('Please choose type of concordia, "conv" or "tw"')
-    return (T_lsq, S_lsq, X_lsq, Y_lsq, MSWD, P)
+    return (T_lsq, S_lsq, X_lsq, Y_lsq, MSWDconc, MSWDeq, MSWDcomb, Pconc, Peq,
+            Pcomb)
 
 
 # ------------------------------------------------
@@ -1875,36 +1868,41 @@ if __name__ == '__main__':
 
         # Concordia age
         if (opt_concordia_age or opt_concordia_ia):
-            T_lsq, S_lsq, X_lsq, Y_lsq, MSWD, Pvalue = concordia_age(
+            T_lsq, S_lsq, X_lsq, Y_lsq, MSWDconc, MSWDeq, MSWDcomb, Pconc, Peq, Pcomb = concordia_age(
                 'conv', X[ind], Y[ind], sigma_X[ind], sigma_Y[ind],
                 rho_XY[ind], ca_cr)
+
+        if ca_mswd == 0:
+            MSWD = MSWDconc
+            Pvalue = Pconc
+        elif ca_mswd == 1:
+            MSWD = MSWDeq
+            Pvalue = Peq
+        else:
+            MSWD = MSWDcomb
+            Pvalue = Pcomb
 
         if (opt_concordia_age):
             legend_pos += 1
             plot_concordia_age(ax, axn, T_lsq, S_lsq, X_lsq, Y_lsq, MSWD,
                                ca_cr, legend_pos_x[legend_pos],
                                legend_pos_y[legend_pos])
-            print(u'    Concordia age = %s ±%s %s [%d%% conf.]' % (format(
-                T_lsq / age_unit, dignum), format(
-                    S_lsq / age_unit, dignum), age_unit_name, ca_cr * 100))
-            print(u'    Concordia age = %s ±%s %s [t√MSWD]' %
-                  (format(T_lsq / age_unit, dignum),
-                   format(S_lsq / age_unit * np.sqrt(MSWD), dignum),
-                   age_unit_name))
-
             legend_pos += 1
             plot_concordia_age_MSWD(ax, axn, MSWD, ca_mswd, Pvalue,
                                     legend_pos_x[legend_pos],
                                     legend_pos_y[legend_pos])
-            if (ca_mswd == 1):
-                print(r'    (MSWD of equivalence=%s, p(chi^2)=%s)' % (format(
-                    MSWD, dignum), format(Pvalue, dignum2)))
-            elif (ca_mswd == 2):
-                print(r'    (MSWD of combined=%s, p(chi^2)=%s)' % (format(
-                    MSWD, dignum), format(Pvalue, dignum2)))
-            else:
-                print(r'    (MSWD of concordance=%s, p(chi^2)=%s)' % (format(
-                    MSWD, dignum), format(Pvalue, dignum2)))
+
+            print(u'    Concordia age = %s ±%s [%d%% conf.] / ±%s [t√MSWD] %s'
+                  % (format(T_lsq / age_unit, dignum),
+                     format(S_lsq / age_unit, dignum), (ca_cr * 100),
+                     format(S_lsq / age_unit * np.sqrt(MSWDcomb), dignum),
+                     age_unit_name))
+            print(
+                '    MSWD concordance / equivalence / combined = %.2f / %.2f / %.2f'
+                % (MSWDconc, MSWDeq, MSWDcomb))
+            print(
+                '    P-value concordance / equivalence / combined = %.2f / %.2f / %.2f'
+                % (Pconc, Peq, Pcomb))
 
         # plot intercept line and band
         if (opt_concordia_ia):
@@ -1991,36 +1989,42 @@ if __name__ == '__main__':
 
         # Concordia age
         if (opt_concordia_age or opt_concordia_ia):
-            t_lsq, s_lsq, x_lsq, y_lsq, mswd, pvalue = concordia_age(
+            t_lsq, s_lsq, x_lsq, y_lsq, mswd_conc, mswd_eq, mswd_comb, p_conc, p_eq, p_comb = concordia_age(
                 'tw', x[ind], y[ind], sigma_x[ind], sigma_y[ind], rho_xy[ind],
                 ca_cr)
+
+        if ca_mswd == 0:
+            mswd = mswd_conc
+            pvalue = p_conc
+        elif ca_mswd == 1:
+            mswd = mswd_eq
+            pvalue = p_eq
+        else:
+            mswd = mswd_comb
+            pvalue = p_comb
 
         if (opt_concordia_age):
             legend_pos += 1
             plot_concordia_age(ax, axn, t_lsq, s_lsq, x_lsq, y_lsq, mswd,
                                ca_cr, legend_pos_x[legend_pos],
                                legend_pos_y[legend_pos])
-            print(u'    Concordia age = %s ±%s %s [%d%% conf.]' % (format(
-                t_lsq / age_unit, dignum), format(
-                    s_lsq / age_unit, dignum), age_unit_name, ca_cr * 100))
-            print(u'    Concordia age = %s ±%s %s [t√MSWD]' %
-                  (format(T_lsq / age_unit, dignum),
-                   format(S_lsq / age_unit * np.sqrt(MSWD), dignum),
-                   age_unit_name))
-
             legend_pos += 1
             plot_concordia_age_MSWD(ax, axn, mswd, ca_mswd, pvalue,
                                     legend_pos_x[legend_pos],
                                     legend_pos_y[legend_pos])
-            if (ca_mswd == 1):
-                print(u'    (MSWD of equivalence=%s, p(chi^2)=%s)' % (format(
-                    mswd, dignum), format(pvalue, dignum2)))
-            elif (ca_mswd == 2):
-                print(u'    MSWD of combined=%s, p(chi^2)=%s)' % (format(
-                    mswd, dignum), format(pvalue, dignum2)))
-            else:
-                print(u'    (MSWD of concordance=%s, p(chi^2)=%s)' % (format(
-                    mswd, dignum), format(pvalue, dignum2)))
+
+            print(u'    Concordia age = %s ±%s [%d%% conf.] / ±%s [t√MSWD] %s'
+                  % (format(t_lsq / age_unit, dignum),
+                     format(s_lsq / age_unit, dignum), (ca_cr * 100),
+                     format(s_lsq / age_unit * np.sqrt(MSWDcomb), dignum),
+                     age_unit_name))
+
+            print(
+                '    MSWD concordance / equivalence / combined = %.2f / %.2f / %.2f'
+                % (MSWDconc, MSWDeq, MSWDcomb))
+            print(
+                '    P-value concordance / equivalence / combined = %.2f / %.2f / %.2f'
+                % (Pconc, Peq, Pcomb))
 
         # plot intercept line and band
         if (opt_concordia_ia):
