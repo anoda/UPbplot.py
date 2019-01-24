@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2019/01/24 11:58:30.
+# Last updated: 2019/01/24 13:51:53.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -383,21 +383,21 @@ def myEllipse(i,
     vals, vecs = eigsorted(cov)
     theta = np.degrees(np.arctan2(*vecs[:, 0][::-1]))
     if (vals[0] < 0.0) | (vals[1] < 0.0):
-        print('!!! Unable to draw an error ellipse [Data %s] !!!' % str(i))
-        width, height = [0., 0.]
+        ell = 0
     else:
         width, height = 2 * np.sqrt(stats.chi2.ppf(conf, 2)) * np.sqrt(vals)
 
-    ell = Ellipse(
-        xy=(x, y),
-        width=width,
-        height=height,
-        angle=theta,
-        alpha=alpha,
-        fc=fc,
-        ec=edgecolor,
-        lw=edgewidth,
-        ls=linestyle)
+        ell = Ellipse(
+            xy=(x, y),
+            width=width,
+            height=height,
+            angle=theta,
+            alpha=alpha,
+            fc=fc,
+            ec=edgecolor,
+            lw=edgewidth,
+            ls=linestyle)
+        
     return (ell)
 
 
@@ -908,7 +908,9 @@ def plot_data_point_error_ellipse(ax, axn, X, Y, sigma_X, sigma_Y, cov_XY, cr,
                 linestyle=dp0_ee_ls,
                 edgecolor=dp0_ee_ec,
                 edgewidth=dp0_ee_ew)
-        ax[axn].add_artist(dp_ell)
+
+        if dp_ell:
+            ax[axn].add_artist(dp_ell)
 
 
 # ------------------------------------------------
@@ -2007,15 +2009,15 @@ if __name__ == '__main__':
             print(u'    Concordia age = %s ±%s [%d%% conf.] / ±%s [t√MSWD] %s'
                   % (format(t_lsq / age_unit, dignum),
                      format(s_lsq / age_unit, dignum), (ca_cr * 100),
-                     format(s_lsq / age_unit * np.sqrt(MSWDcomb), dignum),
+                     format(s_lsq / age_unit * np.sqrt(mswd_comb), dignum),
                      age_unit_name))
 
             print(
                 '    MSWD concordance / equivalence / combined = %.2f / %.2f / %.2f'
-                % (MSWDconc, MSWDeq, MSWDcomb))
+                % (mswd_conc, mswd_eq, mswd_comb))
             print(
                 '    P-value concordance / equivalence / combined = %.2f / %.2f / %.2f'
-                % (Pconc, Peq, Pcomb))
+                % (p_conc, p_eq, p_comb))
 
         # plot intercept line and band
         if (opt_concordia_ia):
@@ -2138,8 +2140,9 @@ if __name__ == '__main__':
                 density = True)
 
             ax_yticklocs = ax[axn].yaxis.get_ticklocs()
-            ax_yticklocs = list(map(lambda x: x * len(range(range_hist_x[0], range_hist_x[1]))*1.0/hist_bin_num, ax_yticklocs))
-            ax[axn].yaxis.set_ticklabels(list(map(lambda x: "%0.2f" % x, ax_yticklocs)))
+            ax_yticklocs = list(map(lambda x: x * len(np.arange(range_hist_x[0], range_hist_x[1]))*1.0/hist_bin_num, ax_yticklocs))
+
+            # ax[axn].yaxis.set_ticklabels(list(map(lambda x: "%0.2f" % x, ax_yticklocs)))
             
             ax[axn].plot(
                 ls, kde_all(ls), linestyle='--', color='red')
