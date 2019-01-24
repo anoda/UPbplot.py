@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2019/01/24 11:28:10.
+# Last updated: 2019/01/24 11:47:31.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -1334,7 +1334,6 @@ if __name__ == '__main__':
     opt_exclude_disc = config.getboolean('File', 'opt_exclude_discordant_data')
     disc_thres = config.getfloat('File', 'discordance_percent_threshold')
     disc_type = config.getint('File', 'disc_type')
-    accept_data_points = loads(config.get('File', 'accept_data_points'))
     exclude_data_points = loads(config.get('File', 'exclude_data_points'))
     opt_Th_U = config.getboolean('File', 'opt_Th_U')
     Th_U_inverse = config.getboolean('File', 'Th_U_inverse')
@@ -1520,9 +1519,6 @@ if __name__ == '__main__':
         delimiter=delim,
         usecols=column_num_isotopic_ratio,
         skiprows=rows_of_header)
-
-    if (accept_data_points):
-        data = data[accept_data_points]
 
     data = DataFrame(data, columns=dt_name_column)
 
