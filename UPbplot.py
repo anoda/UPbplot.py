@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2019/01/24 10:56:33.
+# Last updated: 2019/01/24 11:28:10.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -2119,17 +2119,16 @@ if __name__ == '__main__':
             x = Tall
             x = x[(x > range_hist_x[0])&(x < range_hist_x[1])]
             kde_all = stats.gaussian_kde(x)
-            hh = np.histogram(Tall, hist_bin_num, range=ax[axn].get_xlim())
             kde_multi_all = len(x)
 
             x = Tall[ind]
             x = x[(x > range_hist_x[0])&(x < range_hist_x[1])]
             kde = stats.gaussian_kde(x)
-            hh = np.histogram(Tall[ind], hist_bin_num, range=ax[axn].get_xlim())
             kde_multi = len(x)
 
         if (opt_hist_density):
             ax[axn].set_ylabel("Density of samples", fontsize=legend_font_size + 4)
+
             n, bins, rects = ax[axn].hist(
                 (Tall[ind], Tall[outd_disc], Tall[outd]),
                 hist_bin_num,
@@ -2140,10 +2139,17 @@ if __name__ == '__main__':
                 zorder=0,
                 range=ax[axn].get_xlim(),
                 density = True)
+
+            ax_yticklocs = ax[axn].yaxis.get_ticklocs()
+            ax_yticklocs = list(map(lambda x: x * len(range(range_hist_x[0], range_hist_x[1]))*1.0/hist_bin_num, ax_yticklocs))
+            ax[axn].yaxis.set_ticklabels(list(map(lambda x: "%0.2f" % x, ax_yticklocs)))
+            
             ax[axn].plot(
                 ls, kde_all(ls), linestyle='--', color='red')
             ax[axn].plot(ls, kde(ls), linestyle='-', color='red')
+
         else:
+
             ax[axn].set_ylabel("Number of samples", fontsize=legend_font_size + 4)
             n, bins, rects = ax[axn].hist(
                 (Tall[ind], Tall[outd_disc], Tall[outd]),
