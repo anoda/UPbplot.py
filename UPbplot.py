@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2019/01/24 10:36:11.
+# Last updated: 2019/01/24 10:56:33.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -21,12 +21,6 @@
 # __version__ = "0.0.5"             # Oct/30/2017
 # __version__ = "0.0.6"  # Sep/12/2018
 __version__ = "0.0.7"  # Jan/24/2019
-
-# version 0.0.7
-#    * Modify KDE plot
-#         Remove option kde_multiplier, which is now calculated from data
-#    * Introduce opt_hist_density
-#         Histogram is shown in density instead of number
 
 # [Citation]
 #
