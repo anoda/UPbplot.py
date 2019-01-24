@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2018/09/14 08:22:11.
+# Last updated: 2019/01/24 10:36:11.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -19,7 +19,14 @@
 # __version__ = "0.0.3"           # Nov/15/2016
 # __version__ = "0.0.4"             # Mar/01/2017
 # __version__ = "0.0.5"             # Oct/30/2017
-__version__ = "0.0.6"  # Sep/12/2018
+# __version__ = "0.0.6"  # Sep/12/2018
+__version__ = "0.0.7"  # Jan/24/2019
+
+# version 0.0.7
+#    * Modify KDE plot
+#         Remove option kde_multiplier, which is now calculated from data
+#    * Introduce opt_hist_density
+#         Histogram is shown in density instead of number
 
 # [Citation]
 #
@@ -1324,7 +1331,7 @@ if __name__ == '__main__':
     c_7Pb5U = config.getint('File', 'colnum_207Pb_235U')
     c_7Pb5U_e = config.getint('File', 'colnum_207Pb_235U_error')
     c_6Pb8U = config.getint('File', 'colnum_206Pb_238U')
-    c_6P8U_e = config.getint('File', 'colnum_206Pb_238U_error')
+    c_6Pb8U_e = config.getint('File', 'colnum_206Pb_238U_error')
     c_7Pb6Pb = config.getint('File', 'colnum_207Pb_206Pb')
     c_7Pb6Pb_e = config.getint('File', 'colnum_207Pb_206Pb_error')
     c_7Pb6Pb_i = config.getboolean('File', 'colnum_207Pb_206Pb_inverse')
@@ -1430,8 +1437,8 @@ if __name__ == '__main__':
     hist_bin_color2 = config.get('Graph', 'hist_bin_color2')  # 0.5
     hist_bin_alpha = config.getfloat('Graph', 'hist_bin_alpha')  # 0.75
     opt_kde = config.getboolean('Graph', 'opt_kde')  # 1
-    kde_multiplier = config.getfloat('Graph',
-                                     'kde_multiplier')  # number of samples
+    opt_hist_density = config.getfloat('Graph',
+                                     'opt_hist_density')  # density of histogram
 
     # cumulative probability density
     # 1 sigma (68.3), 2 sigma (95.4%), and 3 sigma (99.7%)
@@ -1504,7 +1511,7 @@ if __name__ == '__main__':
     ]
 
     column_num_isotopic_ratio = [
-        c_7Pb5U, c_7Pb5U_e, c_6Pb8U, c_6P8U_e, c_7Pb6Pb, c_7Pb6Pb_e
+        c_7Pb5U, c_7Pb5U_e, c_6Pb8U, c_6Pb8U_e, c_7Pb6Pb, c_7Pb6Pb_e
     ]
 
     if (c_delim == 'comma'):
@@ -1673,19 +1680,12 @@ if __name__ == '__main__':
     print(('Output filename is %s') % outfile)
     print('# Input data (first 5 lines)')
     print('------------------------------------------------------------')
-    if (error_type):
-        print(
-            '207Pb/235U  %ds[%%]     206Pb/238U  %ds[%%]     207Pb/206Pb  %ds[%%]'
-            % (input_error_sigma, input_error_sigma, input_error_sigma))
-    else:
-        print('207Pb/235U  %ds        206Pb/238U  %ds        207Pb/206Pb  %ds'
-              % (input_error_sigma, input_error_sigma, input_error_sigma))
-
-        print(
-            'column[%d]   column[%d] column[%d]   column[%d] column[%d]    column[%d]'
-            % (column_num_isotopic_ratio[0], column_num_isotopic_ratio[1],
-               column_num_isotopic_ratio[2], column_num_isotopic_ratio[3],
-               column_num_isotopic_ratio[4], column_num_isotopic_ratio[5]))
+    print('207Pb/235U  1s     206Pb/238U  1s     207Pb/206Pb  1s')
+    print(
+        'column[%d]   column[%d] column[%d]   column[%d] column[%d]    column[%d]'
+        % (column_num_isotopic_ratio[0], column_num_isotopic_ratio[1],
+           column_num_isotopic_ratio[2], column_num_isotopic_ratio[3],
+           column_num_isotopic_ratio[4], column_num_isotopic_ratio[5]))
 
     if (len(X) > 5):
         Nc = 5
@@ -2111,7 +2111,6 @@ if __name__ == '__main__':
         ax[axn].set_xlim(range_hist_x[0], range_hist_x[1])
         Tall, s1, label_selected = select_age_type(hist_age_type)
         ax[axn].set_xlabel(label_selected, fontsize=legend_font_size + 4)
-        ax[axn].set_ylabel("Number of samples", fontsize=legend_font_size + 4)
 
         # Optional: Th/U ratio
         if (opt_Th_U):
@@ -2120,31 +2119,51 @@ if __name__ == '__main__':
             plot_Th_U(axb, Th_U, Th_U_e, Tall, s1, ind, outd, outd_disc,
                       oneD_cr, range_hist_x, range_hist_y2)
 
-        # Optional: kernel density estimation
-        if (kde_multiplier > 0.0):
-            kde_multi_all = kde_multiplier
-            kde_multi = kde_multiplier
-        else:
-            kde_multi_all = len(Tall)
-            kde_multi = len(Tall[ind])
-
         if (opt_kde):
-            kde_all = stats.gaussian_kde(Tall)
-            kde = stats.gaussian_kde(Tall[ind])
-            ls = np.linspace(range_hist_x[0], range_hist_x[1])
-            ax[axn].plot(
-                ls, kde_all(ls) * kde_multi_all, linestyle='--', color='red')
-            ax[axn].plot(ls, kde(ls) * kde_multi, linestyle='-', color='red')
 
-        n, bins, rects = ax[axn].hist(
-            (Tall[ind], Tall[outd_disc], Tall[outd]),
-            hist_bin_num,
-            histtype='barstacked',
-            color=(hist_bin_color1, hist_bin_color2, hist_bin_color0),
-            alpha=hist_bin_alpha,
-            edgecolor='k',
-            zorder=0,
-            range=ax[axn].get_xlim())
+            ls = np.linspace(range_hist_x[0], range_hist_x[1], num=200)
+            x = Tall
+            x = x[(x > range_hist_x[0])&(x < range_hist_x[1])]
+            kde_all = stats.gaussian_kde(x)
+            hh = np.histogram(Tall, hist_bin_num, range=ax[axn].get_xlim())
+            kde_multi_all = len(x)
+
+            x = Tall[ind]
+            x = x[(x > range_hist_x[0])&(x < range_hist_x[1])]
+            kde = stats.gaussian_kde(x)
+            hh = np.histogram(Tall[ind], hist_bin_num, range=ax[axn].get_xlim())
+            kde_multi = len(x)
+
+        if (opt_hist_density):
+            ax[axn].set_ylabel("Density of samples", fontsize=legend_font_size + 4)
+            n, bins, rects = ax[axn].hist(
+                (Tall[ind], Tall[outd_disc], Tall[outd]),
+                hist_bin_num,
+                histtype='barstacked',
+                color=(hist_bin_color1, hist_bin_color2, hist_bin_color0),
+                alpha=hist_bin_alpha,
+                edgecolor='k',
+                zorder=0,
+                range=ax[axn].get_xlim(),
+                density = True)
+            ax[axn].plot(
+                ls, kde_all(ls), linestyle='--', color='red')
+            ax[axn].plot(ls, kde(ls), linestyle='-', color='red')
+        else:
+            ax[axn].set_ylabel("Number of samples", fontsize=legend_font_size + 4)
+            n, bins, rects = ax[axn].hist(
+                (Tall[ind], Tall[outd_disc], Tall[outd]),
+                hist_bin_num,
+                histtype='barstacked',
+                color=(hist_bin_color1, hist_bin_color2, hist_bin_color0),
+                alpha=hist_bin_alpha,
+                edgecolor='k',
+                zorder=0,
+                range=ax[axn].get_xlim())
+            ax[axn].plot(
+                ls, kde_all(ls)*kde_multi_all, linestyle='--', color='red')
+            ax[axn].plot(ls, kde(ls)*kde_multi, linestyle='-', color='red')
+
 
     print('All done.')
 
