@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2019/01/24 11:47:31.
+# Last updated: 2019/01/24 11:58:30.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -1664,6 +1664,7 @@ if __name__ == '__main__':
         xprinter.on()
 
     # input file
+    print('\n\n')
     print('============================================================')
     print(('Data filename is %s') % infile)
     print(('Configuration filename is %s') % conffile)
