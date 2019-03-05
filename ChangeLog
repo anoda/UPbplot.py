@@ -1,3 +1,9 @@
+2019-03-05  Version 007
+
+	Main script:
+
+	* fixed a bug related with calculation of MSWDconc, MSWDeq, and MSWDcomb.
+
 2019-01-24  Version 007
 
 	Main script:
