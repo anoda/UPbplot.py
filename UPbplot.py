@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2019/03/05 15:38:58.
+# Last updated: 2019/03/06 09:35:00.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -1023,7 +1023,7 @@ def plot_concordia_age(
     ax[axn].text(
         legend_pos_x,
         legend_pos_y,
-        u"Concordia age = %s ±%s %s [%d%% conf.]"
+        u"Concordia age = %s ± %s %s [%d%% conf.]"
         % (
             format(T_lsq / age_unit, dignum),
             format(S_lsq / age_unit, dignum),
@@ -1243,7 +1243,7 @@ def plot_oneD_weighted_mean(
     ax[axn].text(
         legend_pos_x[0],
         legend_pos_y[1],
-        u"Weighted mean = %s ±%s %s [%d%% conf.] (MSWD = %s)"
+        u"Weighted mean = %s ± %s %s [%d%% conf.] (MSWD = %s)"
         % (
             format(Twm, dignum),
             format(sm, dignum),
@@ -2049,7 +2049,7 @@ if __name__ == "__main__":
             )
 
             print(
-                u"    Concordia age = %s ±%s [%d%% conf.] / ±%s [t√MSWD] %s"
+                u"    Concordia age = %s ± %s [%d%% conf.] / ± %s [t√MSWD] %s"
                 % (
                     format(T_lsq / age_unit, dignum),
                     format(S_lsq / age_unit, dignum),
@@ -2240,7 +2240,7 @@ if __name__ == "__main__":
             )
 
             print(
-                u"    Concordia age = %s ±%s [%d%% conf.] / ±%s [t√MSWD] %s"
+                u"    Concordia age = %s ± %s [%d%% conf.] / ± %s [t√MSWD] %s"
                 % (
                     format(t_lsq / age_unit, dignum),
                     format(s_lsq / age_unit, dignum),
@@ -2366,7 +2366,7 @@ if __name__ == "__main__":
             legend_pos_y,
         )
         print(
-            u"    1D weighted mean age = %s ±%s %s [%d%% conf.] (MSDW=%s)"
+            u"    1D weighted mean age = %s ± %s %s [%d%% conf.] (MSDW=%s)"
             % (
                 format(T_owm, dignum),
                 format(S_owm, dignum),
