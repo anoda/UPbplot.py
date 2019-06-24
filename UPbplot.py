@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2019/03/06 09:35:00.
+# Last updated: 2019/06/25 08:04:26.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -20,7 +20,8 @@
 # __version__ = "0.0.4"             # Mar/01/2017
 # __version__ = "0.0.5"             # Oct/30/2017
 # __version__ = "0.0.6"  # Sep/12/2018
-__version__ = "0.0.7"  # Jan/24/2019
+# __version__ = "0.0.7"  # Jan/24/2019
+__version__ = "0.0.8"  # Jun/06/2019
 
 # [Citation]
 #
@@ -84,8 +85,6 @@ __version__ = "0.0.7"  # Jan/24/2019
 #        -i FILE, --in=FILE    Name of input data file
 #        -c FILE, --cfg=FILE   Name of configuration file
 #        -o FILE, --out=FILE   Name of output file (when pdf driver is used)
-#        -g, --gui             Use GUI
-#        -n, --no-gui          Do not use GUI (default)
 #        -d DRIVER, --driver=DRIVER
 #                              Choose from [pdf (default), qt4agg]
 #        -f, --force-overwrite
@@ -125,7 +124,8 @@ U85r = 137.818  # 238U/235U
 
 # Time (year)
 time_ka = np.array(list(range(1000, 5 * 10 ** 6, 1 * 10 ** 3)))  # 1-5000 ka
-time_ma = np.array(list(range(1 * 10 ** 6, 4600 * 10 ** 6, 1 * 10 ** 6)))  # 1-4601 Ma
+# 1-4601 Ma
+time_ma = np.array(list(range(1 * 10 ** 6, 4600 * 10 ** 6, 1 * 10 ** 6)))
 
 # ################################################
 # Setting of file names
@@ -138,33 +138,6 @@ def set_filename_input_gui(in_path, driver):
     conf_path = in_path.replace(in_ext, ".cfg")
     out_path = in_path.replace(in_ext, ".pdf")
     in_dir = os.path.dirname(in_path)
-
-    if "pdf" in driver:
-        if os.path.exists(out_path):
-            confirmation = q.Confirm(
-                message="Do you overwrite the existing pdf?",
-                title="Confirmation",
-                default=True,
-                ok=False,
-                cancel=False,
-            )
-            if not confirmation:
-                out_path = q.SetFile(
-                    directory=in_dir,
-                    filename="",
-                    overwrite=False,
-                    title="Save",
-                    wildcard="Output file (*.pdf)|*.pdf",
-                )
-
-    if not os.path.exists(conf_path):
-        conf_path = q.GetFile(
-            directory=in_dir,
-            filename="",
-            multiple=False,
-            wildcard="Configuration files (*.cfg)|*.cfg",
-            title="Please select configuration file (*.cfg)",
-        )
 
     return [in_path, out_path, conf_path]
 
@@ -198,7 +171,6 @@ def set_filename_input(*inputfile):
         infile = input("Enter data filename: ")  # python3
         if not os.path.exists(infile):
             sys.exit("Input data file %s is not found.") % infile
-
     return infile
 
 
@@ -221,7 +193,6 @@ def set_filename_conf(filename):
                     conffile = input()  # python3
                     if not os.path.exists(conffile):
                         sys.exit("Configuration file %s is not found.") % conffile
-
     return conffile
 
 
@@ -232,7 +203,7 @@ def set_filename_output(filename, driver, opt_force_overwrite):
         if "pdf" in driver:
             # print(('Output file %s exists.') % outfile)
             if not (opt_force_overwrite):
-                # answer = raw_input('Do you set a new file name?: [y/N] ')  # python2
+                # answer = raw_input('Do you set a new file name?: [y/N] ')  #
                 answer = input("Do you set a new file name?: [y/N] ")  # python3
                 if (len(answer) != 0) and (answer or answer[0].lower()) == "y":
                     print("Please enter output file name (*.pdf): ")
@@ -391,6 +362,7 @@ def myEllipse(
     vals, vecs = eigsorted(cov)
     theta = np.degrees(np.arctan2(*vecs[:, 0][::-1]))
     if (vals[0] < 0.0) | (vals[1] < 0.0):
+        print("!!! Unable to draw an error ellipse [Data %s] !!!" % str(i))
         ell = 0
     else:
         width, height = 2 * np.sqrt(stats.chi2.ppf(conf, 2)) * np.sqrt(vals)
@@ -519,16 +491,6 @@ def ConcAgeConv(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
     P_value_comb = 1 - stats.chi2.cdf(S_bar + S, df_combined)
     P_value_conc = 1 - stats.chi2.cdf(S_bar, df_concordance)
 
-    if ca_mswd == 1:
-        MSWD = MSWD_equivalence
-        P_value = P_value_eq
-    elif ca_mswd == 2:
-        MSWD = MSWD_combined
-        P_value = P_value_comb
-    else:
-        MSWD = MSWD_concordance
-        P_value = P_value_conc
-
     return (
         T_leastsq,
         T_sigma,
@@ -590,16 +552,6 @@ def ConcAgeTW(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
     P_value_eq = 1 - stats.chi2.cdf(S, df_equivalence)
     P_value_comb = 1 - stats.chi2.cdf(S_bar + S, df_combined)
     P_value_conc = 1 - stats.chi2.cdf(S_bar, df_concordance)
-
-    if ca_mswd == 1:
-        MSWD = MSWD_equivalence
-        P_value = P_value_eq
-    elif ca_mswd == 2:
-        MSWD = MSWD_combined
-        P_value = P_value_comb
-    else:
-        MSWD = MSWD_concordance
-        P_value = P_value_conc
 
     return (
         T_leastsq,
@@ -1197,45 +1149,48 @@ def plot_oneD_weighted_mean(
     )
 
     for i in range(0, len(Tall)):
-        if i in ind:
-            ax[axn].errorbar(
+        if i in outd:
+            eb0 = ax[axn].errorbar(
                 i + 1,
                 Tall[i],
                 yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
-                ecolor=oneD_bar_color,
-                linewidth=oneD_bar_line_width,
-                fmt=dp1_marker_type,
-                markersize=dp1_marker_size,
-                markerfacecolor=dp1_marker_fc,
-                markeredgecolor=dp1_marker_ec,
-                markeredgewidth=dp1_marker_ew,
-            )
-        elif i in outd_disc:
-            ax[axn].errorbar(
-                i + 1,
-                Tall[i],
-                yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
-                ecolor=oneD_bar_color,
-                linewidth=oneD_bar_line_width,
-                fmt=dp2_marker_type,
-                markersize=dp2_marker_size,
-                markerfacecolor=dp2_marker_fc,
-                markeredgecolor=dp2_marker_ec,
-                markeredgewidth=dp2_marker_ew,
-            )
-        else:
-            ax[axn].errorbar(
-                i + 1,
-                Tall[i],
-                yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
-                ecolor=oneD_bar_color,
-                linewidth=oneD_bar_line_width,
+                ecolor=dp0_bar_color,
+                linewidth=dp0_bar_line_width,
                 fmt=dp0_marker_type,
                 markersize=dp0_marker_size,
                 markerfacecolor=dp0_marker_fc,
                 markeredgecolor=dp0_marker_ec,
                 markeredgewidth=dp0_marker_ew,
             )
+            eb0[-1][0].set_linestyle(dp0_bar_line_style)
+        elif i in outd_disc:
+            eb2 = ax[axn].errorbar(
+                i + 1,
+                Tall[i],
+                yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
+                ecolor=dp2_bar_color,
+                linewidth=dp2_bar_line_width,
+                fmt=dp2_marker_type,
+                markersize=dp2_marker_size,
+                markerfacecolor=dp2_marker_fc,
+                markeredgecolor=dp2_marker_ec,
+                markeredgewidth=dp2_marker_ew,
+            )
+            eb2[-1][0].set_linestyle(dp2_bar_line_style)
+        elif i in ind:
+            eb1 = ax[axn].errorbar(
+                i + 1,
+                Tall[i],
+                yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
+                ecolor=dp1_bar_color,
+                linewidth=dp1_bar_line_width,
+                fmt=dp1_marker_type,
+                markersize=dp1_marker_size,
+                markerfacecolor=dp1_marker_fc,
+                markeredgecolor=dp1_marker_ec,
+                markeredgewidth=dp1_marker_ew,
+            )
+            eb1[-1][0].set_linestyle(dp1_bar_line_style)
 
     # legend
     legend_data_number(ax, axn, legend_pos_x[0], legend_pos_y[0])
@@ -1279,48 +1234,51 @@ def plot_Th_U(
     axb.set_ylim(range_hist_y2[0], range_hist_y2[1])
     axb.set_ylabel("Th/U", fontsize=legend_font_size + 4)
     for i in range(len(Tall)):
-        if i in ind:
-            axb.errorbar(
+        if i in outd:
+            eb0 = axb.errorbar(
                 Tall[i],
                 Th_U[i],
                 xerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
                 yerr=Th_U_e[i],
-                ecolor=oneD_bar_color,
-                linewidth=oneD_bar_line_width,
-                fmt=dp1_marker_type,
-                markersize=dp1_marker_size,
-                markerfacecolor=dp1_marker_fc,
-                markeredgecolor=dp1_marker_ec,
-                markeredgewidth=dp1_marker_ew,
-            )
-        elif i in outd_disc:
-            axb.errorbar(
-                Tall[i],
-                Th_U[i],
-                xerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
-                yerr=Th_U_e[i],
-                ecolor=oneD_bar_color,
-                linewidth=oneD_bar_line_width,
-                fmt=dp2_marker_type,
-                markersize=dp2_marker_size,
-                markerfacecolor=dp2_marker_fc,
-                markeredgecolor=dp2_marker_ec,
-                markeredgewidth=dp2_marker_ew,
-            )
-        else:
-            axb.errorbar(
-                Tall[i],
-                Th_U[i],
-                xerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
-                yerr=Th_U_e[i],
-                ecolor=oneD_bar_color,
-                linewidth=oneD_bar_line_width,
+                ecolor=dp0_bar_color,
+                linewidth=dp0_bar_line_width,
                 fmt=dp0_marker_type,
                 markersize=dp0_marker_size,
                 markerfacecolor=dp0_marker_fc,
                 markeredgecolor=dp0_marker_ec,
                 markeredgewidth=dp0_marker_ew,
             )
+            eb0[-1][0].set_linestyle(dp1_bar_line_style)
+        elif i in outd_disc:
+            eb2 = axb.errorbar(
+                Tall[i],
+                Th_U[i],
+                xerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
+                yerr=Th_U_e[i],
+                ecolor=dp2_bar_color,
+                linewidth=dp2_bar_line_width,
+                fmt=dp2_marker_type,
+                markersize=dp2_marker_size,
+                markerfacecolor=dp2_marker_fc,
+                markeredgecolor=dp2_marker_ec,
+                markeredgewidth=dp2_marker_ew,
+            )
+            eb2[-1][0].set_linestyle(dp2_bar_line_style)
+        elif i in ind:
+            eb1 = axb.errorbar(
+                Tall[i],
+                Th_U[i],
+                xerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
+                yerr=Th_U_e[i],
+                ecolor=dp1_bar_color,
+                linewidth=dp1_bar_line_width,
+                fmt=dp1_marker_type,
+                markersize=dp1_marker_size,
+                markerfacecolor=dp1_marker_fc,
+                markeredgecolor=dp1_marker_ec,
+                markeredgewidth=dp1_marker_ew,
+            )
+            eb1[-1][0].set_linestyle(dp1_bar_line_style)
 
 
 # ################################################
@@ -1529,8 +1487,15 @@ if __name__ == "__main__":
     oneD_wm_line_color = config.get("Graph", "oneD_wm_line_color")  # blue
     oneD_band_fc = config.get("Graph", "oneD_band_fillcolor")  # 0.8
     oneD_band_alpha = config.getfloat("Graph", "oneD_band_alpha")  # 0.5
-    oneD_bar_line_width = config.getfloat("Graph", "oneD_bar_line_width")  # 1
-    oneD_bar_color = config.get("Graph", "oneD_bar_color")  # black
+    dp0_bar_line_style = config.get("Graph", "dp0_bar_line_style")  # solid
+    dp0_bar_line_width = config.getfloat("Graph", "dp0_bar_line_width")  # 1
+    dp0_bar_color = config.get("Graph", "dp0_bar_color")  # black
+    dp1_bar_line_style = config.get("Graph", "dp1_bar_line_style")  # solid
+    dp1_bar_line_width = config.getfloat("Graph", "dp1_bar_line_width")  # 1
+    dp1_bar_color = config.get("Graph", "dp1_bar_color")  # black
+    dp2_bar_line_style = config.get("Graph", "dp2_bar_line_style")  # dashed
+    dp2_bar_line_width = config.getfloat("Graph", "dp2_bar_line_width")  # 1
+    dp2_bar_color = config.get("Graph", "dp2_bar_color")  # black
     range_automatic_hist = config.getboolean("Graph", "range_automatic_hist")
     range_hist_x = loads(config.get("Graph", "range_hist_x"))  # [70, 100]
     hist_bin_num = config.getint("Graph", "hist_bin_num")  # 20
@@ -1832,28 +1797,76 @@ if __name__ == "__main__":
         print("Discordance is calculated by", end=" ")  # python3
         if disc_type == 0:
             print("100*(1-([206Pb/238U age]/[207Pb/206Pb age]))")
+            # Discordant data points
+            print("Discordant data points [n = %d] are" % len(outd_disc))
+            for i in outd_disc:
+                print(
+                    "%d: %s%% = (1-%.1f/%.1f) x 100"
+                    % (
+                        i,
+                        format(disc_percent[i], dignum),
+                        age_6Pb_8U[i] / age_unit,
+                        age_7Pb_5U[i] / age_unit,
+                    )
+                )
         elif disc_type == 1:
             print("100*(1-([207Pb/235U age]/[207Pb/206Pb age]))")
+            # Discordant data points
+            print("Discordant data points [n = %d] are" % len(outd_disc))
+            for i in outd_disc:
+                print(
+                    "%d: %s%% = (1-%.1f/%.1f) x 100"
+                    % (
+                        i,
+                        format(disc_percent[i], dignum),
+                        age_7Pb_5U[i] / age_unit,
+                        age_7Pb_6Pb[i] / age_unit,
+                    )
+                )
         elif disc_type == 2:
             print("100*(1-([206Pb/238U age]/[207Pb/235U age])")
+            # Discordant data points
+            print("Discordant data points [n = %d] are" % len(outd_disc))
+            for i in outd_disc:
+                print(
+                    "%d: %s%% = (1-%.1f/%.1f) x 100"
+                    % (
+                        i,
+                        format(disc_percent[i], dignum),
+                        age_6Pb_8U[i] / age_unit,
+                        age_7Pb_5U[i] / age_unit,
+                    )
+                )
         elif disc_type == 3:
             print("100*(1-([207Pb/235U age]/[206Pb/238U age])")
+            # Discordant data points
+            print("Discordant data points [n = %d] are" % len(outd_disc))
+            for i in outd_disc:
+                print(
+                    "%d: %s%% = (1-%.1f/%.1f) x 100"
+                    % (
+                        i,
+                        format(disc_percent[i], dignum),
+                        age_7Pb_5U[i] / age_unit,
+                        age_6Pb_8U[i] / age_unit,
+                    )
+                )
         elif disc_type == 4:
             print("100*(1-(min[207Pb/235U age] / max[206Pb/238U age])")
-
-        # Discordant data points
-        print("Discordant data points [n = %d] are" % len(outd_disc))
-        for i in outd_disc:
-            print(
-                "%d: %s%% = (1-%.1f/%.1f) x 100"
-                % (
-                    i,
-                    format(disc_percent[i], dignum),
-                    (age_7Pb_5U[i] - age_7Pb_5U_se[i] * input_error_sigma) / age_unit,
-                    (age_6Pb_8U[i] + age_6Pb_8U_se[i] * input_error_sigma) / age_unit,
+            # Discordant data points
+            print("Discordant data points [n = %d] are" % len(outd_disc))
+            for i in outd_disc:
+                print(
+                    "%d: %s%% = (1-%.1f/%.1f) x 100"
+                    % (
+                        i,
+                        format(disc_percent[i], dignum),
+                        (age_7Pb_5U[i] - age_7Pb_5U_se[i] * input_error_sigma)
+                        / age_unit,
+                        (age_6Pb_8U[i] + age_6Pb_8U_se[i] * input_error_sigma)
+                        / age_unit,
+                    )
                 )
-            )
-
     else:
         print("Discordant data are not excluded from calculation")
 
@@ -2425,12 +2438,12 @@ if __name__ == "__main__":
             x = Tall
             x = x[(x > range_hist_x[0]) & (x < range_hist_x[1])]
             kde_all = stats.gaussian_kde(x)
-            kde_multi_all = len(x)
+            kde_multi_all = len(x)  # replace len(ls) 20190606
 
             x = Tall[ind]
             x = x[(x > range_hist_x[0]) & (x < range_hist_x[1])]
             kde = stats.gaussian_kde(x)
-            kde_multi = len(x)
+            kde_multi = len(x)  # replace len(ls) 20190606
 
         if opt_hist_density:
             ax[axn].set_ylabel("Density of samples", fontsize=legend_font_size + 4)

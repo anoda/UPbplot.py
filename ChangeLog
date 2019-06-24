@@ -1,8 +1,20 @@
-2019-03-05  Version 007
+2019-03-05  Version 008
 
 	Main script:
 
-	* fixed a bug related with calculation of MSWDconc, MSWDeq, and MSWDcomb.
+	* fix a bug related with calculation of MSWDconc, MSWDeq, MSWDcomb.
+
+	Configuration file:
+
+	* New variables
+	dp0_bar_line_style, dp0_bar_line_width, dp0_bar_color
+	dp1_bar_line_style, dp1_bar_line_width, dp1_bar_color
+	dp2_bar_line_style, dp2_bar_line_width, dp2_bar_color
+
+
+	* opt_hist_density is a new option.  Histogram is shown by density of sample instead of number of sample
+
+	* accept_data_points: deleted.
 
 2019-01-24  Version 007
 
