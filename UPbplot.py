@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2019/06/25 08:04:26.
+# Last updated: 2019/06/25 08:25:38.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -44,14 +44,6 @@ __version__ = "0.0.8"  # Jun/06/2019
 #    SciPy: https://www.scipy.org
 #
 #    will be required.  Install them in advance.
-#
-#    If you want to use GUI mode, further additional libraries of
-#
-#    PySide (https://wiki.qt.io/PySide)
-#    quickgui (https://pypi.python.org/pypi/quickgui)
-#    wxPython (http://www.wxpython.org)
-#
-#    will be required.  Matplotlib must include Qt4Agg as the backend.
 #
 # 2. Copy and modify example data and configuration files in the working
 #    directory.
