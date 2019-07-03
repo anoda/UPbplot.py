@@ -1,4 +1,4 @@
-2019-06-28  Version 009
+2019-07-03  Version 009
 
 	Main script:
 
@@ -11,7 +11,7 @@
 
 	* calc_chi2_red: reduced chi-squared test for check the data set represents a single population
 
-	
+
 	Configuration file:
 
 	* New variables
