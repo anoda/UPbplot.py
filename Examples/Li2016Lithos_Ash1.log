@@ -21,7 +21,9 @@ Range of data
 207Pb/206Pb: 0.05063--0.05379
 238U/206Pb: 18.76173--20.28398
 ------------------------------------------------------------
-Discordant data are not excluded from calculation
+Discordant data (> 10.0%) are excluded from analysis.
+Discordance is calculated by 100*(1-([206Pb/238U age]/[207Pb/235U age])
+Discordant data points [n = 0] are
 ------------------------------------------------------------
 U-Pb ages (Ma) [2 sigma]
 #	6/8	+-s	7/5	+-s	7/6	+s	-s	
@@ -57,7 +59,7 @@ b: Tera-Wasserburg concordia diagram
     P-value concordance / equivalence / combined = 0.88 / 0.01 / 0.01
 c: One-dimensional bar plot
     1D weighted mean age = 319.6 ± 2.6 Ma [95% conf.] (MSDW=2.2)
-    Reduced Chi-squared = 2.2 (Failed)
+    Reduced Chi-squared = 2.2 (Failed, over dispersion/uncertainties underestimated)
 d: Histogram
 All done.
 Saving Li2016Lithos_Ash1.pdf

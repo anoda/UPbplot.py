@@ -63,7 +63,7 @@ Accepted data points [n = 28] are [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 
 Excluded data points [n = 0] are []
 a: One-dimensional bar plot
     1D weighted mean age = 120.912 ± 1.472 Ma [95% conf.] (MSDW=0.228)
-    Reduced Chi-squared = 0.228 (Failed)
+    Reduced Chi-squared = 0.228 (Failed, under dispersion/uncertainties overestimated)
 b: Histogram
 All done.
 Saving Labrado2015cjes.pdf

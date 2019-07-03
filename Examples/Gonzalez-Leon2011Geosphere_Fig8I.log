@@ -95,7 +95,7 @@ b: Tera-Wasserburg concordia diagram
     Intercept age = 69.20 +0.37 -0.45 Ma [95% conf.]
 c: One-dimensional bar plot
     1D weighted mean age = 69.67 ± 0.37 Ma [95% conf.] (MSDW=2.03)
-    Reduced Chi-squared = 2.03 (Failed)
+    Reduced Chi-squared = 2.03 (Failed, over dispersion/uncertainties underestimated)
 d: Histogram
 All done.
 Saving Gonzalez-Leon2011Geosphere_Fig8I.pdf
