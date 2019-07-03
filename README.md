@@ -63,8 +63,8 @@ websites if you need such help.
 
 		Numpy: https://pypi.org/project/numpy/
 		Matplotlib: https://pypi.org/project/matplotlib/
-   		pandas: https://pypi.org/project/pandas/
-	   	SciPy: https://pypi.org/project/scipy/
+		pandas: https://pypi.org/project/pandas/
+		SciPy: https://pypi.org/project/scipy/
 
 2. If you prefer to using Qt5Agg as a driver for matplotlib, please install it.
 
