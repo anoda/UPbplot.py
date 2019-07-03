@@ -15,10 +15,10 @@ concordia-intercept ages with errors on both concordia diagrams.
 
 [License, Author, Copyright, Publication date]
 
-License: Apache License, Version 2.0
-Author: Atsushi Noda
-Copyright: Geological Survey of Japan, AIST
-Publication date: Jul 03, 2019 (ver 0.0.9)
+	License: Apache License, Version 2.0
+	Author: Atsushi Noda
+	Copyright: Geological Survey of Japan, AIST
+	Publication date: Jul 03, 2019 (ver 0.0.9)
 
 
 [Citation]
@@ -61,18 +61,14 @@ websites if you need such help.
    additional libraries (Numpy, SciPy, Matplotlib, pandas, and so on)
    will be required.  Install them in advance.
 
-   Numpy: https://pypi.org/project/numpy/
-   
-   Matplotlib: https://pypi.org/project/matplotlib/
-   
-   pandas: https://pypi.org/project/pandas/
-   
-   SciPy: https://pypi.org/project/scipy/
+		Numpy: https://pypi.org/project/numpy/
+		Matplotlib: https://pypi.org/project/matplotlib/
+   	pandas: https://pypi.org/project/pandas/
+   	SciPy: https://pypi.org/project/scipy/
 
 2. If you prefer to using Qt5Agg as a driver for matplotlib, please install it.
 
-   PyQt5: https://pypi.org/project/PyQt5/
-
+		PyQt5: https://pypi.org/project/PyQt5/
 
 3. Copy and modify example data and configuration files in the working
    directory
@@ -90,12 +86,9 @@ websites if you need such help.
 After installation of libraries listed above, you can run the script
 in a terminal window, for examples,
 
-$ python UPbplot.py -n -i data.csv -c data.cfg
-
-$ python UPbplot.py -n -i data.csv -d pdf -f
-
-$ python UPbplot.py -d qt5agg
-
+	$ python UPbplot.py -n -i data.csv -c data.cfg
+	$ python UPbplot.py -n -i data.csv -d pdf -f
+	$ python UPbplot.py -d qt5agg
 
 The script assumes the configuration file name is "data.cfg" as
 defaults, if the input data file name is "data.csv".
@@ -103,10 +96,10 @@ defaults, if the input data file name is "data.csv".
 Command-line options:
 
 Options:
-  -h, --help                  Show this help message and exit
-  -i FILE, --in=FILE          Name of input data file
-  -c FILE, --cfg=FILE         Name of configure file
-  -o FILE, --out=FILE         Name of output file (when pdf driver is used)
-  -d DRIVER, --driver=DRIVER  Choose from [pdf (default), Qt5Agg, TKAgg, macosx]
-  -f, --force-overwrite       Force overwrite the pre-existing pdf
+	-h, --help                  Show this help message and exit
+	-i FILE, --in=FILE          Name of input data file
+	-c FILE, --cfg=FILE         Name of configure file
+	-o FILE, --out=FILE         Name of output file (when pdf driver is used)
+	-d DRIVER, --driver=DRIVER  Choose from [pdf (default), Qt5Agg, TKAgg, macosx]
+	-f, --force-overwrite       Force overwrite the pre-existing pdf
 
