@@ -35,7 +35,7 @@ Japan, 68(3), 131-140.
 
 The script was written in Python 3.6.8 and tested on MacOSX
 (Mojave).  If you use it under Python 2, please modify lines using 
-``print'' function in the script.  Comments are added to the relevant lines.
+print function in the script.  Comments are added to the relevant lines.
 
 Mandatory and optional libraries are listed in [Preparation] section.
 
@@ -62,8 +62,11 @@ websites if you need such help.
    will be required.  Install them in advance.
 
    Numpy: https://pypi.org/project/numpy/
+   
    Matplotlib: https://pypi.org/project/matplotlib/
+   
    pandas: https://pypi.org/project/pandas/
+   
    SciPy: https://pypi.org/project/scipy/
 
 2. If you prefer to using Qt5Agg as a driver for matplotlib, please install it.
@@ -88,7 +91,9 @@ After installation of libraries listed above, you can run the script
 in a terminal window, for examples,
 
 $ python UPbplot.py -n -i data.csv -c data.cfg
+
 $ python UPbplot.py -n -i data.csv -d pdf -f
+
 $ python UPbplot.py -d qt5agg
 
 
