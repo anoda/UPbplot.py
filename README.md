@@ -1,4 +1,4 @@
-UPbplot.py
+# UPbplot.py
 
 [Introduction]
 
@@ -61,10 +61,15 @@ websites if you need such help.
    additional libraries (Numpy, SciPy, Matplotlib, pandas, and so on)
    will be required.  Install them in advance.
 
-   Numpy: http://www.numpy.org
-   Matplotlib: http://matplotlib.org
-   pandas: http://pandas.pydata.org
-   SciPy: https://www.scipy.org
+   Numpy: https://pypi.org/project/numpy/
+   Matplotlib: https://pypi.org/project/matplotlib/
+   pandas: https://pypi.org/project/pandas/
+   SciPy: https://pypi.org/project/scipy/
+
+2. If you prefer to using Qt5Agg as a driver for matplotlib, please install it.
+
+   PyQt5: https://pypi.org/project/PyQt5/
+
 
 2. Copy and modify example data and configuration files in the working
    directory
@@ -97,6 +102,6 @@ Options:
   -i FILE, --in=FILE          Name of input data file
   -c FILE, --cfg=FILE         Name of configure file
   -o FILE, --out=FILE         Name of output file (when pdf driver is used)
-  -d DRIVER, --driver=DRIVER  Choose from [pdf (default), qt4agg]
+  -d DRIVER, --driver=DRIVER  Choose from [pdf (default), Qt5Agg, TKAgg, macosx]
   -f, --force-overwrite       Force overwrite the pre-existing pdf
 
