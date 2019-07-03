@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2019/07/03 15:25:51.
+# Last updated: 2019/07/03 17:22:47.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -755,7 +755,7 @@ def discordance(
 # Spencer2016gf
 
 
-def calc_chi2_red(x, s1, wm, n):
+def calc_chi2_red(x, s1, wm, n, opt):
     # x: ages of each sample
     # s1: errors (1 sigma) of each sample
     # wm: weighted mean age
@@ -766,7 +766,13 @@ def calc_chi2_red(x, s1, wm, n):
     if (chi2_red <= error_max) & (chi2_red >= error_min):
         res = "Passed"
     else:
-        res = "Failed"
+        if opt:
+            if chi2_red < error_min:
+                res = "Failed, under dispersion/uncertainties overestimated"
+            else:
+                res = "Failed, over dispersion/uncertainties underestimated"
+        else:
+            res = "Failed"
     return (chi2_red, res)
 
 
@@ -793,7 +799,6 @@ def GESDtest(Tall, s1, ind, cr):
         x = Tall[ii]
         s = s1[ii]
         n = len(x)
-        # t = stats.t.isf(q=(cr / (2*n), df=n - 2)
         t = stats.t.ppf(q=(1 - cr / (2 * n)), df=n - 2)
         tau = (n - 1) * t / np.sqrt(n * (n - 2) + n * t * t)
         xs_min, xs_max = np.min(x + ss * s), np.max(x - ss * s)
@@ -817,12 +822,14 @@ def GESDtest(Tall, s1, ind, cr):
             i_min = [i for i in ind if s0[i] == smax]
 
         Twm, sm, MSWD = oneWM(x[ii], s[ii], conf)
-        if np.abs(xs_max - Twm) > np.abs(xs_min - Twm):
+        if np.abs(xs_max - Twm) > np.abs(xs_min - Twm) and xs_max >= Twm:
             i_far = i_max[-1]
             tau_far = np.abs(((x[i_far] - ss * s[i_far]) - Twm) / sm)
-        else:
+        elif np.abs(xs_max - Twm) <= np.abs(xs_min - Twm) and xs_min <= Twm:
             i_far = i_min[-1]
             tau_far = np.abs(((x[i_far] + ss * s[i_far]) - Twm) / sm)
+        else:
+            break
 
         if float(tau_far) < tau:
             break
@@ -1270,7 +1277,7 @@ def plot_oneD_weighted_mean(
         fontsize=legend_font_size,
     )
 
-    chi2_red, res_chi2_red = calc_chi2_red(Tall[ind], s1[ind], Twm, len(ind))
+    chi2_red, res_chi2_red = calc_chi2_red(Tall[ind], s1[ind], Twm, len(ind), opt=0)
 
     ax[axn].text(
         legend_pos_x[0],
@@ -2454,7 +2461,9 @@ if __name__ == "__main__":
         )
 
         # reduced chi-squared (Spencer2016gf)
-        chi2_red, res_chi2_red = calc_chi2_red(Tall[ind], s1[ind], T_owm, len(ind))
+        chi2_red, res_chi2_red = calc_chi2_red(
+            Tall[ind], s1[ind], T_owm, len(ind), opt=1
+        )
         print(
             u"    Reduced Chi-squared = %s (%s)"
             % (format(chi2_red, dignum), res_chi2_red)
