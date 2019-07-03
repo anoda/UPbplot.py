@@ -5,7 +5,7 @@
 	* quickgui and Qt4Agg are now obsolete.  Options '-g' and '-n' were deleted.
 
 	* Drivers Qt5Agg, TKAgg, and macosx can be selected by using option '-d'.
-	PyQt5 is required to be installed, if Qt5Agg is used.
+	PyQt5 should be installed, if Qt5Agg is used.
 
 	* GESDtest: install a test for excluding outliers by using generalized ESD test
 
