@@ -1,3 +1,24 @@
+2019-06-28  Version 009
+
+	Main script:
+
+	* quickgui and Qt4Agg are now obsolete.  Options '-g' and '-n' were deleted.
+
+	* Drivers Qt5Agg, TKAgg, and macosx can be selected by using option '-d'.
+	PyQt5 is required to be installed, if Qt5Agg is used.
+
+	* GESDtest: install a test for excluding outliers by using generalized ESD test
+
+	* calc_chi2_red: reduced chi-squared test for check the data set represents a single population
+
+	
+	Configuration file:
+
+	* New variables
+	opt_outlier: apply generalized ESD rejection test (1) or not (0)
+	outlier_alpha: confidence criteria for GESD test
+
+
 2019-03-05  Version 008
 
 	Main script:

@@ -18,7 +18,7 @@ concordia-intercept ages with errors on both concordia diagrams.
 License: Apache License, Version 2.0
 Author: Atsushi Noda
 Copyright: Geological Survey of Japan, AIST
-Publication date: Oct 30, 2017 (ver 0.0.5)
+Publication date: Jul 03, 2019 (ver 0.0.9)
 
 
 [Citation]
@@ -33,10 +33,9 @@ Japan, 68(3), 131-140.
 
 [Development environment]
 
-The script was written in Python 2.7.11 and tested on MacOSX
-(Yosemite) and Windows 10.  If you use it under Python 3, please
-modify lines using ``print'' function in the script.  Comments are
-added to the relevant lines.
+The script was written in Python 3.6.8 and tested on MacOSX
+(Mojave).  If you use it under Python 2, please modify lines using 
+``print'' function in the script.  Comments are added to the relevant lines.
 
 Mandatory and optional libraries are listed in [Preparation] section.
 
@@ -85,7 +84,7 @@ in a terminal window, for examples,
 
 $ python UPbplot.py -n -i data.csv -c data.cfg
 $ python UPbplot.py -n -i data.csv -d pdf -f
-$ python UPbplot.py -d qt4agg
+$ python UPbplot.py -d qt5agg
 
 
 The script assumes the configuration file name is "data.cfg" as

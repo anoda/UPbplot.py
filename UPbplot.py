@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2019/06/25 08:25:38.
+# Last updated: 2019/07/03 15:25:51.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -21,7 +21,8 @@
 # __version__ = "0.0.5"             # Oct/30/2017
 # __version__ = "0.0.6"  # Sep/12/2018
 # __version__ = "0.0.7"  # Jan/24/2019
-__version__ = "0.0.8"  # Jun/06/2019
+# __version__ = "0.0.8"  # Jun/06/2019
+__version__ = "0.0.9"  # Jun/28/2019
 
 # [Citation]
 #
@@ -78,7 +79,7 @@ __version__ = "0.0.8"  # Jun/06/2019
 #        -c FILE, --cfg=FILE   Name of configuration file
 #        -o FILE, --out=FILE   Name of output file (when pdf driver is used)
 #        -d DRIVER, --driver=DRIVER
-#                              Choose from [pdf (default), qt4agg]
+#                              Choose from [pdf (default), qt5agg]
 #        -f, --force-overwrite
 #                              Force overwrite the pre-existing pdf
 #
@@ -121,28 +122,6 @@ time_ma = np.array(list(range(1 * 10 ** 6, 4600 * 10 ** 6, 1 * 10 ** 6)))
 
 # ################################################
 # Setting of file names
-
-
-# input filename by quickgui
-def set_filename_input_gui(in_path, driver):
-    in_basename = os.path.basename(in_path)
-    in_name, in_ext = os.path.splitext(in_basename)
-    conf_path = in_path.replace(in_ext, ".cfg")
-    out_path = in_path.replace(in_ext, ".pdf")
-    in_dir = os.path.dirname(in_path)
-
-    return [in_path, out_path, conf_path]
-
-
-def get_path_quickgui(wildcard):
-    path = q.GetFile(
-        directory="",
-        filename="",
-        multiple=False,
-        wildcard="CSV (*.csv)|*.csv|TXT (*.txt)|*.txt",
-        title="Please select input data file",
-    )
-    return path
 
 
 # ------------------------------------------------
@@ -771,8 +750,87 @@ def discordance(
     return disc_percent
 
 
-# ################################################
-# Functions for plotting
+# ------------------------------------------------
+# Weighted mean and reduced chi-square
+# Spencer2016gf
+
+
+def calc_chi2_red(x, s1, wm, n):
+    # x: ages of each sample
+    # s1: errors (1 sigma) of each sample
+    # wm: weighted mean age
+    # n: number of sample
+    chi2_red = 1 / (n - 1) * np.sum((x - wm) ** 2 / s1 ** 2)
+    error_min = 1 - 2 * np.sqrt(2 / (n - 1))
+    error_max = 1 + 2 * np.sqrt(2 / (n - 1))
+    if (chi2_red <= error_max) & (chi2_red >= error_min):
+        res = "Passed"
+    else:
+        res = "Failed"
+    return (chi2_red, res)
+
+
+# ------------------------------------------------
+# Exclude outlier: Generalized ESD test: Rosner 1983
+# ESD (extreme Studentized deviate)
+#
+# https://www.itl.nist.gov/div898/handbook/eda/section3/eda35h3.htm
+#
+# Rosner, Bernard (May 1983), Percentage Points for a Generalized ESD Many-Outlier Procedure,Technometrics, 25(2), pp. 165-172.
+
+
+def GESDtest(Tall, s1, ind, cr):
+
+    conf = 1 - cr  # significant level is conf (e.g. 0.05)
+    ss = 2.0  # 2 sigma level
+    x0 = Tall[ind]
+    x = x0
+    s0 = s1[ind]
+    s = s0
+    ii = ind
+    oo = []
+    while True:
+        x = Tall[ii]
+        s = s1[ii]
+        n = len(x)
+        # t = stats.t.isf(q=(cr / (2*n), df=n - 2)
+        t = stats.t.ppf(q=(1 - cr / (2 * n)), df=n - 2)
+        tau = (n - 1) * t / np.sqrt(n * (n - 2) + n * t * t)
+        xs_min, xs_max = np.min(x + ss * s), np.max(x - ss * s)
+
+        i_max = [i for i in ind if x0[i] - ss * s0[i] == xs_max]
+        # if data have the multiple maximum values, the datum with large error will be excluded.
+        if len(i_max) > 1:
+            smax = s0.min()
+            for j in i_max:
+                if s0[j] > smax:
+                    smax = s0[j]
+            ii_max = [i for i in ind if s0[i] == smax]
+
+        i_min = [i for i in ind if x0[i] + ss * s0[i] == xs_min]
+        # if data have the multiple minimum values, the datum with larger error will be excluded.
+        if len(i_min) > 1:
+            smax = s0.min()
+            for j in i_min:
+                if s0[j] > smax:
+                    smax = s0[j]
+            i_min = [i for i in ind if s0[i] == smax]
+
+        Twm, sm, MSWD = oneWM(x[ii], s[ii], conf)
+        if np.abs(xs_max - Twm) > np.abs(xs_min - Twm):
+            i_far = i_max[-1]
+            tau_far = np.abs(((x[i_far] - ss * s[i_far]) - Twm) / sm)
+        else:
+            i_far = i_min[-1]
+            tau_far = np.abs(((x[i_far] + ss * s[i_far]) - Twm) / sm)
+
+        if float(tau_far) < tau:
+            break
+
+        ii = np.delete(ii, np.where(ii == i_far))
+
+    oo = np.setdiff1d(ind, ii)
+    return (ii, oo)
 
 
 # ------------------------------------------------
@@ -1212,6 +1270,17 @@ def plot_oneD_weighted_mean(
         fontsize=legend_font_size,
     )
 
+    chi2_red, res_chi2_red = calc_chi2_red(Tall[ind], s1[ind], Twm, len(ind))
+
+    ax[axn].text(
+        legend_pos_x[0],
+        legend_pos_y[3],
+        "$\chi^2_{red}$ = %s (%s)" % (format(chi2_red, dignum), res_chi2_red),
+        transform=ax[axn].transAxes,
+        verticalalignment="top",
+        fontsize=legend_font_size,
+    )
+
     return (Twm, sm, MSWD)
 
 
@@ -1305,28 +1374,12 @@ if __name__ == "__main__":
         type="string",
     )
     parser.add_option(
-        "-g",
-        "--gui",
-        help="Use GUI",
-        action="store_true",
-        dest="__gui__",
-        default=False,
-    )
-    parser.add_option(
-        "-n",
-        "--no-gui",
-        help="Do not use GUI",
-        action="store_false",
-        dest="__gui__",
-        default=False,
-    )
-    parser.add_option(
         "-d",
         "--driver",
         default="pdf",
         dest="driver",
-        choices=["qt4agg", "pdf"],
-        help="Choose driver [qt4agg, pdf (default)]",
+        choices=["Qt5Agg", "qt5agg", "pdf", "TKAgg", "tkagg", "macosx"],
+        help="Choose driver [Qt5Agg, TKAgg, maxosx, pdf (default)]",
     )
     parser.add_option(
         "-f",
@@ -1338,45 +1391,31 @@ if __name__ == "__main__":
     )
     (options, args) = parser.parse_args()
 
-    if "qt" in options.driver:
-        from PySide.QtCore import *
-
-        options.__gui__ = True
-        mpl.rcParams["backend.qt4"] = "PySide"
     mpl.use(options.driver)
     mpl.rcParams["pdf.fonttype"] = 42
     mpl.rcParams["ps.useafm"] = True
     mpl.rcParams["font.family"] = "Arial"
     import matplotlib.pyplot as plt
 
-    # GUI option
-    if options.__gui__:
-        import quickgui as q
+    # input filename is command-line argument or standard input
+    if options.inputfile:
+        infile = set_filename_input(options.inputfile)
+    else:
+        infile = set_filename_input()
 
-        infile_path = get_path_quickgui("*")
-        [infile, outfile, conffile] = set_filename_input_gui(
-            infile_path, options.driver
+    if options.cfgfile:
+        conffile = set_filename_conf(options.cfgfile)
+    else:
+        conffile = set_filename_conf(infile)
+
+    if options.outfile:
+        outfile = set_filename_output(
+            options.outfile, options.driver, options.opt_force_overwrite
         )
     else:
-        # input filename is command-line argument or standard input
-        if options.inputfile:
-            infile = set_filename_input(options.inputfile)
-        else:
-            infile = set_filename_input()
-
-        if options.cfgfile:
-            conffile = set_filename_conf(options.cfgfile)
-        else:
-            conffile = set_filename_conf(infile)
-
-        if options.outfile:
-            outfile = set_filename_output(
-                options.outfile, options.driver, options.opt_force_overwrite
-            )
-        else:
-            outfile = set_filename_output(
-                infile, options.driver, options.opt_force_overwrite
-            )
+        outfile = set_filename_output(
+            infile, options.driver, options.opt_force_overwrite
+        )
 
     # ################################################
     # Configuration
@@ -1397,6 +1436,8 @@ if __name__ == "__main__":
     opt_exclude_disc = config.getboolean("File", "opt_exclude_discordant_data")
     disc_thres = config.getfloat("File", "discordance_percent_threshold")
     disc_type = config.getint("File", "disc_type")
+    opt_outlier = config.getboolean("File", "opt_outlier")  # exclude outlier
+    outlier_alpha = config.getfloat("File", "outlier_alpha")  # significant level
     exclude_data_points = loads(config.get("File", "exclude_data_points"))
     opt_Th_U = config.getboolean("File", "opt_Th_U")
     Th_U_inverse = config.getboolean("File", "Th_U_inverse")
@@ -1727,24 +1768,8 @@ if __name__ == "__main__":
     else:
         ind = np.where(X)[0]
 
-    # ------------------------------------------------
-    # Number of data points
-
-    # total number
-    N = len(X)
-
-    # accepted data points
-    n_in = len(ind)
-
-    # rejected data points
-    n_out = len(outd)
-
     # ################################################
     # List of the configurations
-
-    if options.__gui__:
-        xprinter = q.XPrinter()
-        xprinter.on()
 
     # input file
     print("\n\n")
@@ -1777,8 +1802,18 @@ if __name__ == "__main__":
             "%.5f     %.5f   %.5f    %.5f    %.5f    %.5f"
             % (X[i], sigma_X[i], Y[i], sigma_Y[i], y[i], sigma_y[i])
         )
-    print("------------------------------------------------------------")
 
+    print("------------------------------------------------------------")
+    # Range of data
+    print("Range of data")
+    print("207Pb/235U: %.5f--%.5f" % (data["7Pb_5U"].min(), data["7Pb_5U"].max()))
+    print("206Pb/238U: %.5f--%.5f" % (data["6Pb_8U"].min(), data["6Pb_8U"].max()))
+    print("207Pb/206Pb: %.5f--%.5f" % (data["7Pb_6Pb"].min(), data["7Pb_6Pb"].max()))
+    print(
+        "238U/206Pb: %.5f--%.5f" % (1 / data["6Pb_8U"].max(), 1 / data["6Pb_8U"].min())
+    )
+
+    print("------------------------------------------------------------")
     # discordance
     if opt_exclude_disc:
         print(
@@ -1862,16 +1897,6 @@ if __name__ == "__main__":
     else:
         print("Discordant data are not excluded from calculation")
 
-    # excluded data points
-    if excluded_points:
-        # print('Manually excluded data points are'),  # python2
-        print("Manually excluded data points are", end=" ")  # python3
-        print(excluded_points)
-
-    # print('Accepted data points are [n = %d] are' % len(ind)),  # python2
-    print("Accepted data points [n = %d] are" % len(ind), end=" "),  # python3
-    print(ind)
-
     # ------------------------------------------------
     # exit if accepted data < 2
     if len(ind) < 2:
@@ -1909,6 +1934,53 @@ if __name__ == "__main__":
                 format(age_7Pb_6Pb_se_minus[i] / age_unit, dignum),
             )
         )
+
+    # ################################################
+    print("------------------------------------------------------------")
+    # Excluding outliers
+    if opt_outlier:
+        Tall, s1, label_selected = select_age_type(oneD_age_type)
+
+        # check for normality before GESD test
+        w, p = stats.shapiro(list(Tall))
+        if p < outlier_alpha:
+            print("Normality test: passed (p = %.2f)" % (p))
+        else:
+            print("Normality test: failed (p = %.2f)" % (p))
+
+        # generalize ESD test
+        ii, oo = GESDtest(Tall, s1, ind, outlier_alpha)
+        if len(ii) > 0:
+            ind = np.intersect1d(ind, ii)
+        if len(oo) > 0:
+            print("Outliers are ", end=" ")
+            print(oo)
+            outd = np.union1d(outd, oo)
+
+    # ------------------------------------------------
+    # Number of data points
+
+    # total number
+    N = len(X)
+
+    # accepted data points
+    n_in = len(ind)
+
+    # rejected data points
+    n_out = len(outd)
+
+    print("------------------------------------------------------------")
+    # excluded data points
+    if excluded_points:
+        # print('Manually excluded data points are'),  # python2
+        print("Manually excluded data points are", end=" ")  # python3
+        print(excluded_points)
+
+    # print('Accepted data points are [n = %d] are' % len(ind)),  # python2
+    print("Accepted data points [n = %d] are" % len(ind), end=" "),  # python3
+    print(ind)
+    print("Excluded data points [n = %d] are" % len(outd), end=" "),  # python3
+    print(outd)
 
     # ################################################
     # plotting
@@ -1957,7 +2029,7 @@ if __name__ == "__main__":
 
     if plot_diagrams[0] == 1:
         axn = 0
-        axn_title = "A"
+        axn_title = "a"
 
         print("------------------------------------------------------------")
         print(("%s: Conventional concordia diagram") % axn_title)
@@ -2148,10 +2220,10 @@ if __name__ == "__main__":
     if plot_diagrams[1] == 1:
         if plot_diagrams[0] == 1:
             axn = 1
-            axn_title = "B"
+            axn_title = "b"
         else:
             axn = 0
-            axn_title = "A"
+            axn_title = "a"
 
         print(("%s: Tera-Wasserburg concordia diagram") % axn_title)
 
@@ -2331,18 +2403,18 @@ if __name__ == "__main__":
                 )
 
     # ------------------------------------------------
-    # Bar plot of 206Pb/238U ages with 1D weighted mean
+    # C: Bar plot of 206Pb/238U ages with 1D weighted mean
 
     if plot_diagrams[2] == 1:
         if np.sum(plot_diagrams[0:2]) == 2:
             axn = 2
-            axn_title = "C"
+            axn_title = "c"
         elif np.sum(plot_diagrams[0:2]) == 1:
             axn = 1
-            axn_title = "B"
+            axn_title = "b"
         else:
             axn = 0
-            axn_title = "A"
+            axn_title = "a"
 
         print(("%s: One-dimensional bar plot") % axn_title)
 
@@ -2381,6 +2453,13 @@ if __name__ == "__main__":
             )
         )
 
+        # reduced chi-squared (Spencer2016gf)
+        chi2_red, res_chi2_red = calc_chi2_red(Tall[ind], s1[ind], T_owm, len(ind))
+        print(
+            u"    Reduced Chi-squared = %s (%s)"
+            % (format(chi2_red, dignum), res_chi2_red)
+        )
+
     # ------------------------------------------------
     # Histogram
     # Th/U and age histogram plots
@@ -2388,16 +2467,16 @@ if __name__ == "__main__":
     if plot_diagrams[3] == 1:
         if np.sum(plot_diagrams[0:3]) == 3:
             axn = 3
-            axn_title = "D"
+            axn_title = "d"
         elif np.sum(plot_diagrams[0:3]) == 2:
             axn = 2
-            axn_title = "C"
+            axn_title = "c"
         elif np.sum(plot_diagrams[0:3]) == 1:
             axn = 1
-            axn_title = "B"
+            axn_title = "b"
         else:
             axn = 0
-            axn_title = "A"
+            axn_title = "a"
 
         print(("%s: Histogram") % axn_title)
 
@@ -2429,6 +2508,8 @@ if __name__ == "__main__":
             ls = np.linspace(range_hist_x[0], range_hist_x[1], num=200)
             x = Tall
             x = x[(x > range_hist_x[0]) & (x < range_hist_x[1])]
+            if len(x) == 0:
+                sys.exit("Please set appropriate axis age range in configuration file.")
             kde_all = stats.gaussian_kde(x)
             kde_multi_all = len(x)  # replace len(ls) 20190606
 
@@ -2465,8 +2546,9 @@ if __name__ == "__main__":
 
             # ax[axn].yaxis.set_ticklabels(list(map(lambda x: "%0.2f" % x, ax_yticklocs)))
 
-            ax[axn].plot(ls, kde_all(ls), linestyle="--", color="red")
-            ax[axn].plot(ls, kde(ls), linestyle="-", color="red")
+            if opt_kde:
+                ax[axn].plot(ls, kde_all(ls), linestyle="--", color="red")
+                ax[axn].plot(ls, kde(ls), linestyle="-", color="red")
 
         else:
 
@@ -2481,8 +2563,12 @@ if __name__ == "__main__":
                 zorder=0,
                 range=ax[axn].get_xlim(),
             )
-            ax[axn].plot(ls, kde_all(ls) * kde_multi_all, linestyle="--", color="red")
-            ax[axn].plot(ls, kde(ls) * kde_multi, linestyle="-", color="red")
+
+            if opt_kde:
+                ax[axn].plot(
+                    ls, kde_all(ls) * kde_multi_all, linestyle="--", color="red"
+                )
+                ax[axn].plot(ls, kde(ls) * kde_multi, linestyle="-", color="red")
 
     print("All done.")
 
@@ -2494,7 +2580,3 @@ if __name__ == "__main__":
         plt.savefig(outfile)
     else:
         plt.show()
-
-    if options.__gui__:
-        q.Alert("Done")
-        xprinter.off()
