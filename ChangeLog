@@ -16,7 +16,7 @@
 
 	* New variables
 	opt_outlier: apply generalized ESD rejection test (1) or not (0)
-	outlier_alpha: confidence criteria for GESD test
+	outlier_alpha: significant level for GESD test
 
 
 2019-03-05  Version 008
