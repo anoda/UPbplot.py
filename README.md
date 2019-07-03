@@ -71,7 +71,7 @@ websites if you need such help.
    PyQt5: https://pypi.org/project/PyQt5/
 
 
-2. Copy and modify example data and configuration files in the working
+3. Copy and modify example data and configuration files in the working
    directory
 
    Data file: A comma- or tab-separated data sheet has at least six
