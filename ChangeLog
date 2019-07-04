@@ -2,6 +2,8 @@
 
 	Main script:
 
+	* fix a bug about calculation of the Terra--Wasserburg concordia age
+
 	* quickgui and Qt4Agg are now obsolete.  Options '-g' and '-n' were deleted.
 
 	* Drivers Qt5Agg, TKAgg, and macosx can be selected by using option '-d'.
