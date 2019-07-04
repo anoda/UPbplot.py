@@ -2,7 +2,7 @@
 
 	Main script:
 
-	* fix a bug about calculation of the Terra--Wasserburg concordia age
+	* modify equations about calculation of the Terra--Wasserburg concordia age
 
 	* quickgui and Qt4Agg are now obsolete.  Options '-g' and '-n' were deleted.
 
