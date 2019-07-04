@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2019/07/05 08:53:10.
+# Last updated: 2019/07/05 08:55:41.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -446,7 +446,7 @@ def ConcAgeConv(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
         FitFuncConv, Tinit, args=(X_bar, Y_bar, sigma_X_bar, sigma_Y_bar, rho_XY_bar)
     )[0][0]
     # eq(3)
-    oi = np.linalg.inv([[sigma_x_bar ** 2, cov_xy_bar], [cov_xy_bar, sigma_y_bar ** 2]])
+    oi = np.linalg.inv([[sigma_X_bar ** 2, cov_XY_bar], [cov_XY_bar, sigma_Y_bar ** 2]])
     # eq(14)
     Q235 = l235U * np.exp(l235U * T_leastsq)
     Q238 = l238U * np.exp(l238U * T_leastsq)
