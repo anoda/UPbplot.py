@@ -89,13 +89,13 @@ a: Conventional concordia diagram
     P-value concordance / equivalence / combined = 0.00 / 0.00 / 0.00
     Intercept age = 69.09 +0.91 -1.13 Ma [95% conf.]
 b: Tera-Wasserburg concordia diagram
-    Concordia age = 69.53 ± 0.36 [95% conf.] / ± 0.98 [t√MSWD] Ma
-    MSWD concordance / equivalence / combined = 159.24 / 4.54 / 7.35
+    Concordia age = 69.70 ± 0.36 [95% conf.] / ± 0.98 [t√MSWD] Ma
+    MSWD concordance / equivalence / combined = 159.61 / 4.55 / 7.37
     P-value concordance / equivalence / combined = 0.00 / 0.00 / 0.00
     Intercept age = 69.20 +0.37 -0.45 Ma [95% conf.]
 c: One-dimensional bar plot
     1D weighted mean age = 69.67 ± 0.37 Ma [95% conf.] (MSDW=2.03)
-    Reduced Chi-squared = 2.03 (Failed, over dispersion/uncertainties underestimated)
+    Reduced Chi-squared = 2.03 (Failed, over dispersion or uncertainties underestimated)
 d: Histogram
 All done.
 Saving Gonzalez-Leon2011Geosphere_Fig8I.pdf

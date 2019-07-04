@@ -64,9 +64,9 @@ a: Conventional concordia diagram
     Intercept age = 79.30 +2.57 -9.84 Ma [95% conf.]
     Intercept age = 82.38 +0.75 -0.96 Ma [95% conf.]
 b: Tera-Wasserburg concordia diagram
-    Concordia age = 82.00 ± 0.66 [95% conf.] / ± 0.83 [t√MSWD] Ma
-    MSWD concordance / equivalence / combined = 8.51 / 1.38 / 1.61
-    P-value concordance / equivalence / combined = 0.00 / 0.08 / 0.02
+    Concordia age = 82.09 ± 0.66 [95% conf.] / ± 0.84 [t√MSWD] Ma
+    MSWD concordance / equivalence / combined = 8.40 / 1.40 / 1.62
+    P-value concordance / equivalence / combined = 0.00 / 0.07 / 0.02
     Intercept age = 79.74 +1.94 0.54 Ma [95% conf.]
     Intercept age = 82.43 +1.10 -0.72 Ma [95% conf.]
 c: One-dimensional bar plot

@@ -54,12 +54,12 @@ a: Conventional concordia diagram
     MSWD concordance / equivalence / combined = 0.00 / 1.77 / 1.71
     P-value concordance / equivalence / combined = 0.99 / 0.01 / 0.01
 b: Tera-Wasserburg concordia diagram
-    Concordia age = 319.5 ± 2.5 [95% conf.] / ± 3.3 [t√MSWD] Ma
-    MSWD concordance / equivalence / combined = 0.02 / 1.78 / 1.72
-    P-value concordance / equivalence / combined = 0.88 / 0.01 / 0.01
+    Concordia age = 320.0 ± 2.5 [95% conf.] / ± 3.4 [t√MSWD] Ma
+    MSWD concordance / equivalence / combined = 0.06 / 1.81 / 1.75
+    P-value concordance / equivalence / combined = 0.80 / 0.01 / 0.01
 c: One-dimensional bar plot
     1D weighted mean age = 319.6 ± 2.6 Ma [95% conf.] (MSDW=2.2)
-    Reduced Chi-squared = 2.2 (Failed, over dispersion/uncertainties underestimated)
+    Reduced Chi-squared = 2.2 (Failed, over dispersion or uncertainties underestimated)
 d: Histogram
 All done.
 Saving Li2016Lithos_Ash1.pdf
