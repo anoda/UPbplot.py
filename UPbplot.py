@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2019/07/04 19:39:22.
+# Last updated: 2019/07/05 08:53:10.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -446,16 +446,14 @@ def ConcAgeConv(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
         FitFuncConv, Tinit, args=(X_bar, Y_bar, sigma_X_bar, sigma_Y_bar, rho_XY_bar)
     )[0][0]
     # eq(3)
-    o11 = sigma_Y_bar ** 2 / ((sigma_X_bar ** 2) * (sigma_Y_bar ** 2) - cov_XY_bar ** 2)
-    # eq(3)
-    o22 = sigma_X_bar ** 2 / ((sigma_X_bar ** 2) * (sigma_Y_bar ** 2) - cov_XY_bar ** 2)
-    # eq(3)
-    o12 = -cov_XY_bar / ((sigma_X_bar ** 2) * (sigma_Y_bar ** 2) - cov_XY_bar ** 2)
+    oi = np.linalg.inv([[sigma_x_bar ** 2, cov_xy_bar], [cov_xy_bar, sigma_y_bar ** 2]])
     # eq(14)
     Q235 = l235U * np.exp(l235U * T_leastsq)
     Q238 = l238U * np.exp(l238U * T_leastsq)
     # eq(13)
-    QQ = (Q235 ** 2 * o11 + Q238 ** 2 * o22 + 2 * Q235 * Q238 * o12) ** (-1)
+    QQ = (Q235 ** 2 * oi[0][0] + Q238 ** 2 * oi[1][1] + 2 * Q235 * Q238 * oi[0][1]) ** (
+        -1
+    )
     T_1sigma = np.sqrt(QQ)
     T_sigma = stats.norm.ppf(conf + (1 - conf) / 2.0) * T_1sigma
     S_bar = FitFuncConv(T_leastsq, X_bar, Y_bar, sigma_X_bar, sigma_Y_bar, rho_XY_bar)
@@ -515,11 +513,9 @@ def ConcAgeTW(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
         FitFuncTW, Tinit, args=(x_bar, y_bar, sigma_x_bar, sigma_y_bar, rho_xy_bar)
     )[0][0]
     # eq(3)
-    o11 = sigma_y_bar ** 2 / ((sigma_x_bar ** 2) * (sigma_y_bar ** 2) - cov_xy_bar ** 2)
-    o22 = sigma_x_bar ** 2 / ((sigma_x_bar ** 2) * (sigma_y_bar ** 2) - cov_xy_bar ** 2)
-    o12 = -cov_xy_bar / ((sigma_x_bar ** 2) * (sigma_y_bar ** 2) - cov_xy_bar ** 2)
-    # modified from eq(14)
-    # A and B are derivative of x and y, respectively.
+    oi = np.linalg.inv([[sigma_x_bar ** 2, cov_xy_bar], [cov_xy_bar, sigma_y_bar ** 2]])
+    # modified from eq(14) using eq(10, 11)
+    # A and B are derivative of x(t) and y(t), respectively.
     A = -l238U * np.exp(l238U * Ttw_leastsq) / (np.exp(l238U * Ttw_leastsq) - 1) ** 2
     B = (
         1
@@ -531,7 +527,7 @@ def ConcAgeTW(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
         / (np.exp(l238U * Ttw_leastsq) - 1) ** 2
     )
     # eq(13)
-    QQtw = (A ** 2 * o11 + B ** 2 * o22 + 2 * A * B * o12) ** (-1)
+    QQtw = (A ** 2 * oi[0][0] + B ** 2 * oi[1][1] + 2 * A * B * oi[0][1]) ** (-1)
     Ttw_1sigma = np.sqrt(QQtw)
     Ttw_sigma = stats.norm.ppf(conf + (1 - conf) / 2.0) * Ttw_1sigma
     S_bar = FitFuncTW(Ttw_leastsq, x_bar, y_bar, sigma_x_bar, sigma_y_bar, rho_xy_bar)
