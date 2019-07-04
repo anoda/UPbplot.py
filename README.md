@@ -86,9 +86,9 @@ websites if you need such help.
 After installation of libraries listed above, you can run the script
 in a terminal window, for examples,
 
-	$ python UPbplot.py -i data.csv -c data.cfg
-	$ python UPbplot.py -i data.csv -d pdf -f
-	$ python UPbplot.py -d qt5agg
+	$ python3 UPbplot.py -i data.csv -c data.cfg
+	$ python3 UPbplot.py -i data.csv -d pdf -f
+	$ python3 UPbplot.py -d qt5agg
 
 The script assumes the configuration file name is "data.cfg" as
 defaults, if the input data file name is "data.csv".
