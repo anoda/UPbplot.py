@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2019/07/04 19:17:10.
+# Last updated: 2019/07/04 19:39:22.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -521,7 +521,15 @@ def ConcAgeTW(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
     # modified from eq(14)
     # A and B are derivative of x and y, respectively.
     A = -l238U * np.exp(l238U * Ttw_leastsq) / (np.exp(l238U * Ttw_leastsq) - 1) ** 2
-    B = 1 / U85r * l235U * np.exp(l235U * Ttw_leastsq) * A
+    B = (
+        1
+        / U85r
+        * (
+            l235U * np.exp(l235U * Ttw_leastsq) * (np.exp(l238U * Ttw_leastsq) - 1)
+            - l238U * np.exp(l238U * Ttw_leastsq) * (np.exp(l235U * Ttw_leastsq) - 1)
+        )
+        / (np.exp(l238U * Ttw_leastsq) - 1) ** 2
+    )
     # eq(13)
     QQtw = (A ** 2 * o11 + B ** 2 * o22 + 2 * A * B * o12) ** (-1)
     Ttw_1sigma = np.sqrt(QQtw)
