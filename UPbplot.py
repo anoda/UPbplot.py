@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2019/07/05 08:55:41.
+# Last updated: 2019/07/05 09:11:45.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -481,11 +481,13 @@ def ConcAgeConv(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
     )
 
 
-# Tera-Wasserburg concordia curve (p. 668 in Ludwig, 1998)
+# Tera-Wasserburg concordia age
 def ConcAgeTW(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
-    # x = U85r * Yi / Xi
-    # y = 1.0 / Xi
-    # sigma_x = (
+
+    # # Follow the method of p. 668 in Ludwig1998gca
+    # X = U85r * Yi / Xi
+    # Y = 1.0 / Xi
+    # sigma_X = (
     #     np.sqrt(
     #         (
     #             (sigma_Xi / Xi) ** 2
@@ -493,12 +495,30 @@ def ConcAgeTW(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
     #             - 2 * (sigma_Xi / Xi) * (sigma_Yi / Yi) * rhoXYi
     #         )
     #     )
-    #     * x
+    #     * X
     # )
-    # sigma_y = sigma_Xi / Xi * y
-    # rhoxy = ((sigma_Xi / Xi) ** 2 - (sigma_Xi / Xi) * (sigma_Yi / Yi) * rhoXYi) / (
-    #     (sigma_x / x) * (sigma_y / y)
+    # sigma_Y = sigma_Xi / Xi * Y
+    # rhoXY = ((sigma_Xi / Xi) ** 2 - (sigma_Xi / Xi) * (sigma_Yi / Yi) * rhoXYi) / (
+    #     (sigma_X / X) * (sigma_Y / Y)
     # )
+    # X_bar, Y_bar, MSWD_bar, sigma_X_bar, sigma_Y_bar, cov_XY_bar = twoWM(
+    #     X, Y, sigma_X, sigma_Y, rhoXY, conf
+    # )
+    # rho_XY_bar = cov_XY_bar / (sigma_X_bar * sigma_Y_bar)
+    # T_leastsq = optimize.leastsq(
+    #     FitFuncConv, Tinit, args=(X_bar, Y_bar, sigma_X_bar, sigma_Y_bar, rho_XY_bar)
+    # )[0][0]
+    # OI = np.linalg.inv([[sigma_X_bar ** 2, cov_XY_bar], [cov_XY_bar, sigma_Y_bar ** 2]])
+    # Q235 = l235U * np.exp(l235U * T_leastsq)
+    # Q238 = l238U * np.exp(l238U * T_leastsq)
+    # QQ = (Q235 ** 2 * OI[0][0] + Q238 ** 2 * OI[1][1] + 2 * Q235 * Q238 * OI[0][1]) ** (
+    #     -1
+    # )
+    # T_1sigma = np.sqrt(QQ)
+    # T_sigma = stats.norm.ppf(conf + (1 - conf) / 2.0) * T_1sigma
+    # S_bar = FitFuncConv(T_leastsq, X_bar, Y_bar, sigma_X_bar, sigma_Y_bar, rho_XY_bar)
+    # S = FitFuncConv(T_leastsq, X, Y, sigma_X, sigma_Y, rhoXY)
+
     x = Xi  # eq. (21) = 1/(np.exp(l238U * t) - 1)
     y = Yi  # eq. (22) = 1/U85r * (np.exp(l235U * t) - 1)/(np.exp(l238U * t) - 1)
     sigma_x = sigma_Xi
@@ -509,29 +529,29 @@ def ConcAgeTW(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
         x, y, sigma_x, sigma_y, rhoxy, conf
     )
     rho_xy_bar = cov_xy_bar / (sigma_x_bar * sigma_y_bar)
-    Ttw_leastsq = optimize.leastsq(
+    T_leastsq = optimize.leastsq(
         FitFuncTW, Tinit, args=(x_bar, y_bar, sigma_x_bar, sigma_y_bar, rho_xy_bar)
     )[0][0]
     # eq(3)
     oi = np.linalg.inv([[sigma_x_bar ** 2, cov_xy_bar], [cov_xy_bar, sigma_y_bar ** 2]])
     # modified from eq(14) using eq(10, 11)
     # A and B are derivative of x(t) and y(t), respectively.
-    A = -l238U * np.exp(l238U * Ttw_leastsq) / (np.exp(l238U * Ttw_leastsq) - 1) ** 2
+    A = -l238U * np.exp(l238U * T_leastsq) / (np.exp(l238U * T_leastsq) - 1) ** 2
     B = (
         1
         / U85r
         * (
-            l235U * np.exp(l235U * Ttw_leastsq) * (np.exp(l238U * Ttw_leastsq) - 1)
-            - l238U * np.exp(l238U * Ttw_leastsq) * (np.exp(l235U * Ttw_leastsq) - 1)
+            l235U * np.exp(l235U * T_leastsq) * (np.exp(l238U * T_leastsq) - 1)
+            - l238U * np.exp(l238U * T_leastsq) * (np.exp(l235U * T_leastsq) - 1)
         )
-        / (np.exp(l238U * Ttw_leastsq) - 1) ** 2
+        / (np.exp(l238U * T_leastsq) - 1) ** 2
     )
     # eq(13)
     QQtw = (A ** 2 * oi[0][0] + B ** 2 * oi[1][1] + 2 * A * B * oi[0][1]) ** (-1)
-    Ttw_1sigma = np.sqrt(QQtw)
-    Ttw_sigma = stats.norm.ppf(conf + (1 - conf) / 2.0) * Ttw_1sigma
-    S_bar = FitFuncTW(Ttw_leastsq, x_bar, y_bar, sigma_x_bar, sigma_y_bar, rho_xy_bar)
-    S = FitFuncTW(Ttw_leastsq, x, y, sigma_x, sigma_y, rhoxy)
+    T_1sigma = np.sqrt(QQtw)
+    T_sigma = stats.norm.ppf(conf + (1 - conf) / 2.0) * T_1sigma
+    S_bar = FitFuncTW(T_leastsq, x_bar, y_bar, sigma_x_bar, sigma_y_bar, rho_xy_bar)
+    S = FitFuncTW(T_leastsq, x, y, sigma_x, sigma_y, rhoxy)
 
     df_concordance = 1.0
     df_equivalence = 2.0 * len(Xi) - 2
@@ -544,8 +564,8 @@ def ConcAgeTW(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
     P_value_conc = 1 - stats.chi2.cdf(S_bar, df_concordance)
 
     return (
-        Ttw_leastsq,
-        Ttw_sigma,
+        T_leastsq,
+        T_sigma,
         MSWD_concordance,
         MSWD_equivalence,
         MSWD_combined,
