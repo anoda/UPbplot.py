@@ -23,9 +23,6 @@ concordia-intercept ages with errors on both concordia diagrams.
 
 [Citation]
 
-Noda, Atsushi (2016) UPbplot.py: A python script for U-Pb age data
-analysis. Open-File Report, no. 634, Geological Survey of Japan, AIST.
-
 Noda, Atsushi (2017) A new tool for calculation and visualization
 of U-Pb age data: UPbplot.py.  Bulletin of the Geological Survey of
 Japan, 68(3), 131-140.
@@ -33,7 +30,7 @@ Japan, 68(3), 131-140.
 
 [Development environment]
 
-The script was written in Python 3.6.8 and tested on MacOSX
+The script was written in Python 3.8.2 and tested on MacOSX
 (Mojave).  If you use it under Python 2, please modify lines using 
 print function in the script.  Comments are added to the relevant lines.
 

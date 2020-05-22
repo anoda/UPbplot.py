@@ -1,3 +1,31 @@
+2020-05-22  Version 010
+
+	Main script:
+
+	Modified following function for the new option of discordance (disc_type = 5).  
+
+	* myEllipse: replace matplotlib.patches.Ellipse with plotting by numerical points
+
+	* plot_2D_wm: Adjust for modification of myEllipse.
+
+	Add new functions for the new option of discordance (disc_type = 5).
+
+	* intersections_ellipse: Detect intersections between the error ellipse and concordia line.
+
+	* intersections_line: Reshape concordia line for calculation of intersections.
+
+	* plot_data_point_error_ellipse_disc: plotting function for disc_type = 5.
+
+	Configuration file:
+
+	* New variables
+	oneD_yaxis_log: use log scale for 1D bar plot.
+
+	* New option
+	disc_type: The fifth option for identifying discordant data.  If we use disc_type = 5, the data points whose error ellipses do not intersect the concordia line are classified to discordant data.
+
+
+
 2019-07-03  Version 009
 
 	Main script:
