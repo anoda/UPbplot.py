@@ -1,8 +1,21 @@
+2020-05-23  Version 1.0.0
+
+	Configuration file:
+
+	* New variable
+	oneD_plot_sort: Plot sorted age data for 1D bar plot.
+
+
+	Main script:
+
+	* plot_oneD_weighted_mean: Modified for the new variable (oneD_plot_sort)
+
+
 2020-05-22  Version 010
 
 	Main script:
 
-	Modified following function for the new option of discordance (disc_type = 5).  
+	Modified following functions for the new option of discordance (disc_type = 5).  
 
 	* myEllipse: replace matplotlib.patches.Ellipse with plotting by numerical points
 
@@ -11,14 +24,13 @@
 	Add new functions for the new option of discordance (disc_type = 5).
 
 	* intersections_ellipse: Detect intersections between the error ellipse and concordia line.
-
-	* intersections_line: Reshape concordia line for calculation of intersections.
+	Shapely (Current version 1.7.0) is required for this function.
 
 	* plot_data_point_error_ellipse_disc: plotting function for disc_type = 5.
 
 	Configuration file:
 
-	* New variables
+	* New variable
 	oneD_yaxis_log: use log scale for 1D bar plot.
 
 	* New option

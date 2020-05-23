@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2020/05/22 21:38:20.
+# Last updated: 2020/05/23 11:32:01.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -23,7 +23,8 @@
 # __version__ = "0.0.7"  # Jan/24/2019
 # __version__ = "0.0.8"  # Jun/06/2019
 # __version__ = "0.0.9"  # Jul/03/2019
-__version__ = "0.1.0"  # May/22/2020
+# __version__ = "0.1.0"  # May/22/2020
+__version__ = "0.1.1"  # May/23/2020
 
 # [Citation]
 #
@@ -114,15 +115,15 @@ debug = 1
 # ################################################
 # Initial coefficient
 
-l238U = 1.55125 * 10**(-10)  # lambda_238U
-l235U = 9.8485 * 10**(-10)  # lambda_235U
-l232Th = 4.9475 * 10**(-11)  # lambda_232Th
+l238U = 1.55125 * 10 ** (-10)  # lambda_238U
+l235U = 9.8485 * 10 ** (-10)  # lambda_235U
+l232Th = 4.9475 * 10 ** (-11)  # lambda_232Th
 U85r = 137.818  # 238U/235U
 
 # Time (year)
-time_ka = np.array(list(range(1000, 5 * 10**6, 1 * 10**3)))  # 1-5000 ka
+time_ka = np.array(list(range(1000, 5 * 10 ** 6, 1 * 10 ** 3)))  # 1-5000 ka
 # 1-4601 Ma
-time_ma = np.array(list(range(1 * 10**6, 4600 * 10**6, 1 * 10**6)))
+time_ma = np.array(list(range(1 * 10 ** 6, 4600 * 10 ** 6, 1 * 10 ** 6)))
 
 # ################################################
 # Setting of file names
@@ -167,8 +168,7 @@ def set_filename_conf(filename):
                     # conffile = raw_input()  # python2
                     conffile = input()  # python3
                     if not os.path.exists(conffile):
-                        sys.exit(
-                            "Configuration file %s is not found.") % conffile
+                        sys.exit("Configuration file %s is not found.") % conffile
     return conffile
 
 
@@ -180,8 +180,7 @@ def set_filename_output(filename, driver, opt_force_overwrite):
             # print(('Output file %s exists.') % outfile)
             if not (opt_force_overwrite):
                 # answer = raw_input('Do you set a new file name?: [y/N] ')  #
-                answer = input(
-                    "Do you set a new file name?: [y/N] ")  # python3
+                answer = input("Do you set a new file name?: [y/N] ")  # python3
                 if (len(answer) != 0) and (answer or answer[0].lower()) == "y":
                     print("Please enter output file name (*.pdf): ")
                     # outfile = raw_input()  # python2
@@ -200,7 +199,7 @@ def set_filename_output(filename, driver, opt_force_overwrite):
 
 def ConcLineConv(t):
     X = np.exp(l235U * t) - 1
-    Y = (X + 1)**(l238U / l235U) - 1
+    Y = (X + 1) ** (l238U / l235U) - 1
     return (X, Y)
 
 
@@ -234,7 +233,7 @@ def PlotConcConv(ax, axn, Xconv, Yconv, time, age_unit, L, legend_font_size):
 
 def ConcLineTW(t):
     X = 1.0 / (np.exp(l238U * t) - 1)
-    Y = ((1.0 / X + 1.0)**(l235U / l238U) - 1.0) * X / U85r
+    Y = ((1.0 / X + 1.0) ** (l235U / l238U) - 1.0) * X / U85r
     return (X, Y)
 
 
@@ -298,15 +297,13 @@ def calc_age_7Pb_6Pb(age_unit, j, je, age_7Pb_6Pb, conf):
     age_7Pb_6Pb_lower = np.empty(len(j))  # lower 7Pb/6Pb age
     cr = stats.norm.ppf(conf + (1 - conf) / 2.0)
     for i in range(len(j)):
-        age_7Pb_6Pb[i] = optimize.leastsq(func_age_7Pb_6Pb,
-                                          age_unit,
-                                          args=(j[i]))[0][0]
-        age_7Pb_6Pb_upper[i] = optimize.leastsq(func_age_7Pb_6Pb,
-                                                age_unit,
-                                                args=(j[i] + je[i] * cr))[0][0]
-        age_7Pb_6Pb_lower[i] = optimize.leastsq(func_age_7Pb_6Pb,
-                                                age_unit,
-                                                args=(j[i] - je[i] * cr))[0][0]
+        age_7Pb_6Pb[i] = optimize.leastsq(func_age_7Pb_6Pb, age_unit, args=(j[i]))[0][0]
+        age_7Pb_6Pb_upper[i] = optimize.leastsq(
+            func_age_7Pb_6Pb, age_unit, args=(j[i] + je[i] * cr)
+        )[0][0]
+        age_7Pb_6Pb_lower[i] = optimize.leastsq(
+            func_age_7Pb_6Pb, age_unit, args=(j[i] - je[i] * cr)
+        )[0][0]
         age_7Pb_6Pb_se_plus[i] = age_7Pb_6Pb_upper[i] - age_7Pb_6Pb[i]
         age_7Pb_6Pb_se_minus[i] = age_7Pb_6Pb[i] - age_7Pb_6Pb_lower[i]
         if age_7Pb_6Pb[i] < 0.0:
@@ -362,15 +359,9 @@ def eigsorted(cov):
 
 
 def myEllipse(
-    i,
-    x,
-    y,
-    sigma_x,
-    sigma_y,
-    cov_xy,
-    conf="none",
+    i, x, y, sigma_x, sigma_y, cov_xy, conf="none",
 ):
-    cov = ([sigma_x**2, cov_xy], [cov_xy, sigma_y**2])
+    cov = ([sigma_x ** 2, cov_xy], [cov_xy, sigma_y ** 2])
     vals, vecs = eigsorted(cov)
     theta = np.degrees(np.arctan2(*vecs[:, 0][::-1]))
     if (vals[0] < 0.0) | (vals[1] < 0.0):
@@ -386,7 +377,7 @@ def myEllipse(
         angle = np.deg2rad(theta)
         sa = np.sin(angle)
         ca = np.cos(angle)
-        p = np.empty((n, 2))
+        # p = np.empty((n, 2))
         xx = x + width / 2 * ca * ct - height / 2 * sa * st
         yy = y + width / 2 * sa * ct + height / 2 * ca * st
     return (xx, yy)
@@ -398,14 +389,13 @@ def myEllipse(
 
 
 def oneWM(X, s1, conf):
-    w = s1**(-2) / np.sum(s1**(-2))  # weight
+    w = s1 ** (-2) / np.sum(s1 ** (-2))  # weight
     Twm = np.sum(w * X)  # weight mean of age
-    S = np.sum((X - Twm)**2 / s1**2)  # S
+    S = np.sum((X - Twm) ** 2 / s1 ** 2)  # S
     # Mean Square of the Weighted Deviation
     MSWD = S / (len(X) - 1)
     # standard deviation of the weighted mean [eq. 66]
-    sm = stats.norm.ppf(conf +
-                        (1 - conf) / 2.0) * np.sqrt(1.0 / np.sum(s1**(-2)))
+    sm = stats.norm.ppf(conf + (1 - conf) / 2.0) * np.sqrt(1.0 / np.sum(s1 ** (-2)))
 
     # # p.177 in Talyer1997book
     # w = s1**(-2)                # weight
@@ -426,31 +416,31 @@ def twoWM(Xi, Yi, sXi, sYi, rhoXYi, conf):
     #    sX, sY: SD of X or Y
     N = len(Xi)
     covXYi = rhoXYi * sXi * sYi
-    o11 = sYi**2 / ((sXi**2) * (sYi**2) - covXYi**2)  # eq(3)
-    o22 = sXi**2 / ((sXi**2) * (sYi**2) - covXYi**2)  # eq(3)
-    o12 = -covXYi / ((sXi**2) * (sYi**2) - covXYi**2)  # eq(3)
+    o11 = sYi ** 2 / ((sXi ** 2) * (sYi ** 2) - covXYi ** 2)  # eq(3)
+    o22 = sXi ** 2 / ((sXi ** 2) * (sYi ** 2) - covXYi ** 2)  # eq(3)
+    o12 = -covXYi / ((sXi ** 2) * (sYi ** 2) - covXYi ** 2)  # eq(3)
     # eq(6)
-    x_bar = (np.sum(o22) * np.sum(Xi * o11 + Yi * o12) -
-             np.sum(o12) * np.sum(Yi * o22 + Xi * o12)) / (
-                 np.sum(o11) * np.sum(o22) - np.sum(o12)**2)
+    x_bar = (
+        np.sum(o22) * np.sum(Xi * o11 + Yi * o12)
+        - np.sum(o12) * np.sum(Yi * o22 + Xi * o12)
+    ) / (np.sum(o11) * np.sum(o22) - np.sum(o12) ** 2)
     # eq(7)
-    y_bar = (np.sum(o11) * np.sum(Yi * o22 + Xi * o12) -
-             np.sum(o12) * np.sum(Xi * o11 + Yi * o12)) / (
-                 np.sum(o11) * np.sum(o22) - np.sum(o12)**2)
+    y_bar = (
+        np.sum(o11) * np.sum(Yi * o22 + Xi * o12)
+        - np.sum(o12) * np.sum(Xi * o11 + Yi * o12)
+    ) / (np.sum(o11) * np.sum(o22) - np.sum(o12) ** 2)
     # eq(2)
     (Ri, ri) = (Xi - x_bar, Yi - y_bar)
     # eq(4)
-    S = np.sum(((Ri**2.0) * o11) + ((ri**2.0) * o22) + (2.0 * Ri * ri * o12))
+    S = np.sum(((Ri ** 2.0) * o11) + ((ri ** 2.0) * o22) + (2.0 * Ri * ri * o12))
     # eq(8)
     MSWD = S / (2 * N - 2)
     # eq(9)
-    sigma_x_bar = np.sqrt(
-        np.sum(o22) / (np.sum(o11) * np.sum(o22) - np.sum(o12)**2))
+    sigma_x_bar = np.sqrt(np.sum(o22) / (np.sum(o11) * np.sum(o22) - np.sum(o12) ** 2))
     # eq(9)
-    sigma_y_bar = np.sqrt(
-        np.sum(o11) / (np.sum(o11) * np.sum(o22) - np.sum(o12)**2))
+    sigma_y_bar = np.sqrt(np.sum(o11) / (np.sum(o11) * np.sum(o22) - np.sum(o12) ** 2))
     # eq(9)
-    cov_xy_bar = -np.sum(o12) / (np.sum(o11) * np.sum(o22) - np.sum(o12)**2)
+    cov_xy_bar = -np.sum(o12) / (np.sum(o11) * np.sum(o22) - np.sum(o12) ** 2)
     return (x_bar, y_bar, MSWD, sigma_x_bar, sigma_y_bar, cov_xy_bar)
 
 
@@ -464,41 +454,39 @@ def FitFuncConv(t, x, y, sigma_x, sigma_y, rho_xy):
     A = (x - (np.exp(l235U * t) - 1)) / sigma_x
     B = (y - (np.exp(l238U * t) - 1)) / sigma_y
     # eq(5)
-    S = np.sum((A**2 + B**2 - 2 * A * B * rho_xy) / (1 - rho_xy**2))
+    S = np.sum((A ** 2 + B ** 2 - 2 * A * B * rho_xy) / (1 - rho_xy ** 2))
     return S
 
 
 # Terra-Wasserburg concordia curve by Ludwig (1998)
 def FitFuncTW(t, x, y, sigma_x, sigma_y, rho_xy):
     A = (x - 1 / (np.exp(l238U * t) - 1)) / sigma_x
-    B = (y - (1 / U85r) * (np.exp(l235U * t) - 1) /
-         (np.exp(l238U * t) - 1)) / sigma_y
+    B = (y - (1 / U85r) * (np.exp(l235U * t) - 1) / (np.exp(l238U * t) - 1)) / sigma_y
     # eq(5)
-    S = np.sum((A**2 + B**2 - 2 * A * B * rho_xy) / (1 - rho_xy**2))
+    S = np.sum((A ** 2 + B ** 2 - 2 * A * B * rho_xy) / (1 - rho_xy ** 2))
     return S
 
 
-def ConcAgeConv(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0**6, conf=0.95):
+def ConcAgeConv(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
     X_bar, Y_bar, MSWD_bar, sigma_X_bar, sigma_Y_bar, cov_XY_bar = twoWM(
-        Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, conf)
+        Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, conf
+    )
     rho_XY_bar = cov_XY_bar / (sigma_X_bar * sigma_Y_bar)
-    T_leastsq = optimize.leastsq(FitFuncConv,
-                                 Tinit,
-                                 args=(X_bar, Y_bar, sigma_X_bar, sigma_Y_bar,
-                                       rho_XY_bar))[0][0]
+    T_leastsq = optimize.leastsq(
+        FitFuncConv, Tinit, args=(X_bar, Y_bar, sigma_X_bar, sigma_Y_bar, rho_XY_bar)
+    )[0][0]
     # eq(3)
-    oi = np.linalg.inv([[sigma_X_bar**2, cov_XY_bar],
-                        [cov_XY_bar, sigma_Y_bar**2]])
+    oi = np.linalg.inv([[sigma_X_bar ** 2, cov_XY_bar], [cov_XY_bar, sigma_Y_bar ** 2]])
     # eq(14)
     Q235 = l235U * np.exp(l235U * T_leastsq)
     Q238 = l238U * np.exp(l238U * T_leastsq)
     # eq(13)
-    QQ = (Q235**2 * oi[0][0] + Q238**2 * oi[1][1] +
-          2 * Q235 * Q238 * oi[0][1])**(-1)
+    QQ = (Q235 ** 2 * oi[0][0] + Q238 ** 2 * oi[1][1] + 2 * Q235 * Q238 * oi[0][1]) ** (
+        -1
+    )
     T_1sigma = np.sqrt(QQ)
     T_sigma = stats.norm.ppf(conf + (1 - conf) / 2.0) * T_1sigma
-    S_bar = FitFuncConv(T_leastsq, X_bar, Y_bar, sigma_X_bar, sigma_Y_bar,
-                        rho_XY_bar)
+    S_bar = FitFuncConv(T_leastsq, X_bar, Y_bar, sigma_X_bar, sigma_Y_bar, rho_XY_bar)
     S = FitFuncConv(T_leastsq, Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi)
 
     df_concordance = 1
@@ -524,7 +512,7 @@ def ConcAgeConv(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0**6, conf=0.95):
 
 
 # Tera-Wasserburg concordia age
-def ConcAgeTW(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0**6, conf=0.95):
+def ConcAgeTW(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
 
     # # Follow the method of p. 668 in Ludwig1998gca
     # X = U85r * Yi / Xi
@@ -568,29 +556,31 @@ def ConcAgeTW(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0**6, conf=0.95):
     rhoxy = rhoXYi
     # two-dimensional weighted mean
     x_bar, y_bar, mswd_bar, sigma_x_bar, sigma_y_bar, cov_xy_bar = twoWM(
-        x, y, sigma_x, sigma_y, rhoxy, conf)
+        x, y, sigma_x, sigma_y, rhoxy, conf
+    )
     rho_xy_bar = cov_xy_bar / (sigma_x_bar * sigma_y_bar)
-    T_leastsq = optimize.leastsq(FitFuncTW,
-                                 Tinit,
-                                 args=(x_bar, y_bar, sigma_x_bar, sigma_y_bar,
-                                       rho_xy_bar))[0][0]
+    T_leastsq = optimize.leastsq(
+        FitFuncTW, Tinit, args=(x_bar, y_bar, sigma_x_bar, sigma_y_bar, rho_xy_bar)
+    )[0][0]
     # eq(3)
-    oi = np.linalg.inv([[sigma_x_bar**2, cov_xy_bar],
-                        [cov_xy_bar, sigma_y_bar**2]])
+    oi = np.linalg.inv([[sigma_x_bar ** 2, cov_xy_bar], [cov_xy_bar, sigma_y_bar ** 2]])
     # modified from eq(14) using eq(10, 11)
     # A and B are derivative of x(t) and y(t), respectively.
-    A = -l238U * np.exp(l238U * T_leastsq) / (np.exp(l238U * T_leastsq) - 1)**2
-    B = (1 / U85r *
-         (l235U * np.exp(l235U * T_leastsq) *
-          (np.exp(l238U * T_leastsq) - 1) - l238U * np.exp(l238U * T_leastsq) *
-          (np.exp(l235U * T_leastsq) - 1)) /
-         (np.exp(l238U * T_leastsq) - 1)**2)
+    A = -l238U * np.exp(l238U * T_leastsq) / (np.exp(l238U * T_leastsq) - 1) ** 2
+    B = (
+        1
+        / U85r
+        * (
+            l235U * np.exp(l235U * T_leastsq) * (np.exp(l238U * T_leastsq) - 1)
+            - l238U * np.exp(l238U * T_leastsq) * (np.exp(l235U * T_leastsq) - 1)
+        )
+        / (np.exp(l238U * T_leastsq) - 1) ** 2
+    )
     # eq(13)
-    QQtw = (A**2 * oi[0][0] + B**2 * oi[1][1] + 2 * A * B * oi[0][1])**(-1)
+    QQtw = (A ** 2 * oi[0][0] + B ** 2 * oi[1][1] + 2 * A * B * oi[0][1]) ** (-1)
     T_1sigma = np.sqrt(QQtw)
     T_sigma = stats.norm.ppf(conf + (1 - conf) / 2.0) * T_1sigma
-    S_bar = FitFuncTW(T_leastsq, x_bar, y_bar, sigma_x_bar, sigma_y_bar,
-                      rho_xy_bar)
+    S_bar = FitFuncTW(T_leastsq, x_bar, y_bar, sigma_x_bar, sigma_y_bar, rho_xy_bar)
     S = FitFuncTW(T_leastsq, x, y, sigma_x, sigma_y, rhoxy)
 
     df_concordance = 1.0
@@ -629,10 +619,7 @@ def FitFuncSI_LS(parameter, x, y):
 # Calculate slope (b) and intercept (b) by leastsq
 def SlopeIntercept_LS(x, y):
     init_ab = [0.0, 0.0]
-    result = optimize.leastsq(FitFuncSI_LS,
-                              init_ab,
-                              args=(x, y),
-                              full_output=1)
+    result = optimize.leastsq(FitFuncSI_LS, init_ab, args=(x, y), full_output=1)
     parameter_optimal = result[0]
     return (parameter_optimal[1], parameter_optimal[0], result)
 
@@ -646,12 +633,12 @@ def SlopeIntercept_LS(x, y):
 # Number of equations corresponds with those in York (1969)
 def Fit_XYZ(b, x, y, wx, wy, r):
     # eq(2)
-    z = wx * wy / (b**2 * wy + wx - 2.0 * b * r * np.sqrt(wx * wy))
+    z = wx * wy / (b ** 2 * wy + wx - 2.0 * b * r * np.sqrt(wx * wy))
     # eq(4)
     x_bar = np.sum(z * x) / np.sum(z)
     y_bar = np.sum(z * y) / np.sum(z)
     a = y_bar - b * x_bar
-    S = np.sum(z * (y - b * x - a)**2)
+    S = np.sum(z * (y - b * x - a) ** 2)
     return (x_bar, y_bar, z, S)
 
 
@@ -659,33 +646,29 @@ def Fit_XYZ(b, x, y, wx, wy, r):
 def FitFuncSI(b, X, Y, wx, wy, r, case):
     X_bar, Y_bar, Z, S = Fit_XYZ(b, X, Y, wx, wy, r)
     (U, V) = (X - X_bar, Y - Y_bar)  # eq(4) in York1969epsl
-    A = np.sum(Z**2 * ((U * V / wx) - (r * U**2) / np.sqrt(wx * wy)))
-    B = np.sum(Z**2 * ((U**2 / wy) - (V**2) / wx))
-    C = np.sum(Z**2 * ((U * V / wy) - (r * V**2) / np.sqrt(wx * wy)))
+    A = np.sum(Z ** 2 * ((U * V / wx) - (r * U ** 2) / np.sqrt(wx * wy)))
+    B = np.sum(Z ** 2 * ((U ** 2 / wy) - (V ** 2) / wx))
+    C = np.sum(Z ** 2 * ((U * V / wy) - (r * V ** 2) / np.sqrt(wx * wy)))
     if case == 1:
         # eq(2) in Titterington1979chemg
-        S = (-B + np.sqrt(B**2 + 4 * A * C)) / (2 * A) - b
+        S = (-B + np.sqrt(B ** 2 + 4 * A * C)) / (2 * A) - b
     else:
-        S = (-B - np.sqrt(B**2 + 4 * A * C)) / (2 * A) - b
+        S = (-B - np.sqrt(B ** 2 + 4 * A * C)) / (2 * A) - b
     return S
 
 
 # Calculate slope (b) and intercept (b) by MLE
 def SlopeIntercept(x, y, sigma_x, sigma_y, rho_xy, case):
-    wx = sigma_x**(-2)
-    wy = sigma_y**(-2)
+    wx = sigma_x ** (-2)
+    wy = sigma_y ** (-2)
     init_b = 1.0
 
     # compare two solutions of b
     if case == 1:
-        bi1 = optimize.leastsq(FitFuncSI,
-                               init_b,
-                               args=(x, y, wx, wy, rho_xy, case))[0][0]
+        bi1 = optimize.leastsq(FitFuncSI, init_b, args=(x, y, wx, wy, rho_xy, case))[0][0]
         X_bar1, Y_bar1, Z1, S1 = Fit_XYZ(bi1, x, y, wx, wy, rho_xy)
     else:
-        bi2 = optimize.leastsq(FitFuncSI,
-                               init_b,
-                               args=(x, y, wx, wy, rho_xy, case))[0][0]
+        bi2 = optimize.leastsq(FitFuncSI, init_b, args=(x, y, wx, wy, rho_xy, case))[0][0]
         X_bar2, Y_bar2, Z2, S2 = Fit_XYZ(bi2, x, y, wx, wy, rho_xy)
 
     # Compare the residuals between two solituion
@@ -701,9 +684,9 @@ def SlopeIntercept(x, y, sigma_x, sigma_y, rho_xy, case):
     ai = Y_bar - bi * X_bar
 
     # Appendix in Titterngton1979chemg
-    sigma_bi = np.sqrt(1.0 / np.sum(Z * (x - X_bar)**2))
+    sigma_bi = np.sqrt(1.0 / np.sum(Z * (x - X_bar) ** 2))
     # sigma_ai = np.sqrt(np.sum(x**2*Z)/(np.sum(Z)*np.sum(Z*(x-X_bar)**2)))
-    sigma_ai = np.sqrt(1.0 / np.sum(Z) + X_bar**2 * sigma_bi**2)  # York2004ajp
+    sigma_ai = np.sqrt(1.0 / np.sum(Z) + X_bar ** 2 * sigma_bi ** 2)  # York2004ajp
     return (X_bar, Y_bar, ai, bi, sigma_ai, sigma_bi)
 
 
@@ -717,22 +700,21 @@ def SIsigma(x, x_bar, y_bar, b, sigma_a, sigma_b, conf=0.95):
     # eq(29)
     sigma_a2 = stats.norm.ppf(conf + (1 - conf) / 2.0) * sigma_a
     sigma_b2 = stats.norm.ppf(conf + (1 - conf) / 2.0) * sigma_b
-    sigma2 = np.sqrt(sigma_a2**2.0 + sigma_b2**2.0 * x * (x - 2.0 * x_bar))
+    sigma2 = np.sqrt(sigma_a2 ** 2.0 + sigma_b2 ** 2.0 * x * (x - 2.0 * x_bar))
     return sigma2
 
 
 def SIsigma2(x, x_bar, y_bar, b, sigma_a, sigma_b, conf=0.95):
     # eq(30)
-    dtheta = sigma_b * np.cos(np.arctan(b))**2.0
+    dtheta = sigma_b * np.cos(np.arctan(b)) ** 2.0
     b2 = (np.tan(np.arctan(b) + dtheta) + np.tan(np.arctan(b) - dtheta)) / 2.0
     a2 = y_bar - b2 * x_bar
-    sigma_b2 = (np.tan(np.arctan(b) + dtheta) -
-                np.tan(np.arctan(b) - dtheta)) / 2.0
+    sigma_b2 = (np.tan(np.arctan(b) + dtheta) - np.tan(np.arctan(b) - dtheta)) / 2.0
     sigma_a2 = sigma_a + (sigma_b2 - sigma_b) * x_bar
     sigma_b2 = stats.norm.ppf(conf + (1 - conf) / 2.0) * sigma_b2
     sigma_a2 = stats.norm.ppf(conf + (1 - conf) / 2.0) * sigma_a2
     # eq(31)
-    sigma2 = np.sqrt(sigma_a2**2 + sigma_b2**2.0 * x * (x - 2.0 * x_bar))
+    sigma2 = np.sqrt(sigma_a2 ** 2 + sigma_b2 ** 2.0 * x * (x - 2.0 * x_bar))
     return (a2, sigma_a2, b2, sigma_b2, sigma2)
 
 
@@ -747,23 +729,20 @@ def FitFuncSIageConv(t, a, b, sigma_a, sigma_b, x_bar, y_bar, conf, case):
         y2 = b * x1 + a + sigma
     else:
         y2 = b * x1 + a
-    S = (y2 - y1)**2
+    S = (y2 - y1) ** 2
     return S
 
 
-def SIageConv(a, b, sigma_a, sigma_b, x_bar, y_bar, init_t=10**6, conf=0.95):
-    T = optimize.leastsq(FitFuncSIageConv,
-                         init_t,
-                         args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf,
-                               0))[0][0]
-    Tmin = optimize.leastsq(FitFuncSIageConv,
-                            init_t,
-                            args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf,
-                                  1))[0][0]
-    Tmax = optimize.leastsq(FitFuncSIageConv,
-                            init_t,
-                            args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf,
-                                  2))[0][0]
+def SIageConv(a, b, sigma_a, sigma_b, x_bar, y_bar, init_t=10 ** 6, conf=0.95):
+    T = optimize.leastsq(
+        FitFuncSIageConv, init_t, args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf, 0)
+    )[0][0]
+    Tmin = optimize.leastsq(
+        FitFuncSIageConv, init_t, args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf, 1)
+    )[0][0]
+    Tmax = optimize.leastsq(
+        FitFuncSIageConv, init_t, args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf, 2)
+    )[0][0]
     if Tmax < Tmin:
         Tmax, Tmin = Tmin, Tmax
     return (T, Tmin, Tmax)
@@ -781,23 +760,20 @@ def FitFuncSIageTW(t, a, b, sigma_a, sigma_b, x_bar, y_bar, conf, cs):
         y2 = b * x1 + a + sigma
     else:
         y2 = b * x1 + a
-    S = (y2 - y1)**2
+    S = (y2 - y1) ** 2
     return S
 
 
-def SIageTW(a, b, sigma_a, sigma_b, x_bar, y_bar, init_t=10**6, conf=0.95):
-    T = optimize.leastsq(FitFuncSIageTW,
-                         init_t,
-                         args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf,
-                               0))[0][0]
-    Tmin = optimize.leastsq(FitFuncSIageTW,
-                            init_t,
-                            args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf,
-                                  1))[0][0]
-    Tmax = optimize.leastsq(FitFuncSIageTW,
-                            init_t,
-                            args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf,
-                                  2))[0][0]
+def SIageTW(a, b, sigma_a, sigma_b, x_bar, y_bar, init_t=10 ** 6, conf=0.95):
+    T = optimize.leastsq(
+        FitFuncSIageTW, init_t, args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf, 0)
+    )[0][0]
+    Tmin = optimize.leastsq(
+        FitFuncSIageTW, init_t, args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf, 1)
+    )[0][0]
+    Tmax = optimize.leastsq(
+        FitFuncSIageTW, init_t, args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf, 2)
+    )[0][0]
     if Tmax < Tmin:
         Tmax, Tmin = Tmin, Tmax
     return (T, Tmin, Tmax)
@@ -830,8 +806,9 @@ def discordance(
     elif method == 3:
         disc_percent = (1 - (age_7Pb_5U / age_6Pb_8U)) * 100.0
     elif method == 4:
-        disc_percent = (1 - ((age_7Pb_5U - age_7Pb_5U_se * sd) /
-                             (age_6Pb_8U + age_6Pb_8U_se * sd))) * 100.0
+        disc_percent = (
+            1 - ((age_7Pb_5U - age_7Pb_5U_se * sd) / (age_6Pb_8U + age_6Pb_8U_se * sd))
+        ) * 100.0
     else:
         sys.exit("Exit at function of discordance")
 
@@ -848,7 +825,7 @@ def calc_chi2_red(x, s1, wm, n, opt):
     # s1: errors (1 sigma) of each sample
     # wm: weighted mean age
     # n: number of sample
-    chi2_red = 1 / (n - 1) * np.sum((x - wm)**2 / s1**2)
+    chi2_red = 1 / (n - 1) * np.sum((x - wm) ** 2 / s1 ** 2)
     error_min = 1 - 2 * np.sqrt(2 / (n - 1))
     error_max = 1 + 2 * np.sqrt(2 / (n - 1))
     if (chi2_red <= error_max) & (chi2_red >= error_min):
@@ -1009,36 +986,24 @@ def intersections_ellipse(x, y, line):
 
     if mp.is_empty:
         return 0
-    elif mp.geom_type == 'Point':
+    elif mp.geom_type == "Point":
         return 1
-    elif mp.geom_type == 'MultiPoint':
+    elif mp.geom_type == "MultiPoint":
         return 1
     else:
         return 0
 
 
-def intersections_line(x, y):
-    line = []
-    for i, j in enumerate(x):
-        line.append([x[i], y[i]])
-    return (line)
-
-
 # ------------------------------------------------
 # draw error ellipses of data points
-def plot_data_point_error_ellipse_disc(ax, axn, X, Y, sigma_X, sigma_Y, cov_XY,
-                                       cr, outd, line):
+def plot_data_point_error_ellipse_disc(
+    ax, axn, X, Y, sigma_X, sigma_Y, cov_XY, cr, outd, line
+):
     ind = []
     outd_disc = []
     for i in range(len(X)):
         dp_ell_x, dp_ell_y = myEllipse(
-            i,
-            X[i],
-            Y[i],
-            sigma_X[i],
-            sigma_Y[i],
-            cov_XY[i],
-            conf=cr,
+            i, X[i], Y[i], sigma_X[i], sigma_Y[i], cov_XY[i], conf=cr,
         )
 
         if i in outd:
@@ -1077,17 +1042,12 @@ def plot_data_point_error_ellipse_disc(ax, axn, X, Y, sigma_X, sigma_Y, cov_XY,
 
 # ------------------------------------------------
 # draw error ellipses of data points
-def plot_data_point_error_ellipse(ax, axn, X, Y, sigma_X, sigma_Y, cov_XY, cr,
-                                  ind, outd, outd_disc):
+def plot_data_point_error_ellipse(
+    ax, axn, X, Y, sigma_X, sigma_Y, cov_XY, cr, ind, outd, outd_disc
+):
     for i in range(len(X)):
         dp_ell_x, dp_ell_y = myEllipse(
-            i,
-            X[i],
-            Y[i],
-            sigma_X[i],
-            sigma_Y[i],
-            cov_XY[i],
-            conf=cr,
+            i, X[i], Y[i], sigma_X[i], sigma_Y[i], cov_XY[i], conf=cr,
         )
         if i in ind:
             ax[axn].plot(
@@ -1120,33 +1080,25 @@ def plot_data_point_error_ellipse(ax, axn, X, Y, sigma_X, sigma_Y, cov_XY, cr,
 
 # ------------------------------------------------
 # Plot two-dimensional weighted mean ages and confidence ellipses
-def plot_2D_wm(ax, axn, X, Y, sigma_X, sigma_Y, rho_XY, cr, legend_pos_x,
-               legend_pos_y):
+def plot_2D_wm(ax, axn, X, Y, sigma_X, sigma_Y, rho_XY, cr, legend_pos_x, legend_pos_y):
     Xwm_bar, Ywm_bar, MSWDwm, sigma_Xwm_bar, sigma_Ywm_bar, cov_XYwm_bar = twoWM(
-        X, Y, sigma_X, sigma_Y, rho_XY, conf=cr)
+        X, Y, sigma_X, sigma_Y, rho_XY, conf=cr
+    )
     twm_ell_x, twm_ell_y = myEllipse(
-        0,
-        Xwm_bar,
-        Ywm_bar,
-        sigma_Xwm_bar,
-        sigma_Ywm_bar,
-        cov_XYwm_bar,
-        conf=cr,
+        0, Xwm_bar, Ywm_bar, sigma_Xwm_bar, sigma_Ywm_bar, cov_XYwm_bar, conf=cr,
+    )
+    ax[axn].fill(
+        twm_ell_x, twm_ell_y, fc=twm_ee_fc, alpha=twm_ee_alpha,
     )
     ax[axn].plot(
-        twm_ell_x,
-        twm_ell_y,
-        alpha=twm_ee_alpha,
-        color=twm_ee_ec,
-        linewidth=twm_ee_ew,
+        twm_ell_x, twm_ell_y, color=twm_ee_ec, linewidth=twm_ee_ew,
     )
 
     # legend
     ax[axn].text(
         legend_pos_x,
         legend_pos_y,
-        "2D weighted mean [%d%% conf.] (MSWD=%s)" %
-        (cr * 100, format(MSWDwm, dignum)),
+        "2D weighted mean [%d%% conf.] (MSWD=%s)" % (cr * 100, format(MSWDwm, dignum)),
         transform=ax[axn].transAxes,
         verticalalignment="top",
         fontsize=legend_font_size,
@@ -1158,23 +1110,25 @@ def plot_2D_wm(ax, axn, X, Y, sigma_X, sigma_Y, rho_XY, cr, legend_pos_x,
 def concordia_age(ctype, X, Y, sigma_X, sigma_Y, rho_XY, cr):
     if ctype == "conv":
         T_lsq, S_lsq, MSWDconc, MSWDeq, MSWDcomb, Pconc, Peq, Pcomb = ConcAgeConv(
-            X, Y, sigma_X, sigma_Y, rho_XY, Tinit=age_unit, conf=cr)
+            X, Y, sigma_X, sigma_Y, rho_XY, Tinit=age_unit, conf=cr
+        )
         X_lsq, Y_lsq = ConcLineConv(T_lsq)
     elif ctype == "tw":
         T_lsq, S_lsq, MSWDconc, MSWDeq, MSWDcomb, Pconc, Peq, Pcomb = ConcAgeTW(
-            X, Y, sigma_X, sigma_Y, rho_XY, Tinit=age_unit, conf=cr)
+            X, Y, sigma_X, sigma_Y, rho_XY, Tinit=age_unit, conf=cr
+        )
         X_lsq, Y_lsq = ConcLineTW(T_lsq)
 
     else:
         sys.exit('Please choose type of concordia, "conv" or "tw"')
-    return (T_lsq, S_lsq, X_lsq, Y_lsq, MSWDconc, MSWDeq, MSWDcomb, Pconc, Peq,
-            Pcomb)
+    return (T_lsq, S_lsq, X_lsq, Y_lsq, MSWDconc, MSWDeq, MSWDcomb, Pconc, Peq, Pcomb)
 
 
 # ------------------------------------------------
 # Plot concordia ages on concordia lines
-def plot_concordia_age(ax, axn, T_lsq, S_lsq, X_lsq, Y_lsq, MSWD, cr,
-                       legend_pos_x, legend_pos_y):
+def plot_concordia_age(
+    ax, axn, T_lsq, S_lsq, X_lsq, Y_lsq, MSWD, cr, legend_pos_x, legend_pos_y
+):
 
     ax[axn].plot(
         X_lsq,
@@ -1190,7 +1144,8 @@ def plot_concordia_age(ax, axn, T_lsq, S_lsq, X_lsq, Y_lsq, MSWD, cr,
     ax[axn].text(
         legend_pos_x,
         legend_pos_y,
-        u"Concordia age = %s ± %s %s [%d%% conf.]" % (
+        u"Concordia age = %s ± %s %s [%d%% conf.]"
+        % (
             format(T_lsq / age_unit, dignum),
             format(S_lsq / age_unit, dignum),
             age_unit_name,
@@ -1204,15 +1159,14 @@ def plot_concordia_age(ax, axn, T_lsq, S_lsq, X_lsq, Y_lsq, MSWD, cr,
 
 # ------------------------------------------------
 # Text for MSWD of concordia ages
-def plot_concordia_age_MSWD(ax, axn, MSWD, ca_mswd, p_value, legend_pos_x,
-                            legend_pos_y):
+def plot_concordia_age_MSWD(ax, axn, MSWD, ca_mswd, p_value, legend_pos_x, legend_pos_y):
 
     if ca_mswd == 1:
         ax[axn].text(
             legend_pos_x,
             legend_pos_y,
-            r"(MSWD of equivalence = %s, p($\chi^2$) = %s)" %
-            (format(MSWD, dignum), format(p_value, dignum2)),
+            r"(MSWD of equivalence = %s, p($\chi^2$) = %s)"
+            % (format(MSWD, dignum), format(p_value, dignum2)),
             transform=ax[axn].transAxes,
             verticalalignment="top",
             fontsize=legend_font_size,
@@ -1221,8 +1175,8 @@ def plot_concordia_age_MSWD(ax, axn, MSWD, ca_mswd, p_value, legend_pos_x,
         ax[axn].text(
             legend_pos_x,
             legend_pos_y,
-            r"(MSWD of combined = %s, p($\chi^2$) = %s)" %
-            (format(MSWD, dignum), format(p_value, dignum2)),
+            r"(MSWD of combined = %s, p($\chi^2$) = %s)"
+            % (format(MSWD, dignum), format(p_value, dignum2)),
             transform=ax[axn].transAxes,
             verticalalignment="top",
             fontsize=legend_font_size,
@@ -1231,8 +1185,8 @@ def plot_concordia_age_MSWD(ax, axn, MSWD, ca_mswd, p_value, legend_pos_x,
         ax[axn].text(
             legend_pos_x,
             legend_pos_y,
-            r"(MSWD of concordance = %s, p($\chi^2$) = %s)" %
-            (format(MSWD, dignum), format(p_value, dignum2)),
+            r"(MSWD of concordance = %s, p($\chi^2$) = %s)"
+            % (format(MSWD, dignum), format(p_value, dignum2)),
             transform=ax[axn].transAxes,
             verticalalignment="top",
             fontsize=legend_font_size,
@@ -1259,27 +1213,18 @@ def plot_concordia_intercept_age(
 ):
     xx = np.linspace(range_XY[0][0], range_XY[0][1], 5000)
     Xsi_bar, Ysi_bar, ai, bi, sigma_a, sigma_b = SlopeIntercept(
-        X, Y, sigma_X, sigma_Y, rho_XY, case)
+        X, Y, sigma_X, sigma_Y, rho_XY, case
+    )
 
     # Intercept age
     if ctype == "conv":
-        Tsi, Tmin, Tmax = SIageConv(ai,
-                                    bi,
-                                    sigma_a,
-                                    sigma_b,
-                                    Xsi_bar,
-                                    Ysi_bar,
-                                    init_t=T_lsq,
-                                    conf=cr)
+        Tsi, Tmin, Tmax = SIageConv(
+            ai, bi, sigma_a, sigma_b, Xsi_bar, Ysi_bar, init_t=T_lsq, conf=cr
+        )
     elif ctype == "tw":
-        Tsi, Tmin, Tmax = SIageTW(ai,
-                                  bi,
-                                  sigma_a,
-                                  sigma_b,
-                                  Xsi_bar,
-                                  Ysi_bar,
-                                  init_t=T_lsq,
-                                  conf=cr)
+        Tsi, Tmin, Tmax = SIageTW(
+            ai, bi, sigma_a, sigma_b, Xsi_bar, Ysi_bar, init_t=T_lsq, conf=cr
+        )
 
     # confidence band
     sigma = SIsigma(xx, Xsi_bar, Ysi_bar, bi, sigma_a, sigma_b, conf=cr)
@@ -1300,16 +1245,14 @@ def plot_concordia_intercept_age(
         alpha=ia_alpha,
         interpolate=True,
     )
-    ax[axn].plot(xx,
-                 bi * xx + ai,
-                 linewidth=ia_line_width,
-                 color=ia_line_color)
+    ax[axn].plot(xx, bi * xx + ai, linewidth=ia_line_width, color=ia_line_color)
 
     # legend
     ax[axn].text(
         legend_pos_x,
         legend_pos_y,
-        "Intercept age = %s +%s %s %s (%d%% conf.)" % (
+        "Intercept age = %s +%s %s %s (%d%% conf.)"
+        % (
             format(Tsi / age_unit, dignum),
             format((Tmax - Tsi) / age_unit, dignum),
             format((Tmin - Tsi) / age_unit, dignum),
@@ -1347,19 +1290,18 @@ def select_age_type(age_type):
 
 # ------------------------------------------------
 # Plot one-dimensional weighted mean, SD, and MSWD
-def plot_oneD_weighted_mean(ax, axn, oneD_age_type, Tall, s1, ind, outd,
-                            outd_disc, cr, legend_pos_x, legend_pos_y):
+def plot_oneD_weighted_mean(
+    ax, axn, oneD_age_type, Tall, s1, ind, outd, outd_disc, cr, legend_pos_x, legend_pos_y
+):
 
     if oneD_yaxis_log == 1:
-        ax[axn].set_yscale('log')
+        ax[axn].set_yscale("log")
 
     Twm, sm, MSWD = oneWM(Tall[ind], s1[ind], conf=cr)
 
     # confidence band of the weighted mean
-    ax[axn].axhspan(Twm - sm,
-                    Twm + sm,
-                    facecolor=oneD_band_fc,
-                    alpha=oneD_band_alpha)
+    ax[axn].axhspan(Twm - sm, Twm + sm, facecolor=oneD_band_fc, alpha=oneD_band_alpha)
+
     ax[axn].plot(
         [0.0, len(Tall) + 1],
         [Twm, Twm],
@@ -1367,39 +1309,19 @@ def plot_oneD_weighted_mean(ax, axn, oneD_age_type, Tall, s1, ind, outd,
         color=oneD_wm_line_color,
     )
 
-    for i in range(0, len(Tall)):
-        if i in outd:
-            eb0 = ax[axn].errorbar(
-                i + 1,
-                Tall[i],
-                yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
-                ecolor=dp0_bar_color,
-                linewidth=dp0_bar_line_width,
-                fmt=dp0_marker_type,
-                markersize=dp0_marker_size,
-                markerfacecolor=dp0_marker_fc,
-                markeredgecolor=dp0_marker_ec,
-                markeredgewidth=dp0_marker_ew,
-            )
-            eb0[-1][0].set_linestyle(dp0_bar_line_style)
-        elif i in outd_disc:
-            eb2 = ax[axn].errorbar(
-                i + 1,
-                Tall[i],
-                yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
-                ecolor=dp2_bar_color,
-                linewidth=dp2_bar_line_width,
-                fmt=dp2_marker_type,
-                markersize=dp2_marker_size,
-                markerfacecolor=dp2_marker_fc,
-                markeredgecolor=dp2_marker_ec,
-                markeredgewidth=dp2_marker_ew,
-            )
-            eb2[-1][0].set_linestyle(dp2_bar_line_style)
-        elif i in ind:
+    if oneD_plot_sort == 1:
+        Tplot = np.sort(Tall)
+        Tnumd = np.argsort(Tall)
+    else:
+        Tplot = Tall
+        Tnumd = np.where(Tall)[0]
+
+    for n, t in enumerate(Tplot):
+        i = Tnumd[n]
+        if len(np.intersect1d(i, ind)) > 0:
             eb1 = ax[axn].errorbar(
-                i + 1,
-                Tall[i],
+                n + 1,
+                t,
                 yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
                 ecolor=dp1_bar_color,
                 linewidth=dp1_bar_line_width,
@@ -1410,14 +1332,47 @@ def plot_oneD_weighted_mean(ax, axn, oneD_age_type, Tall, s1, ind, outd,
                 markeredgewidth=dp1_marker_ew,
             )
             eb1[-1][0].set_linestyle(dp1_bar_line_style)
+        elif len(np.intersect1d(i, outd_disc)) > 0:
+            eb2 = ax[axn].errorbar(
+                n + 1,
+                t,
+                yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
+                ecolor=dp2_bar_color,
+                linewidth=dp2_bar_line_width,
+                fmt=dp2_marker_type,
+                markersize=dp2_marker_size,
+                markerfacecolor=dp2_marker_fc,
+                markeredgecolor=dp2_marker_ec,
+                markeredgewidth=dp2_marker_ew,
+            )
+            eb2[-1][0].set_linestyle(dp2_bar_line_style)
+        else:
+            eb0 = ax[axn].errorbar(
+                n + 1,
+                t,
+                yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
+                ecolor=dp0_bar_color,
+                linewidth=dp0_bar_line_width,
+                fmt=dp0_marker_type,
+                markersize=dp0_marker_size,
+                markerfacecolor=dp0_marker_fc,
+                markeredgecolor=dp0_marker_ec,
+                markeredgewidth=dp0_marker_ew,
+            )
+            eb0[-1][0].set_linestyle(dp0_bar_line_style)
 
     # legend
     legend_data_number(ax, axn, legend_pos_x[0], legend_pos_y[0], ind)
 
+    oneD_xticks = np.arange(1, len(Tall) + 1, 1)
+    ax[axn].set_xticks(oneD_xticks)
+    ax[axn].set_xticklabels(Tnumd + 1, rotation=270, fontsize="small")
+
     ax[axn].text(
         legend_pos_x[0],
         legend_pos_y[1],
-        u"Weighted mean = %s ± %s %s [%d%% conf.] (MSWD = %s)" % (
+        u"Weighted mean = %s ± %s %s [%d%% conf.] (MSWD = %s)"
+        % (
             format(Twm, dignum),
             format(sm, dignum),
             age_unit_name,
@@ -1438,11 +1393,7 @@ def plot_oneD_weighted_mean(ax, axn, oneD_age_type, Tall, s1, ind, outd,
         fontsize=legend_font_size,
     )
 
-    chi2_red, res_chi2_red = calc_chi2_red(Tall[ind],
-                                           s1[ind],
-                                           Twm,
-                                           len(ind),
-                                           opt=0)
+    chi2_red, res_chi2_red = calc_chi2_red(Tall[ind], s1[ind], Twm, len(ind), opt=0)
 
     ax[axn].text(
         legend_pos_x[0],
@@ -1460,8 +1411,9 @@ def plot_oneD_weighted_mean(ax, axn, oneD_age_type, Tall, s1, ind, outd,
 # Th/U vs age plot
 # Descriminating between metamorphic and igneous origins
 # Uncetainty in Th/U is assumed to be ± 10%
-def plot_Th_U(axb, Th_U, Th_U_e, Tall, s1, ind, outd, outd_disc, cr,
-              range_hist_x, range_hist_y2):
+def plot_Th_U(
+    axb, Th_U, Th_U_e, Tall, s1, ind, outd, outd_disc, cr, range_hist_x, range_hist_y2
+):
     axb.set_xlim(range_hist_x[0], range_hist_x[1])
     axb.set_ylim(range_hist_y2[0], range_hist_y2[1])
     axb.set_ylabel("Th/U", fontsize=legend_font_size + 4)
@@ -1580,11 +1532,11 @@ if __name__ == "__main__":
         conffile = set_filename_conf(infile)
 
     if options.outfile:
-        outfile = set_filename_output(options.outfile, options.driver,
-                                      options.opt_force_overwrite)
+        outfile = set_filename_output(
+            options.outfile, options.driver, options.opt_force_overwrite
+        )
     else:
-        outfile = set_filename_output(infile, options.driver,
-                                      options.opt_force_overwrite)
+        outfile = set_filename_output(infile, options.driver, options.opt_force_overwrite)
 
     # ################################################
     # Configuration
@@ -1606,8 +1558,7 @@ if __name__ == "__main__":
     disc_thres = config.getfloat("File", "discordance_percent_threshold")
     disc_type = config.getint("File", "disc_type")
     opt_outlier = config.getboolean("File", "opt_outlier")  # exclude outlier
-    outlier_alpha = config.getfloat("File",
-                                    "outlier_alpha")  # significant level
+    outlier_alpha = config.getfloat("File", "outlier_alpha")  # significant level
     exclude_data_points = loads(config.get("File", "exclude_data_points"))
     opt_Th_U = config.getboolean("File", "opt_Th_U")
     Th_U_inverse = config.getboolean("File", "Th_U_inverse")
@@ -1623,8 +1574,7 @@ if __name__ == "__main__":
     range_automatic_cc = config.getboolean("Graph", "range_automatic_cc")
     range_XY = loads(config.get("Graph", "range_xy_cc"))  # [[0,6],[0,0.35]]
     range_automatic_twc = config.getboolean("Graph", "range_automatic_twc")
-    range_xy = loads(config.get("Graph",
-                                "range_xy_tw"))  # [[xmin,xmax],[ymin,ymax]]
+    range_xy = loads(config.get("Graph", "range_xy_tw"))  # [[xmin,xmax],[ymin,ymax]]
     opt_data_point = config.getboolean("Graph", "opt_data_point")
     dp0_marker_type = config.get("Graph", "dp0_marker_type")  # = 'o'
     dp0_marker_size = config.getfloat("Graph", "dp0_marker_size")  # = 7
@@ -1677,8 +1627,7 @@ if __name__ == "__main__":
     ca_marker_ec = config.get("Graph", "ca_marker_edge_color")  # black
     ca_marker_ew = config.getfloat("Graph", "ca_marker_edge_width")  # 1.0
     ca_mswd = config.getint("Graph", "ca_mswd")  # 0, 1, or 2
-    opt_concordia_ia = config.getboolean("Graph",
-                                         "opt_concordia_intercept_age")
+    opt_concordia_ia = config.getboolean("Graph", "opt_concordia_intercept_age")
     ia_line_width = config.getfloat("Graph", "ia_line_width")  # 1
     ia_line_color = config.get("Graph", "ia_line_color")  # blue
     ia_sigma = config.getfloat("Graph", "ia_sigma")  # 2
@@ -1687,6 +1636,7 @@ if __name__ == "__main__":
     range_automatic_oneD = config.getboolean("Graph", "range_automatic_oneD")
     range_oneD_y = loads(config.get("Graph", "range_oneD_y"))  # [70, 100]
     oneD_age_type = config.getint("Graph", "oneD_age_type")  # 68
+    oneD_plot_sort = config.getboolean("Graph", "oneD_plot_sort")
     oneD_sigma = config.getfloat("Graph", "oneD_sigma")  # 2
     oneD_wm_line_width = config.getfloat("Graph", "oneD_wm_line_width")  # 2
     oneD_wm_line_color = config.get("Graph", "oneD_wm_line_color")  # blue
@@ -1713,7 +1663,8 @@ if __name__ == "__main__":
     hist_bin_alpha = config.getfloat("Graph", "hist_bin_alpha")  # 0.75
     opt_kde = config.getboolean("Graph", "opt_kde")  # 1
     opt_hist_density = config.getfloat(
-        "Graph", "opt_hist_density")  # density of histogram
+        "Graph", "opt_hist_density"
+    )  # density of histogram
 
     # cumulative probability density
     # 1 sigma (68.3), 2 sigma (95.4%), and 3 sigma (99.7%)
@@ -1726,10 +1677,10 @@ if __name__ == "__main__":
 
     # Define age unit
     if age_unit_name == "ka":
-        age_unit = 10**3
+        age_unit = 10 ** 3
         time = time_ka
     else:
-        age_unit = 10**6
+        age_unit = 10 ** 6
         time = time_ma
 
     # ################################################
@@ -1858,26 +1809,24 @@ if __name__ == "__main__":
     Sy = sigma_y / y
 
     # error correlation
-    rho_XY = (SX**2 + SY**2 - Sy**2) / (2.0 * SX * SY)
+    rho_XY = (SX ** 2 + SY ** 2 - Sy ** 2) / (2.0 * SX * SY)
     # rho_xy = (SY**2-SX**2*rho_XY)/Sy # Equation in p. 27 of Ludwig2012
-    rho_xy = (SY**2 - SX * SY * rho_XY) / (Sx * Sy)
+    rho_xy = (SY ** 2 - SX * SY * rho_XY) / (Sx * Sy)
 
     # covariance
     cov_XY = rho_XY * sigma_X * sigma_Y
     cov_xy = rho_xy * sigma_x * sigma_y
 
     if opt_Th_U:
-        Th_U = np.loadtxt(infile,
-                          delimiter=delim,
-                          usecols=Th_U_row_num,
-                          skiprows=rows_of_header)
+        Th_U = np.loadtxt(
+            infile, delimiter=delim, usecols=Th_U_row_num, skiprows=rows_of_header
+        )
         if Th_U_inverse:
             Th_U = 1.0 / Th_U
         if Th_U_error_num:
-            Th_U_e = np.loadtxt(infile,
-                                delimiter=delim,
-                                usecols=Th_U_error_num,
-                                skiprows=rows_of_header)
+            Th_U_e = np.loadtxt(
+                infile, delimiter=delim, usecols=Th_U_error_num, skiprows=rows_of_header
+            )
         else:
             Th_U_e = Th_U * 0.0
 
@@ -1892,9 +1841,9 @@ if __name__ == "__main__":
     age_7Pb_6Pb_se_minus = np.empty(len(y))  # 1sigma error
     age_7Pb_6Pb_min = np.empty(len(y))  # 1sigma error
     age_7Pb_6Pb_max = np.empty(len(y))  # 1sigma error
-    (age_7Pb_6Pb, age_7Pb_6Pb_se_plus,
-     age_7Pb_6Pb_se_minus) = calc_age_7Pb_6Pb(age_unit, y, sigma_y,
-                                              age_7Pb_6Pb, ca_cr)
+    (age_7Pb_6Pb, age_7Pb_6Pb_se_plus, age_7Pb_6Pb_se_minus) = calc_age_7Pb_6Pb(
+        age_unit, y, sigma_y, age_7Pb_6Pb, ca_cr
+    )
 
     # print(age_7Pb_5U/age_unit)
     # print(age_7Pb_5U*SX/age_unit*2)
@@ -1962,7 +1911,8 @@ if __name__ == "__main__":
             column_num_isotopic_ratio[3],
             column_num_isotopic_ratio[4],
             column_num_isotopic_ratio[5],
-        ))
+        )
+    )
 
     if len(X) > 5:
         Nc = 5
@@ -1970,88 +1920,101 @@ if __name__ == "__main__":
         Nc = len(X)
 
     for i in range(0, Nc):
-        print("%.5f     %.5f   %.5f    %.5f    %.5f    %.5f" %
-              (X[i], sigma_X[i], Y[i], sigma_Y[i], y[i], sigma_y[i]))
+        print(
+            "%.5f     %.5f   %.5f    %.5f    %.5f    %.5f"
+            % (X[i], sigma_X[i], Y[i], sigma_Y[i], y[i], sigma_y[i])
+        )
 
     print("------------------------------------------------------------")
     # Range of data
     print("Range of data")
-    print("207Pb/235U: %.5f--%.5f" %
-          (data["7Pb_5U"].min(), data["7Pb_5U"].max()))
-    print("206Pb/238U: %.5f--%.5f" %
-          (data["6Pb_8U"].min(), data["6Pb_8U"].max()))
-    print("207Pb/206Pb: %.5f--%.5f" %
-          (data["7Pb_6Pb"].min(), data["7Pb_6Pb"].max()))
-    print("238U/206Pb: %.5f--%.5f" %
-          (1 / data["6Pb_8U"].max(), 1 / data["6Pb_8U"].min()))
+    print("207Pb/235U: %.5f--%.5f" % (data["7Pb_5U"].min(), data["7Pb_5U"].max()))
+    print("206Pb/238U: %.5f--%.5f" % (data["6Pb_8U"].min(), data["6Pb_8U"].max()))
+    print("207Pb/206Pb: %.5f--%.5f" % (data["7Pb_6Pb"].min(), data["7Pb_6Pb"].max()))
+    print("238U/206Pb: %.5f--%.5f" % (1 / data["6Pb_8U"].max(), 1 / data["6Pb_8U"].min()))
 
     print("------------------------------------------------------------")
     # discordance
     if opt_exclude_disc:
-        print("Discordant data (> %s%%) are excluded from analysis." %
-              format(disc_thres, dignum))
+        print(
+            "Discordant data (> %s%%) are excluded from analysis."
+            % format(disc_thres, dignum)
+        )
         if disc_type == 0:
             print("Discordance is calculated by", end=" ")
             print("100*(1-([206Pb/238U age]/[207Pb/206Pb age]))")
             # Discordant data points
             print("Discordant data points [n = %d] are" % len(outd_disc))
             for i in outd_disc:
-                print("%d: %s%% = (1-%.1f/%.1f) x 100" % (
-                    i,
-                    format(disc_percent[i], dignum),
-                    age_6Pb_8U[i] / age_unit,
-                    age_7Pb_5U[i] / age_unit,
-                ))
+                print(
+                    "%d: %s%% = (1-%.1f/%.1f) x 100"
+                    % (
+                        i,
+                        format(disc_percent[i], dignum),
+                        age_6Pb_8U[i] / age_unit,
+                        age_7Pb_5U[i] / age_unit,
+                    )
+                )
         elif disc_type == 1:
             print("Discordance is calculated by", end=" ")
             print("100*(1-([207Pb/235U age]/[207Pb/206Pb age]))")
             # Discordant data points
             print("Discordant data points [n = %d] are" % len(outd_disc))
             for i in outd_disc:
-                print("%d: %s%% = (1-%.1f/%.1f) x 100" % (
-                    i,
-                    format(disc_percent[i], dignum),
-                    age_7Pb_5U[i] / age_unit,
-                    age_7Pb_6Pb[i] / age_unit,
-                ))
+                print(
+                    "%d: %s%% = (1-%.1f/%.1f) x 100"
+                    % (
+                        i,
+                        format(disc_percent[i], dignum),
+                        age_7Pb_5U[i] / age_unit,
+                        age_7Pb_6Pb[i] / age_unit,
+                    )
+                )
         elif disc_type == 2:
             print("Discordance is calculated by", end=" ")
             print("100*(1-([206Pb/238U age]/[207Pb/235U age])")
             # Discordant data points
             print("Discordant data points [n = %d] are" % len(outd_disc))
             for i in outd_disc:
-                print("%d: %s%% = (1-%.1f/%.1f) x 100" % (
-                    i,
-                    format(disc_percent[i], dignum),
-                    age_6Pb_8U[i] / age_unit,
-                    age_7Pb_5U[i] / age_unit,
-                ))
+                print(
+                    "%d: %s%% = (1-%.1f/%.1f) x 100"
+                    % (
+                        i,
+                        format(disc_percent[i], dignum),
+                        age_6Pb_8U[i] / age_unit,
+                        age_7Pb_5U[i] / age_unit,
+                    )
+                )
         elif disc_type == 3:
             print("Discordance is calculated by", end=" ")
             print("100*(1-([207Pb/235U age]/[206Pb/238U age])")
             # Discordant data points
             print("Discordant data points [n = %d] are" % len(outd_disc))
             for i in outd_disc:
-                print("%d: %s%% = (1-%.1f/%.1f) x 100" % (
-                    i,
-                    format(disc_percent[i], dignum),
-                    age_7Pb_5U[i] / age_unit,
-                    age_6Pb_8U[i] / age_unit,
-                ))
+                print(
+                    "%d: %s%% = (1-%.1f/%.1f) x 100"
+                    % (
+                        i,
+                        format(disc_percent[i], dignum),
+                        age_7Pb_5U[i] / age_unit,
+                        age_6Pb_8U[i] / age_unit,
+                    )
+                )
         elif disc_type == 4:
             print("Discordance is calculated by", end=" ")
             print("100*(1-(min[207Pb/235U age] / max[206Pb/238U age])")
             # Discordant data points
             print("Discordant data points [n = %d] are" % len(outd_disc))
             for i in outd_disc:
-                print("%d: %s%% = (1-%.1f/%.1f) x 100" % (
-                    i,
-                    format(disc_percent[i], dignum),
-                    (age_7Pb_5U[i] - age_7Pb_5U_se[i] * input_error_sigma) /
-                    age_unit,
-                    (age_6Pb_8U[i] + age_6Pb_8U_se[i] * input_error_sigma) /
-                    age_unit,
-                ))
+                print(
+                    "%d: %s%% = (1-%.1f/%.1f) x 100"
+                    % (
+                        i,
+                        format(disc_percent[i], dignum),
+                        (age_7Pb_5U[i] - age_7Pb_5U_se[i] * input_error_sigma) / age_unit,
+                        (age_6Pb_8U[i] + age_6Pb_8U_se[i] * input_error_sigma) / age_unit,
+                    )
+                )
         elif disc_type == 5:
             print(
                 "Discordant data means that the error ellipse doesn't intersect the concordia line."
@@ -2068,17 +2031,11 @@ if __name__ == "__main__":
     # Check correlation coefficient
     if rho_XY[ind].max() > 1:
         print("Correlation coefficient: rho_XY")
-        [
-            print("%d %.2f" % (i, rho_XY[i])) for i in range(len(rho_XY))
-            if rho_XY[i] > 1
-        ]
+        [print("%d %.2f" % (i, rho_XY[i])) for i in range(len(rho_XY)) if rho_XY[i] > 1]
         sys.exit("rho_XY is more than 1")
     elif rho_xy[ind].max() > 1:
         print("Correlation coefficient: rho_xy")
-        [
-            print("%d %.2f" % (i, rho_xy[i])) for i in range(len(rho_xy))
-            if rho_xy[i] > 1
-        ]
+        [print("%d %.2f" % (i, rho_xy[i])) for i in range(len(rho_xy)) if rho_xy[i] > 1]
         sys.exit("rho_xy is more than 1")
 
     # ################################################
@@ -2090,16 +2047,19 @@ if __name__ == "__main__":
         age_6Pb_8U_se[i] = age_6Pb_8U[i] * SY[i]
         age_7Pb_5U_se[i] = age_7Pb_5U[i] * SX[i]
 
-        print("%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (
-            i,
-            format(age_6Pb_8U[i] / age_unit, dignum),
-            format(age_6Pb_8U_se[i] / age_unit, dignum),
-            format(age_7Pb_5U[i] / age_unit, dignum),
-            format(age_7Pb_5U_se[i] / age_unit, dignum),
-            format(age_7Pb_6Pb[i] / age_unit, dignum),
-            format(age_7Pb_6Pb_se_plus[i] / age_unit, dignum),
-            format(age_7Pb_6Pb_se_minus[i] / age_unit, dignum),
-        ))
+        print(
+            "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s"
+            % (
+                i,
+                format(age_6Pb_8U[i] / age_unit, dignum),
+                format(age_6Pb_8U_se[i] / age_unit, dignum),
+                format(age_7Pb_5U[i] / age_unit, dignum),
+                format(age_7Pb_5U_se[i] / age_unit, dignum),
+                format(age_7Pb_6Pb[i] / age_unit, dignum),
+                format(age_7Pb_6Pb_se_plus[i] / age_unit, dignum),
+                format(age_7Pb_6Pb_se_minus[i] / age_unit, dignum),
+            )
+        )
 
     # ################################################
     print("------------------------------------------------------------")
@@ -2190,10 +2150,8 @@ if __name__ == "__main__":
         print(("%s: Conventional concordia diagram") % axn_title)
 
         ax[axn].set_title(axn_title, loc="left", fontsize=legend_font_size + 6)
-        ax[axn].set_xlabel("$^{207}$Pb* / $^{235}$U",
-                           fontsize=legend_font_size + 4)
-        ax[axn].set_ylabel("$^{206}$Pb* / $^{238}$U",
-                           fontsize=legend_font_size + 4)
+        ax[axn].set_xlabel("$^{207}$Pb* / $^{235}$U", fontsize=legend_font_size + 4)
+        ax[axn].set_ylabel("$^{206}$Pb* / $^{238}$U", fontsize=legend_font_size + 4)
         ax[axn].set_xlim(rX)
         ax[axn].set_ylim(rY)
 
@@ -2218,19 +2176,28 @@ if __name__ == "__main__":
 
         # draw error ellipses
         if opt_data_point_ee:
-            print("    Error ellipses are %d%% for data points" %
-                  (dp_ee_cr * 100))
+            print("    Error ellipses are %d%% for data points" % (dp_ee_cr * 100))
 
             if disc_type == 5:
-                line_cc = intersections_line(Xconv, Yconv)
+                line_cc = [[Xconv[i], Yconv[i]] for i, j in enumerate(Xconv)]
                 ind_cc, outd_disc_cc = plot_data_point_error_ellipse_disc(
-                    ax, axn, X, Y, sigma_X, sigma_Y, cov_XY, dp_ee_cr, outd,
-                    line_cc)
+                    ax, axn, X, Y, sigma_X, sigma_Y, cov_XY, dp_ee_cr, outd, line_cc
+                )
                 outd_disc = np.unique(np.append(outd_disc, outd_disc_cc))
             else:
-                plot_data_point_error_ellipse(ax, axn, X, Y, sigma_X, sigma_Y,
-                                              cov_XY, dp_ee_cr, ind, outd,
-                                              outd_disc)
+                plot_data_point_error_ellipse(
+                    ax,
+                    axn,
+                    X,
+                    Y,
+                    sigma_X,
+                    sigma_Y,
+                    cov_XY,
+                    dp_ee_cr,
+                    ind,
+                    outd,
+                    outd_disc,
+                )
 
         if len(ind_cc) > 0:
             ind = ind_cc
@@ -2243,8 +2210,7 @@ if __name__ == "__main__":
 
         # # weighted mean
         if opt_2D_wm:
-            print("    Error ellipse is %d%% for 2D weighted mean" %
-                  (twm_ee_cr * 100))
+            print("    Error ellipse is %d%% for 2D weighted mean" % (twm_ee_cr * 100))
             legend_pos += 1
             plot_2D_wm(
                 ax,
@@ -2261,9 +2227,20 @@ if __name__ == "__main__":
 
         # Concordia age
         if opt_concordia_age or opt_concordia_ia:
-            T_lsq, S_lsq, X_lsq, Y_lsq, MSWDconc, MSWDeq, MSWDcomb, Pconc, Peq, Pcomb = concordia_age(
-                "conv", X[ind], Y[ind], sigma_X[ind], sigma_Y[ind],
-                rho_XY[ind], ca_cr)
+            (
+                T_lsq,
+                S_lsq,
+                X_lsq,
+                Y_lsq,
+                MSWDconc,
+                MSWDeq,
+                MSWDcomb,
+                Pconc,
+                Peq,
+                Pcomb,
+            ) = concordia_age(
+                "conv", X[ind], Y[ind], sigma_X[ind], sigma_Y[ind], rho_XY[ind], ca_cr
+            )
 
             if ca_mswd == 0:
                 MSWD = MSWDconc
@@ -2308,13 +2285,16 @@ if __name__ == "__main__":
                     (ca_cr * 100),
                     format(S_lsq / age_unit * np.sqrt(MSWDcomb), dignum),
                     age_unit_name,
-                ))
+                )
+            )
             print(
                 "    MSWD concordance / equivalence / combined = %.2f / %.2f / %.2f"
-                % (MSWDconc, MSWDeq, MSWDcomb))
+                % (MSWDconc, MSWDeq, MSWDcomb)
+            )
             print(
                 "    P-value concordance / equivalence / combined = %.2f / %.2f / %.2f"
-                % (Pconc, Peq, Pcomb))
+                % (Pconc, Peq, Pcomb)
+            )
 
         # plot intercept line and band
         if opt_concordia_ia:
@@ -2337,13 +2317,16 @@ if __name__ == "__main__":
                     legend_pos_x[legend_pos],
                     legend_pos_y[legend_pos],
                 )
-                print("    Intercept age = %s +%s %s %s [%d%% conf.]" % (
-                    format(Tsi / age_unit, dignum),
-                    format((Tmax - Tsi) / age_unit, dignum),
-                    format((Tmin - Tsi) / age_unit, dignum),
-                    age_unit_name,
-                    ia_cr * 100,
-                ))
+                print(
+                    "    Intercept age = %s +%s %s %s [%d%% conf.]"
+                    % (
+                        format(Tsi / age_unit, dignum),
+                        format((Tmax - Tsi) / age_unit, dignum),
+                        format((Tmin - Tsi) / age_unit, dignum),
+                        age_unit_name,
+                        ia_cr * 100,
+                    )
+                )
 
             if (concordia_ia_case_cc == 1) or (concordia_ia_case_cc == 2):
                 legend_pos += 1
@@ -2364,17 +2347,21 @@ if __name__ == "__main__":
                     legend_pos_x[legend_pos],
                     legend_pos_y[legend_pos],
                 )
-                print("    Intercept age = %s +%s %s %s [%d%% conf.]" % (
-                    format(Tsi / age_unit, dignum),
-                    format((Tmax - Tsi) / age_unit, dignum),
-                    format((Tmin - Tsi) / age_unit, dignum),
-                    age_unit_name,
-                    ia_cr * 100,
-                ))
+                print(
+                    "    Intercept age = %s +%s %s %s [%d%% conf.]"
+                    % (
+                        format(Tsi / age_unit, dignum),
+                        format((Tmax - Tsi) / age_unit, dignum),
+                        format((Tmin - Tsi) / age_unit, dignum),
+                        age_unit_name,
+                        ia_cr * 100,
+                    )
+                )
 
         # Sample number
-        legend_data_number(ax, axn, legend_pos_x[legend_pos],
-                           legend_pos_y[legend_pos], ind_cc)
+        legend_data_number(
+            ax, axn, legend_pos_x[legend_pos], legend_pos_y[legend_pos], ind_cc
+        )
 
     # ------------------------------------------------
     # B: Tera-Wasserburg concordia plot
@@ -2398,10 +2385,8 @@ if __name__ == "__main__":
         print(("%s: Tera-Wasserburg concordia diagram") % axn_title)
 
         ax[axn].set_title(axn_title, loc="left", fontsize=legend_font_size + 6)
-        ax[axn].set_xlabel("$^{238}$U / $^{206}$Pb*",
-                           fontsize=legend_font_size + 4)
-        ax[axn].set_ylabel("$^{207}$Pb* / $^{206}$Pb*",
-                           fontsize=legend_font_size + 4)
+        ax[axn].set_xlabel("$^{238}$U / $^{206}$Pb*", fontsize=legend_font_size + 4)
+        ax[axn].set_ylabel("$^{207}$Pb* / $^{206}$Pb*", fontsize=legend_font_size + 4)
         ax[axn].set_xlim(rx)
         ax[axn].set_ylim(ry)
 
@@ -2427,15 +2412,25 @@ if __name__ == "__main__":
         # draw error ellipses
         if opt_data_point_ee:
             if disc_type == 5:
-                line_tw = intersections_line(Xtw, Ytw)
+                line_tw = [[Xtw[i], Ytw[i]] for i, j in enumerate(Xtw)]
                 ind_tw, outd_disc_tw = plot_data_point_error_ellipse_disc(
-                    ax, axn, x, y, sigma_x, sigma_y, cov_xy, dp_ee_cr, outd,
-                    line_tw)
+                    ax, axn, x, y, sigma_x, sigma_y, cov_xy, dp_ee_cr, outd, line_tw
+                )
                 outd_disc = np.unique(np.append(outd_disc, outd_disc_tw))
             else:
-                plot_data_point_error_ellipse(ax, axn, x, y, sigma_x, sigma_y,
-                                              cov_xy, dp_ee_cr, ind, outd,
-                                              outd_disc)
+                plot_data_point_error_ellipse(
+                    ax,
+                    axn,
+                    x,
+                    y,
+                    sigma_x,
+                    sigma_y,
+                    cov_xy,
+                    dp_ee_cr,
+                    ind,
+                    outd,
+                    outd_disc,
+                )
 
         if len(ind_tw) > 0:
             ind = ind_tw
@@ -2464,9 +2459,20 @@ if __name__ == "__main__":
 
         # Concordia age
         if opt_concordia_age or opt_concordia_ia:
-            t_lsq, s_lsq, x_lsq, y_lsq, mswd_conc, mswd_eq, mswd_comb, p_conc, p_eq, p_comb = concordia_age(
-                "tw", x[ind], y[ind], sigma_x[ind], sigma_y[ind], rho_xy[ind],
-                ca_cr)
+            (
+                t_lsq,
+                s_lsq,
+                x_lsq,
+                y_lsq,
+                mswd_conc,
+                mswd_eq,
+                mswd_comb,
+                p_conc,
+                p_eq,
+                p_comb,
+            ) = concordia_age(
+                "tw", x[ind], y[ind], sigma_x[ind], sigma_y[ind], rho_xy[ind], ca_cr
+            )
 
             if ca_mswd == 0:
                 mswd = mswd_conc
@@ -2511,14 +2517,17 @@ if __name__ == "__main__":
                     (ca_cr * 100),
                     format(s_lsq / age_unit * np.sqrt(mswd_comb), dignum),
                     age_unit_name,
-                ))
+                )
+            )
 
             print(
                 "    MSWD concordance / equivalence / combined = %.2f / %.2f / %.2f"
-                % (mswd_conc, mswd_eq, mswd_comb))
+                % (mswd_conc, mswd_eq, mswd_comb)
+            )
             print(
                 "    P-value concordance / equivalence / combined = %.2f / %.2f / %.2f"
-                % (p_conc, p_eq, p_comb))
+                % (p_conc, p_eq, p_comb)
+            )
 
         # plot intercept line and band
         if opt_concordia_ia:
@@ -2541,13 +2550,18 @@ if __name__ == "__main__":
                     legend_pos_x[legend_pos],
                     legend_pos_y[legend_pos],
                 )
-                print(("    Intercept age = %s +%s %s %s [%d%% conf.]" % (
-                    format(Tsi / age_unit, dignum),
-                    format((Tmax - Tsi) / age_unit, dignum),
-                    format((Tmin - Tsi) / age_unit, dignum),
-                    age_unit_name,
-                    ia_cr * 100,
-                )))
+                print(
+                    (
+                        "    Intercept age = %s +%s %s %s [%d%% conf.]"
+                        % (
+                            format(Tsi / age_unit, dignum),
+                            format((Tmax - Tsi) / age_unit, dignum),
+                            format((Tmin - Tsi) / age_unit, dignum),
+                            age_unit_name,
+                            ia_cr * 100,
+                        )
+                    )
+                )
 
             if (concordia_ia_case_tw == 1) or (concordia_ia_case_tw == 2):
                 legend_pos += 1
@@ -2568,17 +2582,23 @@ if __name__ == "__main__":
                     legend_pos_x[legend_pos],
                     legend_pos_y[legend_pos],
                 )
-                print(("    Intercept age = %s +%s %s %s [%d%% conf.]" % (
-                    format(Tsi / age_unit, dignum),
-                    format((Tmax - Tsi) / age_unit, dignum),
-                    format((Tmin - Tsi) / age_unit, dignum),
-                    age_unit_name,
-                    ia_cr * 100,
-                )))
+                print(
+                    (
+                        "    Intercept age = %s +%s %s %s [%d%% conf.]"
+                        % (
+                            format(Tsi / age_unit, dignum),
+                            format((Tmax - Tsi) / age_unit, dignum),
+                            format((Tmin - Tsi) / age_unit, dignum),
+                            age_unit_name,
+                            ia_cr * 100,
+                        )
+                    )
+                )
 
         # Sample number
-        legend_data_number(ax, axn, legend_pos_x[legend_pos],
-                           legend_pos_y[legend_pos], ind)
+        legend_data_number(
+            ax, axn, legend_pos_x[legend_pos], legend_pos_y[legend_pos], ind
+        )
 
     # ------------------------------------------------
     # C: Bar plot of 206Pb/238U ages with 1D weighted mean
@@ -2608,29 +2628,39 @@ if __name__ == "__main__":
         Tall, s1, label_selected = select_age_type(oneD_age_type)
         ax[axn].set_ylabel(label_selected, fontsize=legend_font_size + 4)
 
-        legend_pos_x, legend_pos_y = calc_legend_pos([[(N + 1) * 0.05,
-                                                       (N + 1) * 0.05],
-                                                      range_oneD_y])
+        legend_pos_x, legend_pos_y = calc_legend_pos(
+            [[(N + 1) * 0.05, (N + 1) * 0.05], range_oneD_y]
+        )
         T_owm, S_owm, MSWD_owm = plot_oneD_weighted_mean(
-            ax, axn, oneD_age_type, Tall, s1, ind, outd, outd_disc, oneD_cr,
-            legend_pos_x, legend_pos_y)
-        print(u"    1D weighted mean age = %s ± %s %s [%d%% conf.] (MSDW=%s)" %
-              (
-                  format(T_owm, dignum),
-                  format(S_owm, dignum),
-                  age_unit_name,
-                  oneD_cr * 100,
-                  format(MSWD_owm, dignum),
-              ))
+            ax,
+            axn,
+            oneD_age_type,
+            Tall,
+            s1,
+            ind,
+            outd,
+            outd_disc,
+            oneD_cr,
+            legend_pos_x,
+            legend_pos_y,
+        )
+        print(
+            u"    1D weighted mean age = %s ± %s %s [%d%% conf.] (MSDW=%s)"
+            % (
+                format(T_owm, dignum),
+                format(S_owm, dignum),
+                age_unit_name,
+                oneD_cr * 100,
+                format(MSWD_owm, dignum),
+            )
+        )
 
         # reduced chi-squared (Spencer2016gf)
-        chi2_red, res_chi2_red = calc_chi2_red(Tall[ind],
-                                               s1[ind],
-                                               T_owm,
-                                               len(ind),
-                                               opt=1)
-        print(u"    Reduced Chi-squared = %s (%s)" %
-              (format(chi2_red, dignum), res_chi2_red))
+        chi2_red, res_chi2_red = calc_chi2_red(Tall[ind], s1[ind], T_owm, len(ind), opt=1)
+        print(
+            u"    Reduced Chi-squared = %s (%s)"
+            % (format(chi2_red, dignum), res_chi2_red)
+        )
 
     # ------------------------------------------------
     # Histogram
@@ -2681,9 +2711,7 @@ if __name__ == "__main__":
             x = Tall
             x = x[(x > range_hist_x[0]) & (x < range_hist_x[1])]
             if len(x) == 0:
-                sys.exit(
-                    "Please set appropriate axis age range in configuration file."
-                )
+                sys.exit("Please set appropriate axis age range in configuration file.")
             kde_all = stats.gaussian_kde(x)
             kde_multi_all = len(x)  # replace len(ls) 20190606
 
@@ -2693,8 +2721,7 @@ if __name__ == "__main__":
             kde_multi = len(x)  # replace len(ls) 20190606
 
         if opt_hist_density:
-            ax[axn].set_ylabel("Density of samples",
-                               fontsize=legend_font_size + 4)
+            ax[axn].set_ylabel("Density of samples", fontsize=legend_font_size + 4)
 
             n, bins, rects = ax[axn].hist(
                 (Tall[ind], Tall[outd_disc], Tall[outd]),
@@ -2711,11 +2738,13 @@ if __name__ == "__main__":
             ax_yticklocs = ax[axn].yaxis.get_ticklocs()
             ax_yticklocs = list(
                 map(
-                    lambda x: x * len(
-                        np.arange(range_hist_x[0], range_hist_x[1])) * 1.0 /
-                    hist_bin_num,
+                    lambda x: x
+                    * len(np.arange(range_hist_x[0], range_hist_x[1]))
+                    * 1.0
+                    / hist_bin_num,
                     ax_yticklocs,
-                ))
+                )
+            )
 
             # ax[axn].yaxis.set_ticklabels(list(map(lambda x: "%0.2f" % x, ax_yticklocs)))
 
@@ -2725,8 +2754,7 @@ if __name__ == "__main__":
 
         else:
 
-            ax[axn].set_ylabel("Number of samples",
-                               fontsize=legend_font_size + 4)
+            ax[axn].set_ylabel("Number of samples", fontsize=legend_font_size + 4)
             n, bins, rects = ax[axn].hist(
                 (Tall[ind], Tall[outd_disc], Tall[outd]),
                 hist_bin_num,
@@ -2739,14 +2767,8 @@ if __name__ == "__main__":
             )
 
             if opt_kde:
-                ax[axn].plot(ls,
-                             kde_all(ls) * kde_multi_all,
-                             linestyle="--",
-                             color="red")
-                ax[axn].plot(ls,
-                             kde(ls) * kde_multi,
-                             linestyle="-",
-                             color="red")
+                ax[axn].plot(ls, kde_all(ls) * kde_multi_all, linestyle="--", color="red")
+                ax[axn].plot(ls, kde(ls) * kde_multi, linestyle="-", color="red")
 
     print("All done.")
 
