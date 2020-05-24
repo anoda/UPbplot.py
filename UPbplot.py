@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2020/05/23 11:32:01.
+# Last updated: 2020/05/24 14:23:18.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -24,7 +24,8 @@
 # __version__ = "0.0.8"  # Jun/06/2019
 # __version__ = "0.0.9"  # Jul/03/2019
 # __version__ = "0.1.0"  # May/22/2020
-__version__ = "0.1.1"  # May/23/2020
+# __version__ = "0.1.1"  # May/23/2020
+__version__ = "0.1.2"  # May/24/2020
 
 # [Citation]
 #
@@ -934,10 +935,10 @@ def legend_data_number(ax, axn, x, y, ind):
 
 # ------------------------------------------------
 # plot data points
-def plot_data_point(ax, axn, X, Y, ind, outd, outd_disc):
+def plot_data_point(ax, X, Y, ind, outd, outd_disc):
     for i in range(len(X)):
         if i in ind:
-            ax[axn].plot(
+            ax.plot(
                 X[i],
                 Y[i],
                 dp1_marker_type,
@@ -948,7 +949,7 @@ def plot_data_point(ax, axn, X, Y, ind, outd, outd_disc):
                 markeredgewidth=dp1_marker_ew,
             )
         elif i in outd_disc:
-            ax[axn].plot(
+            ax.plot(
                 X[i],
                 Y[i],
                 dp1_marker_type,
@@ -959,7 +960,7 @@ def plot_data_point(ax, axn, X, Y, ind, outd, outd_disc):
                 markeredgewidth=dp2_marker_ew,
             )
         else:
-            ax[axn].plot(
+            ax.plot(
                 X[i],
                 Y[i],
                 dp0_marker_type,
@@ -1302,6 +1303,7 @@ def plot_oneD_weighted_mean(
     # confidence band of the weighted mean
     ax[axn].axhspan(Twm - sm, Twm + sm, facecolor=oneD_band_fc, alpha=oneD_band_alpha)
 
+    # plot 2D weighted mean
     ax[axn].plot(
         [0.0, len(Tall) + 1],
         [Twm, Twm],
@@ -1309,6 +1311,7 @@ def plot_oneD_weighted_mean(
         color=oneD_wm_line_color,
     )
 
+    # Sorting age data
     if oneD_plot_sort == 1:
         Tplot = np.sort(Tall)
         Tnumd = np.argsort(Tall)
@@ -1316,6 +1319,9 @@ def plot_oneD_weighted_mean(
         Tplot = Tall
         Tnumd = np.where(Tall)[0]
 
+    ind_sort = []
+    outd_sort = []
+    outd_disc_sort = []
     for n, t in enumerate(Tplot):
         i = Tnumd[n]
         if len(np.intersect1d(i, ind)) > 0:
@@ -1325,13 +1331,9 @@ def plot_oneD_weighted_mean(
                 yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
                 ecolor=dp1_bar_color,
                 linewidth=dp1_bar_line_width,
-                fmt=dp1_marker_type,
-                markersize=dp1_marker_size,
-                markerfacecolor=dp1_marker_fc,
-                markeredgecolor=dp1_marker_ec,
-                markeredgewidth=dp1_marker_ew,
             )
             eb1[-1][0].set_linestyle(dp1_bar_line_style)
+            ind_sort.append(n)
         elif len(np.intersect1d(i, outd_disc)) > 0:
             eb2 = ax[axn].errorbar(
                 n + 1,
@@ -1339,13 +1341,9 @@ def plot_oneD_weighted_mean(
                 yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
                 ecolor=dp2_bar_color,
                 linewidth=dp2_bar_line_width,
-                fmt=dp2_marker_type,
-                markersize=dp2_marker_size,
-                markerfacecolor=dp2_marker_fc,
-                markeredgecolor=dp2_marker_ec,
-                markeredgewidth=dp2_marker_ew,
             )
             eb2[-1][0].set_linestyle(dp2_bar_line_style)
+            outd_disc_sort.append(n)
         else:
             eb0 = ax[axn].errorbar(
                 n + 1,
@@ -1353,13 +1351,15 @@ def plot_oneD_weighted_mean(
                 yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
                 ecolor=dp0_bar_color,
                 linewidth=dp0_bar_line_width,
-                fmt=dp0_marker_type,
-                markersize=dp0_marker_size,
-                markerfacecolor=dp0_marker_fc,
-                markeredgecolor=dp0_marker_ec,
-                markeredgewidth=dp0_marker_ew,
             )
             eb0[-1][0].set_linestyle(dp0_bar_line_style)
+            outd_sort.append(n)
+
+    # plot data point
+    if opt_data_point:
+        plot_data_point(
+            ax[axn], np.where(Tall)[0] + 1, Tplot, ind_sort, outd_sort, outd_disc_sort
+        )
 
     # legend
     legend_data_number(ax, axn, legend_pos_x[0], legend_pos_y[0], ind)
@@ -1426,11 +1426,11 @@ def plot_Th_U(
                 yerr=Th_U_e[i],
                 ecolor=dp0_bar_color,
                 linewidth=dp0_bar_line_width,
-                fmt=dp0_marker_type,
-                markersize=dp0_marker_size,
-                markerfacecolor=dp0_marker_fc,
-                markeredgecolor=dp0_marker_ec,
-                markeredgewidth=dp0_marker_ew,
+                # fmt=dp0_marker_type,
+                # markersize=dp0_marker_size,
+                # markerfacecolor=dp0_marker_fc,
+                # markeredgecolor=dp0_marker_ec,
+                # markeredgewidth=dp0_marker_ew,
             )
             eb0[-1][0].set_linestyle(dp1_bar_line_style)
         elif i in outd_disc:
@@ -1441,11 +1441,11 @@ def plot_Th_U(
                 yerr=Th_U_e[i],
                 ecolor=dp2_bar_color,
                 linewidth=dp2_bar_line_width,
-                fmt=dp2_marker_type,
-                markersize=dp2_marker_size,
-                markerfacecolor=dp2_marker_fc,
-                markeredgecolor=dp2_marker_ec,
-                markeredgewidth=dp2_marker_ew,
+                # fmt=dp2_marker_type,
+                # markersize=dp2_marker_size,
+                # markerfacecolor=dp2_marker_fc,
+                # markeredgecolor=dp2_marker_ec,
+                # markeredgewidth=dp2_marker_ew,
             )
             eb2[-1][0].set_linestyle(dp2_bar_line_style)
         elif i in ind:
@@ -1456,13 +1456,17 @@ def plot_Th_U(
                 yerr=Th_U_e[i],
                 ecolor=dp1_bar_color,
                 linewidth=dp1_bar_line_width,
-                fmt=dp1_marker_type,
-                markersize=dp1_marker_size,
-                markerfacecolor=dp1_marker_fc,
-                markeredgecolor=dp1_marker_ec,
-                markeredgewidth=dp1_marker_ew,
+                # fmt=dp1_marker_type,
+                # markersize=dp1_marker_size,
+                # markerfacecolor=dp1_marker_fc,
+                # markeredgecolor=dp1_marker_ec,
+                # markeredgewidth=dp1_marker_ew,
             )
             eb1[-1][0].set_linestyle(dp1_bar_line_style)
+
+    # plot data point
+    if opt_data_point:
+        plot_data_point(axb, Tall, Th_U, ind, outd, outd_disc)
 
 
 # ################################################
@@ -1540,7 +1544,133 @@ if __name__ == "__main__":
 
     # ################################################
     # Configuration
-    config = ConfigParser()
+    config = ConfigParser(
+        defaults={
+            "infile_delimeter": "comma",
+            "rows_of_header": "1",
+            "colnum_207Pb_235U": "2",
+            "colnum_207Pb_235U_error": "3",
+            "colnum_206Pb_238U": "4",
+            "colnum_206Pb_238U_error": "5",
+            "colnum_207Pb_206Pb": "6",
+            "colnum_207Pb_206Pb_error": "7",
+            "colnum_207Pb_206Pb_inverse": False,
+            "error_real": True,
+            "input_error_sigma": "2",
+            "opt_exclude_discordant_data": True,
+            "discordance_percent_threshold": "10.0",
+            "disc_type": "5",
+            "opt_outlier": True,
+            "outlier_alpha": "0.05",
+            "exclude_data_points": "[]",
+            "opt_Th_U": False,
+            "Th_U_inverse": False,
+            "Th_U_row_num": "8",
+            "Th_U_error_num": "[]",
+            "digits_number_output": "1",
+            "plot_diagrams": "[1, 1, 1, 1]",
+            "graph_age_min": "65.0",
+            "graph_age_max": "110.0",
+            "graph_label_interval": "5",
+            "age_unit_name": "Ma",
+            "legend_font_size": "8",
+            "range_automatic_cc": True,
+            "range_xy_cc": "[[0,10],[0,1]]",
+            "range_automatic_twc": True,
+            "range_xy_tw": "[[100, 1200], [0.00, 1.0]]",
+            "opt_data_point": False,
+            "dp0_marker_type": "s",
+            "dp1_marker_type": "o",
+            "dp2_marker_type": "o",
+            "dp0_marker_size": "5",
+            "dp1_marker_size": "5",
+            "dp2_marker_size": "5",
+            "dp0_marker_alpha": "1",
+            "dp1_marker_alpha": "1",
+            "dp2_marker_alpha": "1",
+            "dp0_marker_face_color": "blue",
+            "dp1_marker_face_color": "black",
+            "dp2_marker_face_color": "red",
+            "dp0_marker_edge_color": "white",
+            "dp1_marker_edge_color": "white",
+            "dp2_marker_edge_color": "white",
+            "dp0_marker_edge_width": "0.5",
+            "dp1_marker_edge_width": "0.5",
+            "dp2_marker_edge_width": "0.5",
+            "opt_data_point_ee": True,
+            "dp_ee_sigma": "2.0",
+            "dp0_ee_alpha": "1.0",
+            "dp1_ee_alpha": "1.0",
+            "dp2_ee_alpha": "1.0",
+            "dp0_ee_face_color": "0.0",
+            "dp1_ee_face_color": "0.0",
+            "dp2_ee_face_color": "0.0",
+            "dp0_ee_edge_line_style": "dotted",
+            "dp1_ee_edge_line_style": "solid",
+            "dp2_ee_edge_line_style": "dashed",
+            "dp0_ee_edge_color": "blue",
+            "dp1_ee_edge_color": "black",
+            "dp2_ee_edge_color": "red",
+            "dp0_ee_edge_width": "0.5",
+            "dp1_ee_edge_width": "0.5",
+            "dp2_ee_edge_width": "0.5",
+            "opt_2D_weighted_mean": True,
+            "twm_ee_sigma": "2",
+            "twm_ee_face_color": "blue",
+            "twm_ee_edge_color": "blue",
+            "twm_ee_edge_width": "0.0",
+            "twm_ee_alpha": "0.5",
+            "opt_concordia_age": True,
+            "concordia_ia_case_cc": "0",
+            "concordia_ia_case_tw": "0",
+            "ca_sigma": "2",
+            "ca_marker_type": "s",
+            "ca_marker_size": "2",
+            "ca_marker_face_color": "black",
+            "ca_marker_edge_color": "black",
+            "ca_marker_edge_width": "0.5",
+            "ca_mswd": "1",
+            "opt_concordia_intercept_age": False,
+            "ia_line_width": "1",
+            "ia_line_color": "blue",
+            "ia_sigma": "2",
+            "ia_fill_color": "blue",
+            "ia_alpha": "0.1",
+            "range_automatic_oneD": True,
+            "range_oneD_y": "[1, 110]",
+            "oneD_age_type": "68",
+            "oneD_plot_sort": True,
+            "oneD_sigma": "2",
+            "oneD_wm_line_width": "2",
+            "oneD_wm_line_color": "blue",
+            "oned_band_fillcolor": "0.8",
+            "oneD_band_alpha": "0.75",
+            "oneD_yaxis_log": False,
+            "dp0_bar_line_style": "dotted",
+            "dp1_bar_line_style": "-",
+            "dp2_bar_line_style": "dashed",
+            "dp0_bar_line_width": "1",
+            "dp1_bar_line_width": "1",
+            "dp2_bar_line_width": "1",
+            "dp0_bar_color": "blue",
+            "dp1_bar_color": "black",
+            "dp2_bar_color": "red",
+            "range_automatic_hist": True,
+            "range_hist_x": "[1,110]",
+            "hist_bin_num": "20",
+            "hist_age_type": "68",
+            "Th_U_sigma": "2",
+            "hist_bin_color0": "white",
+            "hist_bin_color1": "blue",
+            "hist_bin_color2": "0.5",
+            "hist_bin_alpha": "0.5",
+            "opt_kde": True,
+            "kde_line_color": "green",
+            "kde_line_width": "1.5",
+            "opt_hist_density": False,
+        }
+    )
+
     config.read(conffile)
 
     c_delim = config.get("File", "infile_delimeter")  # 'comma' or 'tab'
@@ -1552,7 +1682,7 @@ if __name__ == "__main__":
     c_7Pb6Pb = config.getint("File", "colnum_207Pb_206Pb")
     c_7Pb6Pb_e = config.getint("File", "colnum_207Pb_206Pb_error")
     c_7Pb6Pb_i = config.getboolean("File", "colnum_207Pb_206Pb_inverse")
-    error_type = config.getboolean("File", "error_type")
+    error_real = config.getboolean("File", "error_real")
     input_error_sigma = config.getfloat("File", "input_error_sigma")  # 1 or 2
     opt_exclude_disc = config.getboolean("File", "opt_exclude_discordant_data")
     disc_thres = config.getfloat("File", "discordance_percent_threshold")
@@ -1572,9 +1702,9 @@ if __name__ == "__main__":
     age_unit_name = config.get("Graph", "age_unit_name")  # = 'Ma'
     legend_font_size = config.getint("Graph", "legend_font_size")  # = 10
     range_automatic_cc = config.getboolean("Graph", "range_automatic_cc")
-    range_XY = loads(config.get("Graph", "range_xy_cc"))  # [[0,6],[0,0.35]]
+    range_xy_cc = loads(config.get("Graph", "range_xy_cc"))  # [[0,6],[0,0.35]]
     range_automatic_twc = config.getboolean("Graph", "range_automatic_twc")
-    range_xy = loads(config.get("Graph", "range_xy_tw"))  # [[xmin,xmax],[ymin,ymax]]
+    range_xy_tw = loads(config.get("Graph", "range_xy_tw"))  # [[xmin,xmax],[ymin,ymax]]
     opt_data_point = config.getboolean("Graph", "opt_data_point")
     dp0_marker_type = config.get("Graph", "dp0_marker_type")  # = 'o'
     dp0_marker_size = config.getfloat("Graph", "dp0_marker_size")  # = 7
@@ -1642,7 +1772,7 @@ if __name__ == "__main__":
     oneD_wm_line_color = config.get("Graph", "oneD_wm_line_color")  # blue
     oneD_band_fc = config.get("Graph", "oneD_band_fillcolor")  # 0.8
     oneD_band_alpha = config.getfloat("Graph", "oneD_band_alpha")  # 0.5
-    oneD_yaxis_log = config.getint("Graph", "oneD_yaxis_log")  # 0
+    oneD_yaxis_log = config.getboolean("Graph", "oneD_yaxis_log")  # 0
     dp0_bar_line_style = config.get("Graph", "dp0_bar_line_style")  # solid
     dp0_bar_line_width = config.getfloat("Graph", "dp0_bar_line_width")  # 1
     dp0_bar_color = config.get("Graph", "dp0_bar_color")  # black
@@ -1662,9 +1792,9 @@ if __name__ == "__main__":
     hist_bin_color2 = config.get("Graph", "hist_bin_color2")  # 0.5
     hist_bin_alpha = config.getfloat("Graph", "hist_bin_alpha")  # 0.75
     opt_kde = config.getboolean("Graph", "opt_kde")  # 1
-    opt_hist_density = config.getfloat(
-        "Graph", "opt_hist_density"
-    )  # density of histogram
+    kde_line_color = config.get("Graph", "kde_line_color")  # red
+    kde_line_width = config.get("Graph", "kde_line_width")  # 2
+    opt_hist_density = config.getboolean("Graph", "opt_hist_density")
 
     # cumulative probability density
     # 1 sigma (68.3), 2 sigma (95.4%), and 3 sigma (99.7%)
@@ -1706,7 +1836,7 @@ if __name__ == "__main__":
             ],
         ]
     else:
-        range_XY = range_XY
+        range_XY = range_xy_cc
 
     # Tera-Wasserburg concordia diagrams
     # x = 1/Y
@@ -1720,7 +1850,7 @@ if __name__ == "__main__":
             ],
         ]
     else:
-        range_xy = range_xy
+        range_xy = range_xy_tw
 
     # 1D bar plot
     # x = number of samples
@@ -1777,10 +1907,12 @@ if __name__ == "__main__":
         data["7Pb_6Pb"] = 1.0 / data["7Pb_6Pb"]
 
     # if error is shown in percentage
-    if error_type:
+    print(data["7Pb_5U_1s"])
+    if not error_real:
         data["7Pb_5U_1s"] = data["7Pb_5U"] * data["7Pb_5U_1s"] / 100.0
         data["6Pb_8U_1s"] = data["6Pb_8U"] * data["6Pb_8U_1s"] / 100.0
         data["7Pb_6Pb_1s"] = data["7Pb_6Pb"] * data["7Pb_6Pb_1s"] / 100.0
+        print(data["7Pb_5U_1s"])
     # if error range is given by other than 1 sigma
     if input_error_sigma != 1.0:
         data["7Pb_5U_1s"] = data["7Pb_5U_1s"] / input_error_sigma
@@ -2170,10 +2302,6 @@ if __name__ == "__main__":
         legend_pos_x, legend_pos_y = calc_legend_pos(range_XY)
         legend_pos = 0
 
-        # plot data point
-        if opt_data_point:
-            plot_data_point(ax, axn, X, Y, ind, outd, outd_disc)
-
         # draw error ellipses
         if opt_data_point_ee:
             print("    Error ellipses are %d%% for data points" % (dp_ee_cr * 100))
@@ -2184,6 +2312,10 @@ if __name__ == "__main__":
                     ax, axn, X, Y, sigma_X, sigma_Y, cov_XY, dp_ee_cr, outd, line_cc
                 )
                 outd_disc = np.unique(np.append(outd_disc, outd_disc_cc))
+                if len(ind_cc) > 0:
+                    ind = ind_cc
+                if len(outd_disc_cc) > 0:
+                    outd_disc = outd_disc_cc
             else:
                 plot_data_point_error_ellipse(
                     ax,
@@ -2199,14 +2331,13 @@ if __name__ == "__main__":
                     outd_disc,
                 )
 
-        if len(ind_cc) > 0:
-            ind = ind_cc
-        if len(outd_disc_cc) > 0:
-            outd_disc = outd_disc_cc
-
         print("    Excluded data are ", outd)
         print("    Concordant data are ", ind)
         print("    Discordant data are ", outd_disc)
+
+        # plot data point
+        if opt_data_point:
+            plot_data_point(ax[axn], X, Y, ind, outd, outd_disc)
 
         # # weighted mean
         if opt_2D_wm:
@@ -2360,7 +2491,7 @@ if __name__ == "__main__":
 
         # Sample number
         legend_data_number(
-            ax, axn, legend_pos_x[legend_pos], legend_pos_y[legend_pos], ind_cc
+            ax, axn, legend_pos_x[legend_pos], legend_pos_y[legend_pos], ind
         )
 
     # ------------------------------------------------
@@ -2407,7 +2538,7 @@ if __name__ == "__main__":
 
         # plot data point
         if opt_data_point:
-            plot_data_point(ax, axn, x, y, ind, outd, outd_disc)
+            plot_data_point(ax[axn], x, y, ind, outd, outd_disc)
 
         # draw error ellipses
         if opt_data_point_ee:
@@ -2417,6 +2548,10 @@ if __name__ == "__main__":
                     ax, axn, x, y, sigma_x, sigma_y, cov_xy, dp_ee_cr, outd, line_tw
                 )
                 outd_disc = np.unique(np.append(outd_disc, outd_disc_tw))
+                if len(ind_tw) > 0:
+                    ind = ind_tw
+                if len(outd_disc_tw) > 0:
+                    outd_disc = outd_disc_tw
             else:
                 plot_data_point_error_ellipse(
                     ax,
@@ -2431,11 +2566,6 @@ if __name__ == "__main__":
                     outd,
                     outd_disc,
                 )
-
-        if len(ind_tw) > 0:
-            ind = ind_tw
-        if len(outd_disc_tw) > 0:
-            outd_disc = outd_disc_tw
 
         print("    Excluded data are ", outd)
         print("    Concordant data are ", ind)
@@ -2706,8 +2836,7 @@ if __name__ == "__main__":
             )
 
         if opt_kde:
-
-            ls = np.linspace(range_hist_x[0], range_hist_x[1], num=200)
+            ls = np.linspace(range_hist_x[0], range_hist_x[1], num=400)
             x = Tall
             x = x[(x > range_hist_x[0]) & (x < range_hist_x[1])]
             if len(x) == 0:
@@ -2749,8 +2878,20 @@ if __name__ == "__main__":
             # ax[axn].yaxis.set_ticklabels(list(map(lambda x: "%0.2f" % x, ax_yticklocs)))
 
             if opt_kde:
-                ax[axn].plot(ls, kde_all(ls), linestyle="--", color="red")
-                ax[axn].plot(ls, kde(ls), linestyle="-", color="red")
+                ax[axn].plot(
+                    ls,
+                    kde_all(ls),
+                    linestyle="--",
+                    color=kde_line_color,
+                    linewidth=kde_line_width,
+                )
+                ax[axn].plot(
+                    ls,
+                    kde(ls),
+                    linestyle="-",
+                    color=kde_line_color,
+                    linewidth=kde_line_width,
+                )
 
         else:
 
@@ -2767,8 +2908,20 @@ if __name__ == "__main__":
             )
 
             if opt_kde:
-                ax[axn].plot(ls, kde_all(ls) * kde_multi_all, linestyle="--", color="red")
-                ax[axn].plot(ls, kde(ls) * kde_multi, linestyle="-", color="red")
+                ax[axn].plot(
+                    ls,
+                    kde_all(ls) * kde_multi_all,
+                    linestyle="--",
+                    color=kde_line_color,
+                    linewidth=kde_line_width,
+                )
+                ax[axn].plot(
+                    ls,
+                    kde(ls) * kde_multi,
+                    linestyle="-",
+                    color=kde_line_color,
+                    linewidth=kde_line_width,
+                )
 
     print("All done.")
 
