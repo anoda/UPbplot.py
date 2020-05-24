@@ -101,3 +101,9 @@ Command-line options:
 	-d DRIVER, --driver=DRIVER  Choose from [pdf (default), Qt5Agg, TKAgg, macosx]
 	-f, --force-overwrite       Force overwrite the pre-existing pdf
 
+[Advantages]:
+
+1. There are some manners to separate discordant data from concordant ones.  This script can automatically classify data whose error ellipses intersect the concordia curves as discordant data.  Set ``disc_type: 5'' in the configuration file to use this method.
+
+2. Generalized ESD test is a common procedure to identify outliers in a data set.  This script can automatically exclude outliers at a certain critical value of the confidince level (eg., ``outlier_alpha: 0.05'').  Set ``opt_outlier: True'' to use this option.
+
