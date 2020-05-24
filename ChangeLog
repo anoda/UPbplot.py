@@ -4,13 +4,13 @@
 
 	Main script:
 
-	* config: add defaults values for ConfigParser.
-	Now, you just need to list selevctive variables in your configuration file,
+	* config: add default values for ConfigParser.
+	Now, you just need to describe selevcted variables in your configuration file,
 	instead of all variables.
 
 	Configuration file:
 
-	error_real: renamed from error_type
+	error_real: renamed from error_type (True or False)
 
 2020-05-23  Version 0.1.1
 
