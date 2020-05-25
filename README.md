@@ -13,12 +13,11 @@ concordia diagrams, and
 concordia-intercept ages with errors on both concordia diagrams.
 
 
-[License, Author, Copyright, Publication date]
+[License, Author, and Copyright]
 
 	License: Apache License, Version 2.0
 	Author: Atsushi Noda
 	Copyright: Geological Survey of Japan, AIST
-	Publication date: Jul 03, 2019 (ver 0.0.9)
 
 
 [Citation]
