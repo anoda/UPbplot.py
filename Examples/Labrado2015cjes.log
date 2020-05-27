@@ -21,9 +21,7 @@ Range of data
 207Pb/206Pb: 0.04267--0.05558
 238U/206Pb: 50.76142--54.94505
 ------------------------------------------------------------
-Discordant data (> 15.000%) are excluded from analysis.
-Discordance is calculated by 100*(1-([206Pb/238U age]/[207Pb/235U age])
-Discordant data points [n = 0] are
+Discordant data means that the error ellipse doesn't intersect the concordia line.
 ------------------------------------------------------------
 U-Pb ages (Ma) [2 sigma]
 #	6/8	+-s	7/5	+-s	7/6	+s	-s	
@@ -57,11 +55,14 @@ U-Pb ages (Ma) [2 sigma]
 27	125.760	4.779	111.166	18.565	0.000	662.169	1104.051
 ------------------------------------------------------------
 Normality test: failed (p = 0.55)
-------------------------------------------------------------
-Accepted data points [n = 28] are [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
+Inliers are  [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
  24 25 26 27]
-Excluded data points [n = 0] are []
+------------------------------------------------------------
 a: One-dimensional bar plot
+    Excluded data are  []
+    Accepted data are  [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
+ 24 25 26 27]
+    Discordant data are  []
     1D weighted mean age = 120.912 ± 1.472 Ma [95% conf.] (MSDW=0.228)
     Reduced Chi-squared = 0.228 (Failed, under dispersion or uncertainties overestimated)
 b: Histogram

@@ -21,57 +21,61 @@ Range of data
 207Pb/206Pb: 0.04490--0.05510
 238U/206Pb: 74.79432--79.80846
 ------------------------------------------------------------
-Discordant data (> 10.00%) are excluded from analysis.
-Discordance is calculated by 100*(1-([206Pb/238U age]/[207Pb/235U age])
-Discordant data points [n = 3] are
-2: 12.98% = (1-83.0/95.4) x 100
-3: 12.64% = (1-83.9/96.0) x 100
-6: 10.45% = (1-80.3/89.6) x 100
+Discordant data means that the error ellipse doesn't intersect the concordia line.
 ------------------------------------------------------------
 U-Pb ages (Ma) [2 sigma]
 #	6/8	+-s	7/5	+-s	7/6	+s	-s	
-0	82.63	1.02	86.29	2.97	189.29	142.76	156.46
-1	81.99	0.99	86.01	2.82	198.59	137.73	150.44
-2	83.01	1.02	95.39	3.15	415.28	132.28	144.15
-3	83.90	1.06	96.04	3.39	411.22	140.07	153.44
-4	81.74	0.93	86.01	2.24	203.22	103.00	109.95
-5	80.59	0.93	83.40	2.29	161.07	114.49	123.11
-6	80.27	0.96	89.64	2.82	344.81	126.26	136.98
-7	83.39	1.02	78.71	2.98	0.00	165.30	183.59
-8	81.16	1.02	84.52	3.07	179.94	152.11	167.75
-9	81.29	1.86	86.48	4.62	230.73	208.70	239.45
-10	81.61	1.83	78.71	3.91	0.00	202.67	230.99
-11	81.16	1.76	85.55	3.36	207.84	145.43	159.68
-12	84.73	1.89	89.55	3.84	221.61	160.89	178.55
-13	82.95	1.95	91.22	5.82	310.56	240.73	282.86
-14	81.67	1.86	83.40	4.43	132.36	212.46	244.16
-15	85.62	1.83	85.92	2.53	93.27	91.35	96.74
-16	82.05	1.76	84.05	2.73	141.98	111.32	119.44
-17	81.99	1.86	85.64	4.28	189.29	193.21	219.19
-18	80.97	1.76	78.43	2.78	1.77	130.59	141.79
+0	82.6	1.0	86.3	3.0	189.3	142.8	156.5
+1	82.0	1.0	86.0	2.8	198.6	137.7	150.4
+2	83.0	1.0	95.4	3.1	415.3	132.3	144.1
+3	83.9	1.1	96.0	3.4	411.2	140.1	153.4
+4	81.7	0.9	86.0	2.2	203.2	103.0	110.0
+5	80.6	0.9	83.4	2.3	161.1	114.5	123.1
+6	80.3	1.0	89.6	2.8	344.8	126.3	137.0
+7	83.4	1.0	78.7	3.0	0.0	165.3	183.6
+8	81.2	1.0	84.5	3.1	179.9	152.1	167.7
+9	81.3	1.9	86.5	4.6	230.7	208.7	239.4
+10	81.6	1.8	78.7	3.9	0.0	202.7	231.0
+11	81.2	1.8	85.5	3.4	207.8	145.4	159.7
+12	84.7	1.9	89.6	3.8	221.6	160.9	178.5
+13	82.9	2.0	91.2	5.8	310.6	240.7	282.9
+14	81.7	1.9	83.4	4.4	132.4	212.5	244.2
+15	85.6	1.8	85.9	2.5	93.3	91.4	96.7
+16	82.1	1.8	84.1	2.7	142.0	111.3	119.4
+17	82.0	1.9	85.6	4.3	189.3	193.2	219.2
+18	81.0	1.8	78.4	2.8	1.8	130.6	141.8
 ------------------------------------------------------------
 Normality test: failed (p = 0.20)
+Inliers are  [ 0  1  4  5  7  8  9 10 11 12 13 14 15 16 17 18]
+Discordants are  [2. 3. 6.]
 ------------------------------------------------------------
-Accepted data points [n = 16] are [ 0  1  4  5  7  8  9 10 11 12 13 14 15 16 17 18]
-Excluded data points [n = 0] are []
 ------------------------------------------------------------
 a: Conventional concordia diagram
     Error ellipses are 95% for data points
+    Excluded data are  []
+    Concordant data are  [ 0  1  4  5  7  8  9 10 11 12 13 14 15 16 17 18]
+    Discordant data are  [2. 3. 6.]
     Error ellipse is 95% for 2D weighted mean
-    Concordia age = 82.00 ± 0.66 [95% conf.] / ± 0.84 [t√MSWD] Ma
+    Concordia age = 82.0 ± 0.7 [95% conf.] / ± 0.8 [t√MSWD] Ma
     MSWD concordance / equivalence / combined = 8.81 / 1.40 / 1.64
     P-value concordance / equivalence / combined = 0.00 / 0.07 / 0.01
-    Intercept age = 79.30 +2.57 -9.84 Ma [95% conf.]
-    Intercept age = 82.38 +0.75 -0.96 Ma [95% conf.]
+    Intercept age = 79.3 +2.6 -9.8 Ma [95% conf.]
+    Intercept age = 82.4 +0.7 -1.0 Ma [95% conf.]
 b: Tera-Wasserburg concordia diagram
-    Concordia age = 82.09 ± 0.66 [95% conf.] / ± 0.84 [t√MSWD] Ma
+    Excluded data are  []
+    Concordant data are  [ 0  1  4  5  7  8  9 10 11 12 13 14 15 16 17 18]
+    Discordant data are  [2. 3. 6.]
+    Concordia age = 82.1 ± 0.7 [95% conf.] / ± 0.8 [t√MSWD] Ma
     MSWD concordance / equivalence / combined = 8.40 / 1.40 / 1.62
     P-value concordance / equivalence / combined = 0.00 / 0.07 / 0.02
-    Intercept age = 79.74 +1.94 0.54 Ma [95% conf.]
-    Intercept age = 82.43 +1.10 -0.72 Ma [95% conf.]
+    Intercept age = 79.7 +1.9 0.5 Ma [95% conf.]
+    Intercept age = 82.4 +1.1 -0.7 Ma [95% conf.]
 c: One-dimensional bar plot
-    1D weighted mean age = 82.03 ± 0.66 Ma [95% conf.] (MSDW=0.82)
-    Reduced Chi-squared = 0.82 (Passed)
+    Excluded data are  []
+    Accepted data are  [ 0  1  4  5  7  8  9 10 11 12 13 14 15 16 17 18]
+    Discordant data are  [2. 3. 6.]
+    1D weighted mean age = 82.0 ± 0.7 Ma [95% conf.] (MSDW=0.8)
+    Reduced Chi-squared = 0.8 (Passed)
 d: Histogram
 All done.
 Saving Iida2015ia_080122I01.pdf

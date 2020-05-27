@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2020/05/24 14:23:18.
+# Last updated: 2020/05/27 20:48:45.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -25,7 +25,8 @@
 # __version__ = "0.0.9"  # Jul/03/2019
 # __version__ = "0.1.0"  # May/22/2020
 # __version__ = "0.1.1"  # May/23/2020
-__version__ = "0.1.2"  # May/24/2020
+# __version__ = "0.1.2"  # May/24/2020
+__version__ = "0.1.3"  # May/27/2020
 
 # [Citation]
 #
@@ -359,9 +360,7 @@ def eigsorted(cov):
 #     return ell
 
 
-def myEllipse(
-    i, x, y, sigma_x, sigma_y, cov_xy, conf="none",
-):
+def myEllipse(i, x, y, sigma_x, sigma_y, cov_xy, conf="none"):
     cov = ([sigma_x ** 2, cov_xy], [cov_xy, sigma_y ** 2])
     vals, vecs = eigsorted(cov)
     theta = np.degrees(np.arctan2(*vecs[:, 0][::-1]))
@@ -996,12 +995,26 @@ def intersections_ellipse(x, y, line):
 
 
 # ------------------------------------------------
+# Judgement of discordance (disc_type == 5)
+def discordant_judge(xx, yy, sigma_xx, sigma_yy, cov_xxyy, conf, i_in, i_disc, line):
+    i_ind = i_in
+    for j, i in enumerate(i_in):
+        dp_ell_x, dp_ell_y = myEllipse(
+            i, xx[i], yy[i], sigma_xx[i], sigma_yy[i], cov_xxyy[i], conf,
+        )
+        if not intersections_ellipse(dp_ell_x, dp_ell_y, line):
+            i_disc = np.append(i_disc, i)
+
+    i_disc = np.unique(i_disc)
+    i_ind = np.setdiff1d(i_in, i_disc)
+    return (i_ind, i_disc)
+
+
+# ------------------------------------------------
 # draw error ellipses of data points
 def plot_data_point_error_ellipse_disc(
-    ax, axn, X, Y, sigma_X, sigma_Y, cov_XY, cr, outd, line
+    ax, axn, X, Y, sigma_X, sigma_Y, cov_XY, cr, ind, outd, outd_disc, line
 ):
-    ind = []
-    outd_disc = []
     for i in range(len(X)):
         dp_ell_x, dp_ell_y = myEllipse(
             i, X[i], Y[i], sigma_X[i], sigma_Y[i], cov_XY[i], conf=cr,
@@ -1016,27 +1029,24 @@ def plot_data_point_error_ellipse_disc(
                 color=dp0_ee_ec,
                 linewidth=dp0_ee_ew,
             )
-        else:
-            if intersections_ellipse(dp_ell_x, dp_ell_y, line):
-                ind = np.unique(np.append(ind, i))
-                ax[axn].plot(
-                    dp_ell_x,
-                    dp_ell_y,
-                    alpha=dp1_ee_alpha,
-                    linestyle=dp1_ee_ls,
-                    color=dp1_ee_ec,
-                    linewidth=dp1_ee_ew,
-                )
-            else:
-                outd_disc.append(i)
-                ax[axn].plot(
-                    dp_ell_x,
-                    dp_ell_y,
-                    alpha=dp2_ee_alpha,
-                    linestyle=dp2_ee_ls,
-                    color=dp2_ee_ec,
-                    linewidth=dp2_ee_ew,
-                )
+        elif i in ind:
+            ax[axn].plot(
+                dp_ell_x,
+                dp_ell_y,
+                alpha=dp1_ee_alpha,
+                linestyle=dp1_ee_ls,
+                color=dp1_ee_ec,
+                linewidth=dp1_ee_ew,
+            )
+        elif i in outd_disc:
+            ax[axn].plot(
+                dp_ell_x,
+                dp_ell_y,
+                alpha=dp2_ee_alpha,
+                linestyle=dp2_ee_ls,
+                color=dp2_ee_ec,
+                linewidth=dp2_ee_ew,
+            )
 
     return (ind, outd_disc)
 
@@ -1426,13 +1436,8 @@ def plot_Th_U(
                 yerr=Th_U_e[i],
                 ecolor=dp0_bar_color,
                 linewidth=dp0_bar_line_width,
-                # fmt=dp0_marker_type,
-                # markersize=dp0_marker_size,
-                # markerfacecolor=dp0_marker_fc,
-                # markeredgecolor=dp0_marker_ec,
-                # markeredgewidth=dp0_marker_ew,
             )
-            eb0[-1][0].set_linestyle(dp1_bar_line_style)
+            eb0[-1][0].set_linestyle(dp0_bar_line_style)
         elif i in outd_disc:
             eb2 = axb.errorbar(
                 Tall[i],
@@ -1441,11 +1446,6 @@ def plot_Th_U(
                 yerr=Th_U_e[i],
                 ecolor=dp2_bar_color,
                 linewidth=dp2_bar_line_width,
-                # fmt=dp2_marker_type,
-                # markersize=dp2_marker_size,
-                # markerfacecolor=dp2_marker_fc,
-                # markeredgecolor=dp2_marker_ec,
-                # markeredgewidth=dp2_marker_ew,
             )
             eb2[-1][0].set_linestyle(dp2_bar_line_style)
         elif i in ind:
@@ -1456,11 +1456,6 @@ def plot_Th_U(
                 yerr=Th_U_e[i],
                 ecolor=dp1_bar_color,
                 linewidth=dp1_bar_line_width,
-                # fmt=dp1_marker_type,
-                # markersize=dp1_marker_size,
-                # markerfacecolor=dp1_marker_fc,
-                # markeredgecolor=dp1_marker_ec,
-                # markeredgewidth=dp1_marker_ew,
             )
             eb1[-1][0].set_linestyle(dp1_bar_line_style)
 
@@ -1647,11 +1642,11 @@ if __name__ == "__main__":
             "oneD_band_alpha": "0.75",
             "oneD_yaxis_log": False,
             "dp0_bar_line_style": "dotted",
-            "dp1_bar_line_style": "-",
+            "dp1_bar_line_style": "solid",
             "dp2_bar_line_style": "dashed",
-            "dp0_bar_line_width": "1",
-            "dp1_bar_line_width": "1",
-            "dp2_bar_line_width": "1",
+            "dp0_bar_line_width": "0.5",
+            "dp1_bar_line_width": "1.0",
+            "dp2_bar_line_width": "0.5",
             "dp0_bar_color": "blue",
             "dp1_bar_color": "black",
             "dp2_bar_color": "red",
@@ -1838,6 +1833,22 @@ if __name__ == "__main__":
     else:
         range_XY = range_xy_cc
 
+    rX = [range_XY[0][0], range_XY[0][1]]
+    rY = [range_XY[1][0], range_XY[1][1]]
+    tX_min, tX_max, tY_min, tY_max = TimeRangeConv(rX, rY)
+    timeX = [t for t in time if t >= tX_min and t <= tX_max]
+    timeY = [t for t in time if t >= tY_min and t <= tY_max]
+    if len(timeX) < len(timeY):
+        timeXY = timeX + [tX_max]
+        timeXY.insert(0, tX_min)
+    else:
+        timeXY = timeY + [tY_max]
+        timeXY.insert(0, tY_min)
+
+    Xconv, Yconv = ConcLineConv(np.array(timeXY))
+    line_cc = [[Xconv[i], Yconv[i]] for i, j in enumerate(Xconv)]
+
+    # ------------------------------------------------
     # Tera-Wasserburg concordia diagrams
     # x = 1/Y
     # y = 1/137.82*X/Y
@@ -1851,6 +1862,15 @@ if __name__ == "__main__":
         ]
     else:
         range_xy = range_xy_tw
+
+    rx = [range_xy[0][0], range_xy[0][1]]
+    ry = [range_xy[1][0], range_xy[1][1]]
+    tx_min, tx_max = TimeRangeTW(rx)
+    timexy = [float(t) for t in time if t >= tx_min and t <= tx_max]
+    timexy += [tx_max]
+    timexy.insert(0, tx_min)
+    Xtw, Ytw = ConcLineTW(np.array(timexy))
+    line_tw = [[Xtw[i], Ytw[i]] for i, j in enumerate(Xtw)]
 
     # 1D bar plot
     # x = number of samples
@@ -1907,12 +1927,10 @@ if __name__ == "__main__":
         data["7Pb_6Pb"] = 1.0 / data["7Pb_6Pb"]
 
     # if error is shown in percentage
-    print(data["7Pb_5U_1s"])
     if not error_real:
         data["7Pb_5U_1s"] = data["7Pb_5U"] * data["7Pb_5U_1s"] / 100.0
         data["6Pb_8U_1s"] = data["6Pb_8U"] * data["6Pb_8U_1s"] / 100.0
         data["7Pb_6Pb_1s"] = data["7Pb_6Pb"] * data["7Pb_6Pb_1s"] / 100.0
-        print(data["7Pb_5U_1s"])
     # if error range is given by other than 1 sigma
     if input_error_sigma != 1.0:
         data["7Pb_5U_1s"] = data["7Pb_5U_1s"] / input_error_sigma
@@ -1963,7 +1981,7 @@ if __name__ == "__main__":
             Th_U_e = Th_U * 0.0
 
     # ------------------------------------------------
-    # Exclusion of discordant data for calculation
+    # Ages
     age_7Pb_5U = 1 / l235U * np.log(X + 1)
     age_7Pb_5U_se = np.empty(len(y))
     age_6Pb_8U = 1 / l238U * np.log(Y + 1)
@@ -1984,7 +2002,31 @@ if __name__ == "__main__":
     # print(age_7Pb_6Pb*Sy/age_unit*2)
     # 207Pb/206Pb age error
 
-    if disc_type != 5:
+    # ------------------------------------------------
+    # Initialize list
+    ind = np.array(range(len(x)))  # inliers
+    outd_disc = []  # discordants
+    outd = []  # outliers
+
+    # ------------------------------------------------
+    # Data points of additional exclusion
+    excluded_points = [i for i in exclude_data_points if i is not None]
+    if excluded_points:
+        outd = np.unique(excluded_points)
+        ind = np.delete(ind, outd)
+
+    # ------------------------------------------------
+    # Exclusion of discordant data for calculation
+    if disc_type == 5:
+        # 206Pb/238U--207Pb/235U
+        ind, outd_disc = discordant_judge(
+            X, Y, sigma_X, sigma_Y, cov_XY, dp_ee_cr, ind, outd_disc, line_cc
+        )
+        # # 207Pb/206Pb--238U/206Pb
+        ind, outd_disc = discordant_judge(
+            x, y, sigma_x, sigma_y, cov_xy, dp_ee_cr, ind, outd_disc, line_tw
+        )
+    else:
         disc_percent = discordance(
             age_7Pb_5U,
             age_7Pb_5U_se,
@@ -1998,29 +2040,7 @@ if __name__ == "__main__":
         )
         # outd_disc = np.where((np.abs(disc_percent) >= disc_thres) | (disc_percent < 0))
         outd_disc = np.where(np.abs(disc_percent) >= disc_thres)
-    else:
-        outd_disc = []
-
-    # ------------------------------------------------
-    # Data points of additional exclusion
-    excluded_points = [i for i in exclude_data_points if i is not None]
-
-    if len(outd_disc) > 0:
-        outd_disc = outd_disc[0]
-        if excluded_points:
-            outd = np.setdiff1d(excluded_points, outd_disc)
-        else:
-            outd = []
-    else:
-        if excluded_points:
-            outd = np.unique(excluded_points)
-        else:
-            outd = []
-
-    if (len(outd) > 0) or (len(outd_disc)):
-        ind = np.delete(np.where(X), np.append(outd, outd_disc))
-    else:
-        ind = np.where(X)[0]
+        ind = np.delete(ind, np.append(outd_disc))
 
     # ################################################
     # List of the configurations
@@ -2068,89 +2088,88 @@ if __name__ == "__main__":
     print("------------------------------------------------------------")
     # discordance
     if opt_exclude_disc:
-        print(
-            "Discordant data (> %s%%) are excluded from analysis."
-            % format(disc_thres, dignum)
-        )
-        if disc_type == 0:
-            print("Discordance is calculated by", end=" ")
-            print("100*(1-([206Pb/238U age]/[207Pb/206Pb age]))")
-            # Discordant data points
-            print("Discordant data points [n = %d] are" % len(outd_disc))
-            for i in outd_disc:
-                print(
-                    "%d: %s%% = (1-%.1f/%.1f) x 100"
-                    % (
-                        i,
-                        format(disc_percent[i], dignum),
-                        age_6Pb_8U[i] / age_unit,
-                        age_7Pb_5U[i] / age_unit,
-                    )
-                )
-        elif disc_type == 1:
-            print("Discordance is calculated by", end=" ")
-            print("100*(1-([207Pb/235U age]/[207Pb/206Pb age]))")
-            # Discordant data points
-            print("Discordant data points [n = %d] are" % len(outd_disc))
-            for i in outd_disc:
-                print(
-                    "%d: %s%% = (1-%.1f/%.1f) x 100"
-                    % (
-                        i,
-                        format(disc_percent[i], dignum),
-                        age_7Pb_5U[i] / age_unit,
-                        age_7Pb_6Pb[i] / age_unit,
-                    )
-                )
-        elif disc_type == 2:
-            print("Discordance is calculated by", end=" ")
-            print("100*(1-([206Pb/238U age]/[207Pb/235U age])")
-            # Discordant data points
-            print("Discordant data points [n = %d] are" % len(outd_disc))
-            for i in outd_disc:
-                print(
-                    "%d: %s%% = (1-%.1f/%.1f) x 100"
-                    % (
-                        i,
-                        format(disc_percent[i], dignum),
-                        age_6Pb_8U[i] / age_unit,
-                        age_7Pb_5U[i] / age_unit,
-                    )
-                )
-        elif disc_type == 3:
-            print("Discordance is calculated by", end=" ")
-            print("100*(1-([207Pb/235U age]/[206Pb/238U age])")
-            # Discordant data points
-            print("Discordant data points [n = %d] are" % len(outd_disc))
-            for i in outd_disc:
-                print(
-                    "%d: %s%% = (1-%.1f/%.1f) x 100"
-                    % (
-                        i,
-                        format(disc_percent[i], dignum),
-                        age_7Pb_5U[i] / age_unit,
-                        age_6Pb_8U[i] / age_unit,
-                    )
-                )
-        elif disc_type == 4:
-            print("Discordance is calculated by", end=" ")
-            print("100*(1-(min[207Pb/235U age] / max[206Pb/238U age])")
-            # Discordant data points
-            print("Discordant data points [n = %d] are" % len(outd_disc))
-            for i in outd_disc:
-                print(
-                    "%d: %s%% = (1-%.1f/%.1f) x 100"
-                    % (
-                        i,
-                        format(disc_percent[i], dignum),
-                        (age_7Pb_5U[i] - age_7Pb_5U_se[i] * input_error_sigma) / age_unit,
-                        (age_6Pb_8U[i] + age_6Pb_8U_se[i] * input_error_sigma) / age_unit,
-                    )
-                )
-        elif disc_type == 5:
+        if disc_type == 5:
             print(
                 "Discordant data means that the error ellipse doesn't intersect the concordia line."
             )
+        else:
+            if disc_type == 0:
+                print("Discordance is calculated by", end=" ")
+                print("100*(1-([206Pb/238U age]/[207Pb/206Pb age]))")
+                # Discordant data points
+                print("Discordant data points [n = %d] are" % len(outd_disc))
+                for i in outd_disc:
+                    print(
+                        "%d: %s%% = (1-%.1f/%.1f) x 100"
+                        % (
+                            i,
+                            format(disc_percent[i], dignum),
+                            age_6Pb_8U[i] / age_unit,
+                            age_7Pb_5U[i] / age_unit,
+                        )
+                    )
+            elif disc_type == 1:
+                print("Discordance is calculated by", end=" ")
+                print("100*(1-([207Pb/235U age]/[207Pb/206Pb age]))")
+                # Discordant data points
+                print("Discordant data points [n = %d] are" % len(outd_disc))
+                for i in outd_disc:
+                    print(
+                        "%d: %s%% = (1-%.1f/%.1f) x 100"
+                        % (
+                            i,
+                            format(disc_percent[i], dignum),
+                            age_7Pb_5U[i] / age_unit,
+                            age_7Pb_6Pb[i] / age_unit,
+                        )
+                    )
+            elif disc_type == 2:
+                print("Discordance is calculated by", end=" ")
+                print("100*(1-([206Pb/238U age]/[207Pb/235U age])")
+                # Discordant data points
+                print("Discordant data points [n = %d] are" % len(outd_disc))
+                for i in outd_disc:
+                    print(
+                        "%d: %s%% = (1-%.1f/%.1f) x 100"
+                        % (
+                            i,
+                            format(disc_percent[i], dignum),
+                            age_6Pb_8U[i] / age_unit,
+                            age_7Pb_5U[i] / age_unit,
+                        )
+                    )
+            elif disc_type == 3:
+                print("Discordance is calculated by", end=" ")
+                print("100*(1-([207Pb/235U age]/[206Pb/238U age])")
+                # Discordant data points
+                print("Discordant data points [n = %d] are" % len(outd_disc))
+                for i in outd_disc:
+                    print(
+                        "%d: %s%% = (1-%.1f/%.1f) x 100"
+                        % (
+                            i,
+                            format(disc_percent[i], dignum),
+                            age_7Pb_5U[i] / age_unit,
+                            age_6Pb_8U[i] / age_unit,
+                        )
+                    )
+            elif disc_type == 4:
+                print("Discordance is calculated by", end=" ")
+                print("100*(1-(min[207Pb/235U age] / max[206Pb/238U age])")
+                # Discordant data points
+                print("Discordant data points [n = %d] are" % len(outd_disc))
+                for i in outd_disc:
+                    print(
+                        "%d: %s%% = (1-%.1f/%.1f) x 100"
+                        % (
+                            i,
+                            format(disc_percent[i], dignum),
+                            (age_7Pb_5U[i] - age_7Pb_5U_se[i] * input_error_sigma)
+                            / age_unit,
+                            (age_6Pb_8U[i] + age_6Pb_8U_se[i] * input_error_sigma)
+                            / age_unit,
+                        )
+                    )
 
     else:
         print("Discordant data are not excluded from calculation")
@@ -2208,14 +2227,25 @@ if __name__ == "__main__":
 
         # generalize ESD test
         ii, oo = GESDtest(Tall, s1, ind, outlier_alpha)
+
         if len(ii) > 0:
+            ind = ii
             print("Inliers are ", end=" ")
-            print(ii)
-            ind = np.intersect1d(ind, ii)
+            print(ind)
+        if len(outd_disc) > 0:
+            print("Discordants are ", end=" ")
+            print(outd_disc)
         if len(oo) > 0:
+            outd = oo
             print("Outliers are ", end=" ")
-            print(oo)
-            outd = np.union1d(outd, oo)
+            print(outd)
+    else:
+        print("Inliers are ", end=" ")
+        print(ind)
+        print("Discordants are ", end=" ")
+        print(outd_disc)
+        print("Outliers are ", end=" ")
+        print(outd)
 
     # ------------------------------------------------
     # Number of data points
@@ -2260,19 +2290,6 @@ if __name__ == "__main__":
 
     # ------------------------------------------------
     # A: Conventional concordia plot
-    rX = [range_XY[0][0], range_XY[0][1]]
-    rY = [range_XY[1][0], range_XY[1][1]]
-    tX_min, tX_max, tY_min, tY_max = TimeRangeConv(rX, rY)
-    timeX = [t for t in time if t >= tX_min and t <= tX_max]
-    timeY = [t for t in time if t >= tY_min and t <= tY_max]
-    if len(timeX) < len(timeY):
-        timeXY = timeX + [tX_max]
-        timeXY.insert(0, tX_min)
-    else:
-        timeXY = timeY + [tY_max]
-        timeXY.insert(0, tY_min)
-
-    Xconv, Yconv = ConcLineConv(np.array(timeXY))
 
     if plot_diagrams[0] == 1:
         axn = 0
@@ -2309,7 +2326,18 @@ if __name__ == "__main__":
             if disc_type == 5:
                 line_cc = [[Xconv[i], Yconv[i]] for i, j in enumerate(Xconv)]
                 ind_cc, outd_disc_cc = plot_data_point_error_ellipse_disc(
-                    ax, axn, X, Y, sigma_X, sigma_Y, cov_XY, dp_ee_cr, outd, line_cc
+                    ax,
+                    axn,
+                    X,
+                    Y,
+                    sigma_X,
+                    sigma_Y,
+                    cov_XY,
+                    dp_ee_cr,
+                    ind,
+                    outd,
+                    outd_disc,
+                    line_cc,
                 )
                 outd_disc = np.unique(np.append(outd_disc, outd_disc_cc))
                 if len(ind_cc) > 0:
@@ -2497,14 +2525,6 @@ if __name__ == "__main__":
     # ------------------------------------------------
     # B: Tera-Wasserburg concordia plot
 
-    rx = [range_xy[0][0], range_xy[0][1]]
-    ry = [range_xy[1][0], range_xy[1][1]]
-    tx_min, tx_max = TimeRangeTW(rx)
-    timexy = [float(t) for t in time if t >= tx_min and t <= tx_max]
-    timexy += [tx_max]
-    timexy.insert(0, tx_min)
-    Xtw, Ytw = ConcLineTW(np.array(timexy))
-
     if plot_diagrams[1] == 1:
         if plot_diagrams[0] == 1:
             axn = 1
@@ -2543,9 +2563,19 @@ if __name__ == "__main__":
         # draw error ellipses
         if opt_data_point_ee:
             if disc_type == 5:
-                line_tw = [[Xtw[i], Ytw[i]] for i, j in enumerate(Xtw)]
                 ind_tw, outd_disc_tw = plot_data_point_error_ellipse_disc(
-                    ax, axn, x, y, sigma_x, sigma_y, cov_xy, dp_ee_cr, outd, line_tw
+                    ax,
+                    axn,
+                    x,
+                    y,
+                    sigma_x,
+                    sigma_y,
+                    cov_xy,
+                    dp_ee_cr,
+                    ind,
+                    outd,
+                    outd_disc,
+                    line_tw,
                 )
                 outd_disc = np.unique(np.append(outd_disc, outd_disc_tw))
                 if len(ind_tw) > 0:

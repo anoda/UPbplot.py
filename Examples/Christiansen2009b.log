@@ -21,11 +21,7 @@ Range of data
 207Pb/206Pb: 0.04901--0.05726
 238U/206Pb: 41.47657--43.47826
 ------------------------------------------------------------
-Discordant data (> 10.00%) are excluded from analysis.
-Discordance is calculated by 100*(1-([206Pb/238U age]/[207Pb/235U age])
-Discordant data points [n = 2] are
-4: 11.35% = (1-150.2/169.5) x 100
-10: 13.40% = (1-149.5/172.6) x 100
+Discordant data means that the error ellipse doesn't intersect the concordia line.
 ------------------------------------------------------------
 U-Pb ages (Ma) [2 sigma]
 #	6/8	+-s	7/5	+-s	7/6	+s	-s	
@@ -46,24 +42,33 @@ U-Pb ages (Ma) [2 sigma]
 14	152.76	2.87	159.80	3.39	264.47	31.75	32.38
 ------------------------------------------------------------
 Normality test: failed (p = 0.42)
+Inliers are  [ 2  6  7  9 12 13]
+Discordants are  [ 0.  1.  3.  4.  5.  8. 10. 11. 14.]
 ------------------------------------------------------------
-Accepted data points [n = 13] are [ 0  1  2  3  5  6  7  8  9 11 12 13 14]
-Excluded data points [n = 0] are []
 ------------------------------------------------------------
 a: Conventional concordia diagram
     Error ellipses are 95% for data points
-    Concordia age = 147.45 ± 1.41 [95% conf.] / ± 6.56 [t√MSWD] Ma
-    MSWD concordance / equivalence / combined = 183.95 / 14.87 / 21.64
-    P-value concordance / equivalence / combined = 0.00 / 0.00 / 0.00
-    Intercept age = 149.52 +1.64 -2.43 Ma [95% conf.]
+    Excluded data are  []
+    Concordant data are  [ 2  6  7  9 12 13]
+    Discordant data are  [ 0.  1.  3.  4.  5.  8. 10. 11. 14.]
+    Concordia age = 149.36 ± 2.00 [95% conf.] / ± 2.55 [t√MSWD] Ma
+    MSWD concordance / equivalence / combined = 5.03 / 1.28 / 1.63
+    P-value concordance / equivalence / combined = 0.02 / 0.23 / 0.08
+    Intercept age = 113.31 +37.72 36.78 Ma [95% conf.]
 b: Tera-Wasserburg concordia diagram
-    Concordia age = 148.81 ± 1.41 [95% conf.] / ± 6.59 [t√MSWD] Ma
-    MSWD concordance / equivalence / combined = 186.20 / 15.08 / 21.92
-    P-value concordance / equivalence / combined = 0.00 / 0.00 / 0.00
-    Intercept age = 149.62 +1.66 -1.93 Ma [95% conf.]
+    Excluded data are  []
+    Concordant data are  [ 2  6  7  9 12 13]
+    Discordant data are  [ 0.  1.  3.  4.  5.  8. 10. 11. 14.]
+    Concordia age = 149.56 ± 2.00 [95% conf.] / ± 2.45 [t√MSWD] Ma
+    MSWD concordance / equivalence / combined = 4.36 / 1.21 / 1.50
+    P-value concordance / equivalence / combined = 0.04 / 0.28 / 0.12
+    Intercept age = 127.19 +23.17 22.87 Ma [95% conf.]
 c: One-dimensional bar plot
-    1D weighted mean age = 149.80 ± 1.46 Ma [95% conf.] (MSDW=0.92)
-    Reduced Chi-squared = 0.92 (Passed)
+    Excluded data are  []
+    Accepted data are  [ 2  6  7  9 12 13]
+    Discordant data are  [ 0.  1.  3.  4.  5.  8. 10. 11. 14.]
+    1D weighted mean age = 149.73 ± 2.06 Ma [95% conf.] (MSDW=1.09)
+    Reduced Chi-squared = 1.09 (Passed)
 d: Histogram
 All done.
 Saving Christiansen2009b.pdf

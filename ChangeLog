@@ -1,16 +1,26 @@
+2020-05-27  Version 0.1.3
+
+	Main script:
+
+	* discordant_judge: A new function
+
+	To judge data points whether discordant or not, when the variable is disc_type == 5.
+
+	At this version, discordant data lines are extracted from the input data lines at first, and then outliers will be calculated. 
+
 2020-05-23  Version 0.1.2
 
 	* README.cfg: An example of configuration file.
 
 	Main script:
 
-	* config: add default values for ConfigParser.
-	Now, you just need to describe selevcted variables in your configuration file,
+	* config: add defaults values for ConfigParser.
+	Now, you just need to list selevctive variables in your configuration file,
 	instead of all variables.
 
 	Configuration file:
 
-	error_real: renamed from error_type (True or False)
+	error_real: renamed from error_type
 
 2020-05-23  Version 0.1.1
 
