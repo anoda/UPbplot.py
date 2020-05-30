@@ -1,0 +1,67 @@
+
+
+============================================================
+Data filename is Ito2020TerraNova_FC.csv
+Configuration filename is Ito2020TerraNova_FC.cfg
+Output filename is Ito2020TerraNova_FC.pdf
+# Input data (first 5 lines)
+------------------------------------------------------------
+207Pb/235U  1s     206Pb/238U  1s     207Pb/206Pb  1s
+column[7]   column[8] column[9]   column[10] column[5]    column[6]
+0.02614     0.00160   0.00428    0.00005    0.04434    0.00283
+0.03002     0.00319   0.00427    0.00006    0.05104    0.00490
+0.02342     0.00149   0.00434    0.00011    0.03913    0.00248
+0.03201     0.00200   0.00429    0.00013    0.05419    0.00298
+0.04783     0.00699   0.00477    0.00029    0.07280    0.01087
+------------------------------------------------------------
+Range of data
+207Pb/235U: 0.02182--0.06442
+206Pb/238U: 0.00407--0.00507
+207Pb/206Pb: 0.03885--0.09217
+238U/206Pb: 197.16088--245.39877
+------------------------------------------------------------
+Discordant data means that the error ellipses do not intersect the concordia line.
+------------------------------------------------------------
+U-Pb ages^ (Ma) [2 sigma]
+#	6/8	+-s	7/5	+-s	7/6	+s	-s	
+1	27.60	0.33	26.08	1.60	0.00	286.83	346.69
+2	27.54	0.38	29.92	3.18	241.60	390.66	514.87
+3	28.02	0.71	23.39	1.49	0.00	302.48	367.92
+4	27.66	0.85	31.88	2.00	377.94	229.70	267.95
+5	30.74	1.85	47.32	6.92	1007.48	510.80	765.43
+6	28.99	0.34	30.37	0.91	157.27	161.49	179.19
+7	29.52	0.51	28.14	2.28	0.00	378.74	491.05
+8	31.04	0.61	33.56	2.31	232.09	253.02	299.71
+9	28.65	0.58	28.68	1.77	48.15	304.27	373.37
+10	27.70	0.51	25.22	2.37	0.00	388.37	506.10
+11	27.85	0.44	25.62	1.81	0.00	336.62	421.72
+12	32.70	0.70	63.27	6.78	1470.04	367.24	485.86
+13	29.06	0.41	30.28	2.85	144.38	408.02	544.31
+14	28.00	0.95	31.00	3.47	285.26	468.26	660.13
+15	29.19	0.77	27.44	2.64	0.00	421.70	565.49
+16	31.58	1.03	42.65	2.92	731.73	244.79	289.90
+17	26.30	1.02	21.80	2.79	0.00	600.47	931.22
+18	28.43	0.59	31.95	2.32	320.91	314.53	390.71
+^ Correction for initial disequilibria.
+------------------------------------------------------------
+Normality test: failed (p = 0.13)
+Concordants (accepted) are  [ 1  2  5  6  7  9 10 11 13 14 15 17 18]
+Concordants (excluded) are  [8.]
+Discordants are  [ 3.  4. 12. 16.]
+------------------------------------------------------------
+a: Conventional concordia diagram
+    Error ellipses are 95% for data points
+    Error ellipse is 95% for 2D weighted mean
+    Concordia age = 28.20 ± 0.23 [95% conf.] / ± 0.44 [t√MSWD] Ma
+    MSWD concordance / equivalence / combined = 8.20 / 3.44 / 3.63
+    P-value concordance / equivalence / combined = 0.00 / 0.00 / 0.00
+b: Tera-Wasserburg concordia diagram
+    Concordia age = 28.29 ± 0.23 [95% conf.] / ± 0.44 [t√MSWD] Ma
+    MSWD concordance / equivalence / combined = 8.25 / 3.45 / 3.64
+    P-value concordance / equivalence / combined = 0.00 / 0.00 / 0.00
+c: One-dimensional bar plot
+    1D weighted mean age = 28.30 ± 0.27 Ma [95% conf.] (MSDW=2.62)
+    Reduced Chi-squared = 2.62 (Failed, over dispersion or uncertainties underestimated)
+d: Histogram
+All done.
+Saving Ito2020TerraNova_FC.pdf

@@ -1,12 +1,47 @@
+2020-05-30 Version 0.1.4
+
+	Corrections for common Pb and initial disequilibra are available.
+
+	* Main script: new functions
+
+	func_Tdiseq: calculation of 206Pb/238U and 207Pb/206Pb ages with
+	correction of initial disequilibra of Th/U and Pa/U.  Based on
+	eqs. (1) and (2) in Sakata (2018) Geochemical Journal.
+
+	SI_Tdiseq: least square functions for func_Tdiseq.
+
+	func_tPb76c: calculation of 206Pb/238U age with both corrections
+	of common Pb (207Pb method) and initial disequilibra.  Based on
+	eq. (5) in Sakata (2018) Geochemical Journal.
+
+	SI_Pb76c:  least square functions for func_tPb76c.
+
+	func_Pb76c: calculation common Pb at age t1.  Based on two-stage
+	evolution model of Stacey and Kramers (1975) EPSL (eqs. 4 and 5).
+
+
+	SI_Pb76c: calculation of fraction of common 206Pb (f206%), 
+	corrected (radiogenic) 207Pb/206Pb and 238U/206Pb, and their ages
+
+	* config: Add new variables for corrections of common Pb and initial disequilibrum
+
+	opt_correct_disequilibrium: True
+	opt_correct_common_Pb: False
+	f_Th_U: 0.2
+	f_Pa_U: 3.5
+
+
 2020-05-27  Version 0.1.3
 
 	Main script:
 
 	* discordant_judge: A new function
 
-	To judge data points whether discordant or not, when the variable is disc_type == 5.
+	To judge data points whether discordant or not, when the variable
+	is disc_type == 5.
 
-	At this version, discordant data lines are extracted from the input data lines at first, and then outliers will be calculated. 
+	At this version, discordant data lines are extracted from the
+	input data lines at first, and then outliers will be calculated.
 
 2020-05-23  Version 0.1.2
 
@@ -14,8 +49,8 @@
 
 	Main script:
 
-	* config: add defaults values for ConfigParser.
-	Now, you just need to list selevctive variables in your configuration file,
+	* config: add defaults values for ConfigParser.  Now, you just
+	need to list selevctive variables in your configuration file,
 	instead of all variables.
 
 	Configuration file:

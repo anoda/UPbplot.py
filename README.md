@@ -106,3 +106,14 @@ Command-line options:
 
 2. Generalized ESD test is a common procedure to identify outliers in a data set.  This script can automatically exclude outliers at a certain critical value of the confidince level (eg., "outlier_alpha: 0.05").  Set "opt_outlier: True" to use this option.
 
+3. Correction for initial disequilibria can be applied based on Sakata (2017, 2018), when ``opt_correction_disequilibrium: True.''
+
+4. Correction for common Pb by 207Pb method from Sakata (2018).  Both corrections can be available simultaneously.
+
+
+[References]:
+Sakata et al., 2017, A new approach for constraining the magnitude of initial disequilibrium in {Quaternary} zircons by coupled uranium and thorium decay series dating. Quaternary Geochronology, vol. 38, p. 1--12, https://doi.org/10.1016/j.quageo.2016.11.002.
+
+Sakata, S., 2018, A practical method for calculating the U-Pb age of Quaternary zircon: Correction for common Pb and initial disequilibria. Geochemical Journal, vol. 52, p. 281--286, https://doi.org/10.2343/geochemj.2.0508.
+
+

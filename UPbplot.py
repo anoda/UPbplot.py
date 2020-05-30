@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2020/05/27 21:14:50.
+# Last updated: 2020/05/30 16:46:56.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -26,7 +26,8 @@
 # __version__ = "0.1.0"  # May/22/2020
 # __version__ = "0.1.1"  # May/23/2020
 # __version__ = "0.1.2"  # May/24/2020
-__version__ = "0.1.3"  # May/27/2020
+# __version__ = "0.1.3"  # May/27/2020
+__version__ = "0.1.4"  # May/30/2020
 
 # [Citation]
 #
@@ -90,10 +91,11 @@ __version__ = "0.1.3"  # May/27/2020
 
 import os
 import sys
+import math
 import numpy as np
 import matplotlib as mpl
+import pandas as pd
 from json import loads
-from pandas import DataFrame
 from optparse import OptionParser
 
 # from ConfigParser import SafeConfigParser  # Python2
@@ -105,13 +107,6 @@ from matplotlib.patches import Ellipse
 # Intersections between concordia line and error ellipses
 from shapely.geometry import Polygon, LineString, LinearRing
 
-# # libraries for pyinstaller on Windows(R)
-# import six
-# import packaging
-# import packaging.version
-# import packaging.specifiers
-# import packaging.requirements
-
 debug = 1
 
 # ################################################
@@ -120,12 +115,22 @@ debug = 1
 l238U = 1.55125 * 10 ** (-10)  # lambda_238U
 l235U = 9.8485 * 10 ** (-10)  # lambda_235U
 l232Th = 4.9475 * 10 ** (-11)  # lambda_232Th
+l231Pa = 2.13 * 10 ** (-5)  # Rempfer2017epsl
+l230Th = 9.1705 * 10 ** (-6)  # Cheng2013epsl
 U85r = 137.818  # 238U/235U
+
+# common-Pb correction
+# Two-stage model for 207Pb-correction
+# Stacey and Kramers (1975) EPSL
+t2nd = 3.7 * 10 ** 9  # 2nd-stage startting  (3.7 Ga)
+Pb64i = 11.152  # (206Pb/204Pb) at 3.7 Ga
+Pb74i = 12.998  # (207Pb/204Pb) at 3.7 Ga
+U8Pb4 = 9.74  # 238U/204Pb
 
 # Time (year)
 time_ka = np.array(list(range(1000, 5 * 10 ** 6, 1 * 10 ** 3)))  # 1-5000 ka
-# 1-4601 Ma
-time_ma = np.array(list(range(1 * 10 ** 6, 4600 * 10 ** 6, 1 * 10 ** 6)))
+# 0.1-4601 Ma
+time_ma = np.array(list(range(10 ** 5, 4600 * 10 ** 6, 10 ** 5)))
 
 # ################################################
 # Setting of file names
@@ -197,35 +202,55 @@ def set_filename_output(filename, driver, opt_force_overwrite):
 # ------------------------------------------------
 # Conventional concordia diagram
 # 207Pb*/235U--206Pb*/238U
-
-
 def ConcLineConv(t):
-    X = np.exp(l235U * t) - 1
-    Y = (X + 1) ** (l238U / l235U) - 1
+    if opt_correct_disequilibrium:
+        # Sakata et al., 2017, Quaternary Geochronology, eqs. (8) and (9)
+        # http://dx.doi.org/10.1016/j.quageo.2016.11.002
+        X = (
+            np.exp(l235U * t)
+            - 1
+            + l235U
+            / l231Pa
+            * (f_Pa_U - 1)
+            * (1 - np.exp(-l231Pa * t))
+            * np.exp(l235U * t)
+        )
+        Y = (
+            np.exp(l238U * t)
+            - 1
+            + l238U
+            / l230Th
+            * (f_Th_U - 1)
+            * (1 - np.exp(-l230Th * t))
+            * np.exp(l238U * t)
+        )
+    else:
+        X = np.exp(l235U * t) - 1
+        Y = (X + 1) ** (l238U / l235U) - 1
     return (X, Y)
 
 
 # Plot a conventional concordia curve
-def PlotConcConv(ax, axn, Xconv, Yconv, time, age_unit, L, legend_font_size):
-    ax[axn].plot(Xconv, Yconv, color="k", linewidth=1)
-    for i in range(len(time)):
-        if time[i] / age_unit % L == 0:
-            ax[axn].plot(
-                Xconv[i],
-                Yconv[i],
-                "o",
-                markerfacecolor="white",
-                markeredgecolor="grey",
-                markeredgewidth=1,
-                markersize=2,
-            )
-            ax[axn].annotate(
-                "%s" % int(time[i] / age_unit),
-                xy=(Xconv[i], Yconv[i]),
-                xytext=(3, -6),
-                fontsize=legend_font_size - 2,
-                textcoords="offset points",
-            )
+def PlotConcConv(axcc, Xconv, Yconv, time, age_unit, L, legend_font_size):
+    li = graph_label_interval * age_unit
+    axcc.plot(Xconv, Yconv, color="k", linewidth=1)
+    t0 = math.floor(time[0] / age_unit) * age_unit
+    tann = np.arange(t0, time[-1], li)
+    xa, ya = ConcLineConv(tann)
+
+    for i, x in enumerate(xa):
+        axcc.plot(xa[i], ya[i], "o", mfc="white", mec="grey", mew=1, ms=2)
+        if li < age_unit:
+            tlabel = "{:.1f}".format(tann[i] / age_unit)
+        else:
+            tlabel = "{:}".format(tann[i] / age_unit)
+        axcc.annotate(
+            tlabel,
+            xy=(xa[i], ya[i]),
+            xytext=(3, -6),
+            fontsize=legend_font_size - 2,
+            textcoords="offset points",
+        )
 
 
 # ------------------------------------------------
@@ -234,32 +259,44 @@ def PlotConcConv(ax, axn, Xconv, Yconv, time, age_unit, L, legend_font_size):
 
 
 def ConcLineTW(t):
-    X = 1.0 / (np.exp(l238U * t) - 1)
-    Y = ((1.0 / X + 1.0) ** (l235U / l238U) - 1.0) * X / U85r
+    if opt_correct_disequilibrium:
+        Xr = (
+            np.exp(l238U * t)
+            - 1
+            + l238U
+            / l230Th
+            * (f_Th_U - 1)
+            * (1 - np.exp(-l230Th * t))
+            * np.exp(l238U * t)
+        )
+        X = 1.0 / Xr
+        Y = ((1.0 / X + 1.0) ** (l235U / l238U) - 1.0) * X / U85r
+    else:
+        X = 1.0 / (np.exp(l238U * t) - 1)
+        Y = ((1.0 / X + 1.0) ** (l235U / l238U) - 1.0) * X / U85r
     return (X, Y)
 
 
 # Plot a Terra-Wasserburg concordia curve
-def PlotConcTW(ax, axn, Xtw, Ytw, time, age_unit, L, legend_font_size):
-    ax[axn].plot(Xtw, Ytw, color="k", linewidth=1)
-    for i in range(len(time)):
-        if time[i] / age_unit % L == 0:
-            ax[axn].plot(
-                Xtw[i],
-                Ytw[i],
-                "o",
-                markerfacecolor="white",
-                markeredgecolor="grey",
-                markeredgewidth=1,
-                markersize=2,
-            )
-            ax[axn].annotate(
-                "%s" % int(time[i] / age_unit),
-                xy=(Xtw[i], Ytw[i]),
-                fontsize=legend_font_size - 2,
-                xytext=(3, 3),
-                textcoords="offset points",
-            )
+def PlotConcTW(axtw, Xtw, Ytw, time, age_unit, L, legend_font_size):
+    li = graph_label_interval * age_unit
+    axtw.plot(Xtw, Ytw, color="k", linewidth=1)
+    t0 = math.floor(time[0] / age_unit) * age_unit
+    tann = np.arange(t0, time[-1], li)
+    xa, ya = ConcLineTW(tann)
+    for i, x in enumerate(xa):
+        axtw.plot(xa[i], ya[i], "o", mfc="white", mec="grey", mew=1, ms=2)
+        if li < age_unit:
+            tlabel = "{:.1f}".format(tann[i] / age_unit)
+        else:
+            tlabel = "{:}".format(tann[i] / age_unit)
+        axtw.annotate(
+            tlabel,
+            xy=(xa[i], ya[i]),
+            xytext=(3, -6),
+            fontsize=legend_font_size - 2,
+            textcoords="offset points",
+        )
 
 
 def TimeRangeConv(rX, rY):
@@ -282,36 +319,28 @@ def TimeRangeTW(rx):
 # Age calculation of 207Pb/206Pb
 
 
-def func_age_7Pb_6Pb(t, j):
+def func_t76(t, j):
     res = abs(U85r * j - (np.exp(l235U * t) - 1) / (np.exp(l238U * t) - 1))
     return res
 
 
-# def calc_age_7Pb_6Pb(age_unit, j, age_7Pb_6Pb):
-#     for i in range(len(j)):
-#         age_7Pb_6Pb[i] = optimize.leastsq(
-#             func_age_7Pb_6Pb, age_unit, args=(j[i]))[0][0]
-#     return(age_7Pb_6Pb)
-
-
-def calc_age_7Pb_6Pb(age_unit, j, je, age_7Pb_6Pb, conf):
-    age_7Pb_6Pb_upper = np.empty(len(j))  # upper 7Pb/6Pb age with error
-    age_7Pb_6Pb_lower = np.empty(len(j))  # lower 7Pb/6Pb age
+def calc_t76(age_unit, j, je, conf):
+    t76 = np.empty(len(j))  # 7Pb/6Pb age
+    t76upper = np.empty(len(j))  # upper 7Pb/6Pb age with error
+    t76lower = np.empty(len(j))  # lower 7Pb/6Pb age
+    t76_se_plus = np.empty(len(j))
+    t76_se_minus = np.empty(len(j))
     cr = stats.norm.ppf(conf + (1 - conf) / 2.0)
     for i in range(len(j)):
-        age_7Pb_6Pb[i] = optimize.leastsq(func_age_7Pb_6Pb, age_unit, args=(j[i]))[0][0]
-        age_7Pb_6Pb_upper[i] = optimize.leastsq(
-            func_age_7Pb_6Pb, age_unit, args=(j[i] + je[i] * cr)
-        )[0][0]
-        age_7Pb_6Pb_lower[i] = optimize.leastsq(
-            func_age_7Pb_6Pb, age_unit, args=(j[i] - je[i] * cr)
-        )[0][0]
-        age_7Pb_6Pb_se_plus[i] = age_7Pb_6Pb_upper[i] - age_7Pb_6Pb[i]
-        age_7Pb_6Pb_se_minus[i] = age_7Pb_6Pb[i] - age_7Pb_6Pb_lower[i]
-        if age_7Pb_6Pb[i] < 0.0:
-            age_7Pb_6Pb[i] = 0.0
+        t76[i] = optimize.leastsq(func_t76, age_unit, args=(j[i]))[0][0]
+        t76upper[i] = optimize.leastsq(func_t76, age_unit, args=(j[i] + je[i] * cr))[0][0]
+        t76lower[i] = optimize.leastsq(func_t76, age_unit, args=(j[i] - je[i] * cr))[0][0]
+        t76_se_plus[i] = t76upper[i] - t76[i]
+        t76_se_minus[i] = t76[i] - t76lower[i]
+        if t76[i] < 0.0:
+            t76[i] = 0.0
 
-    return (age_7Pb_6Pb, age_7Pb_6Pb_se_plus, age_7Pb_6Pb_se_minus)
+    return (t76, t76_se_plus, t76_se_minus)
 
 
 # ------------------------------------------------
@@ -320,44 +349,6 @@ def eigsorted(cov):
     vals, vecs = np.linalg.eigh(cov)
     order = vals.argsort()[::-1]
     return vals[order], vecs[:, order]
-
-
-# def myEllipse(
-#     i,
-#     x,
-#     y,
-#     sigma_x,
-#     sigma_y,
-#     cov_xy,
-#     conf="none",
-#     alpha="none",
-#     fc="none",
-#     edgecolor="none",
-#     edgewidth=0.5,
-#     linestyle="solid",
-# ):
-#     cov = ([sigma_x**2, cov_xy], [cov_xy, sigma_y**2])
-#     vals, vecs = eigsorted(cov)
-#     theta = np.degrees(np.arctan2(*vecs[:, 0][::-1]))
-#     if (vals[0] < 0.0) | (vals[1] < 0.0):
-#         print("!!! Unable to draw an error ellipse [Data %s] !!!" % str(i))
-#         ell = 0
-#     else:
-#         width, height = 2 * np.sqrt(stats.chi2.ppf(conf, 2)) * np.sqrt(vals)
-
-#         ell = Ellipse(
-#             xy=(x, y),
-#             width=width,
-#             height=height,
-#             angle=theta,
-#             alpha=alpha,
-#             fc=fc,
-#             ec=edgecolor,
-#             lw=edgewidth,
-#             ls=linestyle,
-#         )
-
-#     return ell
 
 
 def myEllipse(i, x, y, sigma_x, sigma_y, cov_xy, conf="none"):
@@ -378,9 +369,9 @@ def myEllipse(i, x, y, sigma_x, sigma_y, cov_xy, conf="none"):
         sa = np.sin(angle)
         ca = np.cos(angle)
         # p = np.empty((n, 2))
-        xx = x + width / 2 * ca * ct - height / 2 * sa * st
-        yy = y + width / 2 * sa * ct + height / 2 * ca * st
-    return (xx, yy)
+        xelip = x + width / 2 * ca * ct - height / 2 * sa * st
+        yelip = y + width / 2 * sa * ct + height / 2 * ca * st
+    return (xelip, yelip)
 
 
 # ------------------------------------------------
@@ -513,41 +504,6 @@ def ConcAgeConv(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
 
 # Tera-Wasserburg concordia age
 def ConcAgeTW(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
-
-    # # Follow the method of p. 668 in Ludwig1998gca
-    # X = U85r * Yi / Xi
-    # Y = 1.0 / Xi
-    # sigma_X = (
-    #     np.sqrt(
-    #         (
-    #             (sigma_Xi / Xi) ** 2
-    #             + (sigma_Yi / Yi) ** 2
-    #             - 2 * (sigma_Xi / Xi) * (sigma_Yi / Yi) * rhoXYi
-    #         )
-    #     )
-    #     * X
-    # )
-    # sigma_Y = sigma_Xi / Xi * Y
-    # rhoXY = ((sigma_Xi / Xi) ** 2 - (sigma_Xi / Xi) * (sigma_Yi / Yi) * rhoXYi) / (
-    #     (sigma_X / X) * (sigma_Y / Y)
-    # )
-    # X_bar, Y_bar, MSWD_bar, sigma_X_bar, sigma_Y_bar, cov_XY_bar = twoWM(
-    #     X, Y, sigma_X, sigma_Y, rhoXY, conf
-    # )
-    # rho_XY_bar = cov_XY_bar / (sigma_X_bar * sigma_Y_bar)
-    # T_leastsq = optimize.leastsq(
-    #     FitFuncConv, Tinit, args=(X_bar, Y_bar, sigma_X_bar, sigma_Y_bar, rho_XY_bar)
-    # )[0][0]
-    # OI = np.linalg.inv([[sigma_X_bar ** 2, cov_XY_bar], [cov_XY_bar, sigma_Y_bar ** 2]])
-    # Q235 = l235U * np.exp(l235U * T_leastsq)
-    # Q238 = l238U * np.exp(l238U * T_leastsq)
-    # QQ = (Q235 ** 2 * OI[0][0] + Q238 ** 2 * OI[1][1] + 2 * Q235 * Q238 * OI[0][1]) ** (
-    #     -1
-    # )
-    # T_1sigma = np.sqrt(QQ)
-    # T_sigma = stats.norm.ppf(conf + (1 - conf) / 2.0) * T_1sigma
-    # S_bar = FitFuncConv(T_leastsq, X_bar, Y_bar, sigma_X_bar, sigma_Y_bar, rho_XY_bar)
-    # S = FitFuncConv(T_leastsq, X, Y, sigma_X, sigma_Y, rhoXY)
 
     x = Xi  # eq. (21) = 1/(np.exp(l238U * t) - 1)
     y = Yi  # eq. (22) = 1/U85r * (np.exp(l235U * t) - 1)/(np.exp(l238U * t) - 1)
@@ -780,46 +736,8 @@ def SIageTW(a, b, sigma_a, sigma_b, x_bar, y_bar, init_t=10 ** 6, conf=0.95):
 
 
 # ------------------------------------------------
-# Rejection of data
-
-# Discordance (%) = [1 - A/B] * 100
-
-
-def discordance(
-    age_7Pb_5U,
-    age_7Pb_5U_se,
-    age_6Pb_8U,
-    age_6Pb_8U_se,
-    age_7Pb_6Pb,
-    age_7Pb_6Pb_min,
-    age_7Pb_6Pb_max,
-    sd,
-    method,
-):
-
-    if method == 0:
-        disc_percent = (1 - (age_6Pb_8U / age_7Pb_6Pb)) * 100.0
-    elif method == 1:
-        disc_percent = (1 - (age_7Pb_5U / age_7Pb_6Pb)) * 100.0
-    elif method == 2:
-        disc_percent = (1 - (age_6Pb_8U / age_7Pb_5U)) * 100.0
-    elif method == 3:
-        disc_percent = (1 - (age_7Pb_5U / age_6Pb_8U)) * 100.0
-    elif method == 4:
-        disc_percent = (
-            1 - ((age_7Pb_5U - age_7Pb_5U_se * sd) / (age_6Pb_8U + age_6Pb_8U_se * sd))
-        ) * 100.0
-    else:
-        sys.exit("Exit at function of discordance")
-
-    return disc_percent
-
-
-# ------------------------------------------------
 # Weighted mean and reduced chi-square
 # Spencer2016gf
-
-
 def calc_chi2_red(x, s1, wm, n, opt):
     # x: ages of each sample
     # s1: errors (1 sigma) of each sample
@@ -847,9 +765,8 @@ def calc_chi2_red(x, s1, wm, n, opt):
 #
 # https://www.itl.nist.gov/div898/handbook/eda/section3/eda35h3.htm
 #
-# Rosner, Bernard (May 1983), Percentage Points for a Generalized ESD Many-Outlier Procedure,Technometrics, 25(2), pp. 165-172.
-
-
+# Rosner, Bernard (May 1983), Percentage Points for a Generalized ESD
+#            Many-Outlier Procedure,Technometrics, 25(2), pp. 165-172.
 def GESDtest(Tall, s1, ind, cr):
 
     conf = 1 - cr  # significant level is conf (e.g. 0.05)
@@ -996,11 +913,11 @@ def intersections_ellipse(x, y, line):
 
 # ------------------------------------------------
 # Judgement of discordance (disc_type == 5)
-def discordant_judge(xx, yy, sigma_xx, sigma_yy, cov_xxyy, conf, i_in, i_disc, line):
+def discordant_judge(xd, yd, sigma_xd, sigma_yd, cov_xdyd, conf, i_in, i_disc, line):
     i_ind = i_in
     for j, i in enumerate(i_in):
         dp_ell_x, dp_ell_y = myEllipse(
-            i, xx[i], yy[i], sigma_xx[i], sigma_yy[i], cov_xxyy[i], conf,
+            i, xd[i], yd[i], sigma_xd[i], sigma_yd[i], cov_xdyd[i], conf,
         )
         if not intersections_ellipse(dp_ell_x, dp_ell_y, line):
             i_disc = np.append(i_disc, i)
@@ -1008,6 +925,241 @@ def discordant_judge(xx, yy, sigma_xx, sigma_yy, cov_xxyy, conf, i_in, i_disc, l
     i_disc = np.unique(i_disc)
     i_ind = np.setdiff1d(i_in, i_disc)
     return (i_ind, i_disc)
+
+
+# ------------------------------------------------
+# Discordance (%) = [1 - A/B] * 100
+def discordance(
+    t75, t75e, t68, t68e, t76, t76_min, t76_max, sd, method,
+):
+
+    if method == 0:
+        disc_percent = (1 - (t68 / t76)) * 100.0
+    elif method == 1:
+        disc_percent = (1 - (t75 / t76)) * 100.0
+    elif method == 2:
+        disc_percent = (1 - (t68 / t75)) * 100.0
+    elif method == 3:
+        disc_percent = (1 - (t75 / t68)) * 100.0
+    elif method == 4:
+        disc_percent = (1 - ((t75 - t75e * sd) / (t68 + t68e * sd))) * 100.0
+    else:
+        sys.exit("Exit at function of discordance")
+
+    return disc_percent
+
+
+# ------------------------------------------------
+# print discordant data
+def print_discordant_data(tdisc, odisc, pdisc, sigma):
+    # tdisc: disc_type
+    # odisc: outd_disc
+    # pdisc: disc_percent
+    if tdisc == 0:
+        print("Discordance is calculated by", end=" ")
+        print("100*(1-([206Pb/238U age]/[207Pb/206Pb age]))")
+        # Discordant data points
+        print("Discordant data points [n = %d] are" % len(odisc))
+        for i in odisc:
+            print(
+                "%d: %s%% = (1-%.1f/%.1f) x 100"
+                % (
+                    i + 1,
+                    format(pdisc[i], dignum),
+                    d["t68"].iloc[i] / age_unit,
+                    d["t75"].iloc[i] / age_unit,
+                )
+            )
+    elif tdisc == 1:
+        print("Discordance is calculated by", end=" ")
+        print("100*(1-([207Pb/235U age]/[207Pb/206Pb age]))")
+        # Discordant data points
+        print("Discordant data points [n = %d] are" % len(odisc))
+        for i in odisc:
+            print(
+                "%d: %s%% = (1-%.1f/%.1f) x 100"
+                % (
+                    i + 1,
+                    format(pdisc[i], dignum),
+                    d["t75"].iloc[i] / age_unit,
+                    d["t76"].iloc[i] / age_unit,
+                )
+            )
+    elif tdisc == 2:
+        print("Discordance is calculated by", end=" ")
+        print("100*(1-([206Pb/238U age]/[207Pb/235U age])")
+        # Discordant data points
+        print("Discordant data points [n = %d] are" % len(odisc))
+        for i in odisc:
+            print(
+                "%d: %s%% = (1-%.1f/%.1f) x 100"
+                % (
+                    i + 1,
+                    format(pdisc[i], dignum),
+                    d["t68"].iloc[i] / age_unit,
+                    d["t75"].iloc[i] / age_unit,
+                )
+            )
+    elif tdisc == 3:
+        print("Discordance is calculated by", end=" ")
+        print("100*(1-([207Pb/235U age]/[206Pb/238U age])")
+        # Discordant data points
+        print("Discordant data points [n = %d] are" % len(odisc))
+        for i in odisc:
+            print(
+                "%d: %s%% = (1-%.1f/%.1f) x 100"
+                % (
+                    i + 1,
+                    format(pdisc[i], dignum),
+                    d["t75"].iloc[i] / age_unit,
+                    d["t68"].iloc[i] / age_unit,
+                )
+            )
+    elif tdisc == 4:
+        print("Discordance is calculated by", end=" ")
+        print("100*(1-(min[207Pb/235U age] / max[206Pb/238U age])")
+        # Discordant data points
+        print("Discordant data points [n = %d] are" % len(odisc))
+        for i in odisc:
+            print(
+                "%d: %s%% = (1-%.1f/%.1f) x 100"
+                % (
+                    i + 1,
+                    format(pdisc[i], dignum),
+                    (d["t75"].iloc[i] - d["t75e"].iloc[i] * sigma) / age_unit,
+                    (d["t68"].iloc[i] + d["t68e"].iloc[i] * sigma) / age_unit,
+                )
+            )
+
+
+# ------------------------------------------------
+# ages for correction for initial disequilibria
+# eqs. (1) and (2) in Sakata (2018) Geochemical Journal
+def func_Tdiseq(t, r, rtype):
+    if rtype == 68:
+        F = abs(
+            (np.exp(l238U * t) - 1)
+            + l238U
+            / l230Th
+            * (f_Th_U - 1)
+            * (1 - np.exp(-l230Th * t))
+            * np.exp(l238U * t)
+            - r
+        )
+    elif rtype == 75:
+        F = abs(
+            (np.exp(l235U * t) - 1)
+            + l235U
+            / l231Pa
+            * (f_Pa_U - 1)
+            * (1 - np.exp(-l231Pa * t))
+            * np.exp(l235U * t)
+            - r
+        )
+    return F
+
+
+def SI_Tdiseq(R75m, R68m, rtype):
+    T = []  # corrected age for initial disequilibria
+    if rtype == 68:
+        for i, r in enumerate(R68m):
+            t = 1 / l238U * np.log(r + 1)
+            T68 = optimize.leastsq(func_Tdiseq, t, args=(r, rtype))[0][0]
+            T.append(T68)
+    elif rtype == 75:
+        for i, r in enumerate(R75m):
+            t = 1 / l235U * np.log(r + 1)
+            T75 = optimize.leastsq(func_Tdiseq, t, args=(r, rtype))[0][0]
+            T.append(T75)
+    else:
+        print("Please define rtype = 68 or 75.")
+        exit
+    return T
+
+
+# ------------------------------------------------
+# Common-Pb correction: 207Pb method
+
+# Zricon crystalization age from eq (5) in Sakata2018GeochemJ
+def func_tPb76c(t, R76c, R76m, R86m):
+    F = abs(
+        (
+            1
+            / U85r
+            * (
+                (np.exp(l235U * t) - 1)
+                + l235U
+                / l231Pa
+                * (f_Pa_U - 1)
+                * (1 - np.exp(-l235U * t))
+                * np.exp(l235U * t)
+            )
+            - (R76m - R76c) / R86m
+        )
+        / (
+            (np.exp(l238U * t) - 1)
+            + l238U
+            / l230Th
+            * (f_Th_U - 1)
+            * (1 - np.exp(-l230Th * t))
+            * np.exp(-l238U * t)
+        )
+        - R76c
+    )
+    return F
+
+
+def SI_Pb76c(R76c, R76m, R86m):
+    t = 1 / l238U * np.log(1 / R86m + 1)
+    T = optimize.leastsq(func_tPb76c, t, args=(R76c, R76m, R86m))[0][0]
+    return T
+
+
+def func_Pb76c(X, Y):
+    "Calculate common 207Pb/206Pb at t1 age"
+    # y0 = common 207Pb/206Pb at time t1
+    # x1 = measured 238U/206Pb
+    # y1 = measured 207Pb/206Pb
+    # x2 = corrected (radiogenic) 238U/206Pb
+    # y2 = corrected (radiogenic) 207Pb/206Pb
+    xx2 = []  # corrected (radiogenic) 238U/206Pb
+    yy2 = []  # corrected (radiogenic) 207Pb/206Pb
+    f206p = []  # fraction of common 206Pb
+    T = []  # zircon crystalization age from eq. (5) in Sakata2018GeochemJ
+    for i, y1 in enumerate(Y):
+        x1 = X[i]
+        t1 = 1 / l238U * np.log(1 / x1 + 1)
+        Pb64c_t1 = Pb64i + U8Pb4 * (np.exp(l238U * t2nd) - np.exp(l238U * t1))
+        Pb74c_t1 = Pb74i + U8Pb4 / U85r * (np.exp(l235U * t2nd) - np.exp(l235U * t1))
+        Pb76c0 = Pb74c_t1 / Pb64c_t1
+        x0 = 0
+        y0 = Pb76c0
+        line0 = LineString([(0.0, y0), (10 ** 5, y0)])
+        Xtw, Ytw = ConcLineTW(np.array(list(range(10 ** 5, 5 * 10 ** 9, 10 ** 5))))
+        line_tw = LineString([(Xtw[i], Ytw[i]) for i, j in enumerate(Xtw)])
+        res = line0.intersection(line_tw)
+        # y = a x + b
+        # a = delta(207Pb/206Pb)/delta(238U/206Pb)
+        a = (y1 - y0) / (x1 - x0)
+        b = y1 - a * x1
+        x3 = -b / a
+        line1 = LineString([[x0, y0], [x1, y1], [x3, 0]])
+        res1 = line1.intersection(line_tw)
+        x2 = res1[1].x  # np.max(res1.bounds)
+        y2 = res1[1].y  # np.min(res1.bounds)
+        f = (y1 - y2) / (y0 - y2) * 100
+        t68c = SI_Pb76c(y0, y1, x1)  # y0 = R76c, y1 = R76m, x1 = R86m
+        t68 = 1 / l238U * np.log(1 / x1 + 1)
+
+        xx2.append(x2)
+        yy2.append(y2)
+        f206p.append(f)
+        if opt_correct_disequilibrium:
+            T.append(t68c)
+        else:
+            T.append(t68)
+
+    return (xx2, yy2, f206p, T)
 
 
 # ------------------------------------------------
@@ -1282,15 +1434,15 @@ def plot_concordia_intercept_age(
 # Choose one age type among 206Pb/238U, 207Pb/235U, or 207Pb/206Pb
 def select_age_type(age_type):
     if age_type == 68:
-        Tall = age_6Pb_8U / age_unit
+        Tall = d["t68"] / age_unit
         s1 = Tall * SY
         label = "$^{206}$Pb* / $^{238}$U age (%s)" % age_unit_name
     elif age_type == 75:
-        Tall = age_7Pb_5U / age_unit
+        Tall = d["t75"] / age_unit
         s1 = Tall * SX
         label = "$^{207}$Pb* / $^{235}$U age (%s)" % age_unit_name
     elif age_type == 76:
-        Tall = age_7Pb_6Pb / age_unit
+        Tall = d["t76"] / age_unit
         s1 = Tall * Sy
         label = "$^{207}$Pb* / $^{206}$Pb* age (%s)" % age_unit_name
     else:
@@ -1302,19 +1454,19 @@ def select_age_type(age_type):
 # ------------------------------------------------
 # Plot one-dimensional weighted mean, SD, and MSWD
 def plot_oneD_weighted_mean(
-    ax, axn, oneD_age_type, Tall, s1, ind, outd, outd_disc, cr, legend_pos_x, legend_pos_y
+    ax_1D, oneD_age_type, Tall, s1, ind, outd, outd_disc, cr, legend_pos_x, legend_pos_y
 ):
 
     if oneD_yaxis_log == 1:
-        ax[axn].set_yscale("log")
+        ax_1D.set_yscale("log")
 
     Twm, sm, MSWD = oneWM(Tall[ind], s1[ind], conf=cr)
 
     # confidence band of the weighted mean
-    ax[axn].axhspan(Twm - sm, Twm + sm, facecolor=oneD_band_fc, alpha=oneD_band_alpha)
+    ax_1D.axhspan(Twm - sm, Twm + sm, facecolor=oneD_band_fc, alpha=oneD_band_alpha)
 
     # plot 2D weighted mean
-    ax[axn].plot(
+    ax_1D.plot(
         [0.0, len(Tall) + 1],
         [Twm, Twm],
         linewidth=oneD_wm_line_width,
@@ -1335,7 +1487,7 @@ def plot_oneD_weighted_mean(
     for n, t in enumerate(Tplot):
         i = Tnumd[n]
         if len(np.intersect1d(i, ind)) > 0:
-            eb1 = ax[axn].errorbar(
+            eb1 = ax_1D.errorbar(
                 n + 1,
                 t,
                 yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
@@ -1345,7 +1497,7 @@ def plot_oneD_weighted_mean(
             eb1[-1][0].set_linestyle(dp1_bar_line_style)
             ind_sort.append(n)
         elif len(np.intersect1d(i, outd_disc)) > 0:
-            eb2 = ax[axn].errorbar(
+            eb2 = ax_1D.errorbar(
                 n + 1,
                 t,
                 yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
@@ -1355,7 +1507,7 @@ def plot_oneD_weighted_mean(
             eb2[-1][0].set_linestyle(dp2_bar_line_style)
             outd_disc_sort.append(n)
         else:
-            eb0 = ax[axn].errorbar(
+            eb0 = ax_1D.errorbar(
                 n + 1,
                 t,
                 yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
@@ -1368,17 +1520,17 @@ def plot_oneD_weighted_mean(
     # plot data point
     if opt_data_point:
         plot_data_point(
-            ax[axn], np.where(Tall)[0] + 1, Tplot, ind_sort, outd_sort, outd_disc_sort
+            ax_1D, np.where(Tall)[0] + 1, Tplot, ind_sort, outd_sort, outd_disc_sort
         )
 
     # legend
     legend_data_number(ax, axn, legend_pos_x[0], legend_pos_y[0], ind)
 
     oneD_xticks = np.arange(1, len(Tall) + 1, 1)
-    ax[axn].set_xticks(oneD_xticks)
-    ax[axn].set_xticklabels(Tnumd + 1, rotation=270, fontsize="small")
+    ax_1D.set_xticks(oneD_xticks)
+    ax_1D.set_xticklabels(Tnumd + 1, rotation=270, fontsize="small")
 
-    ax[axn].text(
+    ax_1D.text(
         legend_pos_x[0],
         legend_pos_y[1],
         u"Weighted mean = %s ± %s %s [%d%% conf.] (MSWD = %s)"
@@ -1389,23 +1541,23 @@ def plot_oneD_weighted_mean(
             cr * 100,
             format(MSWD, dignum),
         ),
-        transform=ax[axn].transAxes,
+        transform=ax_1D.transAxes,
         verticalalignment="top",
         fontsize=legend_font_size,
     )
 
-    ax[axn].text(
+    ax_1D.text(
         legend_pos_x[0],
         legend_pos_y[2],
         "Error bars are %d%% conf." % (cr * 100),
-        transform=ax[axn].transAxes,
+        transform=ax_1D.transAxes,
         verticalalignment="top",
         fontsize=legend_font_size,
     )
 
     chi2_red, res_chi2_red = calc_chi2_red(Tall[ind], s1[ind], Twm, len(ind), opt=0)
 
-    ax[axn].text(
+    ax_1D.text(
         legend_pos_x[0],
         legend_pos_y[3],
         "$\chi^2_{red}$ = %s (%s)" % (format(chi2_red, dignum), res_chi2_red),
@@ -1462,6 +1614,105 @@ def plot_Th_U(
     # plot data point
     if opt_data_point:
         plot_data_point(axb, Tall, Th_U, ind, outd, outd_disc)
+
+
+# ------------------------------------------------
+# Figure setup
+def makefigures(pd):
+    # pd = plot_diagrams
+    # ax1 = fig.add_subplot(221) # Conventional concordia
+    # ax2 = fig.add_subplot(222) # Tera-Wasserburg concordia
+    # ax3 = fig.add_subplot(223) # 238U/206Pb age
+    # ax4 = fig.add_subplot(224) # Th/U - histogram
+
+    if np.sum(pd) == 1:
+        fig, ax = plt.subplots(2, 1, figsize=(6, 8))
+        ax[1].axis("off")
+    elif np.sum(pd) == 2:
+        fig, ax = plt.subplots(1, 2, figsize=(12, 4))
+    elif np.sum(pd) == 3:
+        fig, ax = plt.subplots(3, 1, figsize=(6, 12))
+    elif np.sum(pd) == 4:
+        fig, ax = plt.subplots(2, 2, figsize=(12, 8))
+    else:
+        sys.exit("Error in plot_diagrams")
+
+    mpl.rcParams["xtick.labelsize"] = legend_font_size
+    mpl.rcParams["ytick.labelsize"] = legend_font_size
+    ax = ax.ravel()
+
+    if opt_correct_disequilibrium:
+        figtitle = outfile + " (correct disequilibria"
+        if opt_correct_common_Pb:
+            figtitle = figtitle + " and correct common Pb"
+    else:
+        figtitle = outfile + " ("
+        if opt_correct_common_Pb:
+            figtitle = figtitle + "correct common Pb"
+        else:
+            figtitle = figtitle + "no correction"
+    figtitle += ")"
+
+    fig.canvas.set_window_title("%s" % figtitle)
+    fig.suptitle("%s" % figtitle)
+
+    return (fig, ax)
+
+
+# plot KDE curves for all and accepted data
+def plot_kde(ax_kde, rx, x, ii):
+    # rx = range_hist_x
+    # T = Tall
+    # ii = ind
+    ls = np.linspace(rx[0], rx[1], num=400)
+    x = x[(x > rx[0]) & (x < rx[1])]
+    if len(x) == 0:
+        sys.exit("Please set appropriate axis age range in configuration file.")
+
+    kde_all = stats.gaussian_kde(x)
+
+    xi = x[ii]
+    xi = xi[(xi > rx[0]) & (xi < rx[1])]
+    kde = stats.gaussian_kde(xi)
+
+    kde_multi_all = len(x)  # replace len(ls) 20190606
+    kde_multi = len(xi)  # replace len(ls) 20190606
+
+    ax_kde.plot(
+        ls,
+        kde_all(ls) * kde_multi_all,
+        linestyle="--",
+        color=kde_line_color,
+        linewidth=kde_line_width,
+    )
+    ax_kde.plot(
+        ls,
+        kde(ls) * kde_multi,
+        linestyle="-",
+        color=kde_line_color,
+        linewidth=kde_line_width,
+    )
+
+
+# plot histograms
+def plot_hist(ax_hist, T, ii, od, oo):
+    # T = Tall
+    # ii = ind
+    # od = outd_disc
+    # oo = outd
+    ax_hist.set_ylabel("Number of samples", fontsize=legend_font_size + 4)
+    n, bins, rects = ax_hist.hist(
+        (T[ii], T[od], T[oo]),
+        hist_bin_num,
+        histtype="barstacked",
+        color=(hist_bin_color1, hist_bin_color2, hist_bin_color0),
+        alpha=hist_bin_alpha,
+        edgecolor="k",
+        zorder=0,
+        range=ax_hist.get_xlim(),
+    )
+
+    return (n, bins, rects)
 
 
 # ################################################
@@ -1535,7 +1786,9 @@ if __name__ == "__main__":
             options.outfile, options.driver, options.opt_force_overwrite
         )
     else:
-        outfile = set_filename_output(infile, options.driver, options.opt_force_overwrite)
+        outfile = set_filename_output(
+            conffile, options.driver, options.opt_force_overwrite
+        )
 
     # ################################################
     # Configuration
@@ -1559,6 +1812,10 @@ if __name__ == "__main__":
             "outlier_alpha": "0.05",
             "exclude_data_points": "[]",
             "opt_Th_U": False,
+            "opt_correct_disequilibrium": True,
+            "f_Th_U": "0.2",
+            "f_Pa_U": "3.5",
+            "opt_correct_common_Pb": False,
             "Th_U_inverse": False,
             "Th_U_row_num": "[8]",
             "Th_U_error_num": "[]",
@@ -1593,7 +1850,6 @@ if __name__ == "__main__":
             "hist_age_type": "68",
             "Th_U_sigma": "2",
             "opt_kde": True,
-            "opt_hist_density": False,
             "dp0_marker_type": "s",
             "dp1_marker_type": "o",
             "dp2_marker_type": "^",
@@ -1686,6 +1942,10 @@ if __name__ == "__main__":
     outlier_alpha = config.getfloat("File", "outlier_alpha")  # significant level
     exclude_data_points = loads(config.get("File", "exclude_data_points"))
     opt_Th_U = config.getboolean("File", "opt_Th_U")
+    opt_correct_disequilibrium = config.getboolean("File", "opt_correct_disequilibrium")
+    f_Th_U = config.getfloat("File", "f_Th_U")
+    f_Pa_U = config.getfloat("File", "f_Pa_U")
+    opt_correct_common_Pb = config.getboolean("File", "opt_correct_common_Pb")
     Th_U_inverse = config.getboolean("File", "Th_U_inverse")
     Th_U_row_num = loads(config.get("File", "Th_U_row_num"))
     Th_U_error_num = loads(config.get("File", "Th_U_error_num"))
@@ -1693,7 +1953,7 @@ if __name__ == "__main__":
     plot_diagrams = loads(config.get("Graph", "plot_diagrams"))  # [1, 1, 1, 1]
     graph_age_min = config.getfloat("Graph", "graph_age_min")
     graph_age_max = config.getfloat("Graph", "graph_age_max")
-    graph_label_interval = config.getint("Graph", "graph_label_interval")
+    graph_label_interval = config.getfloat("Graph", "graph_label_interval")
     age_unit_name = config.get("Graph", "age_unit_name")  # = 'Ma'
     legend_font_size = config.getint("Graph", "legend_font_size")  # = 10
     range_automatic_cc = config.getboolean("Graph", "range_automatic_cc")
@@ -1789,7 +2049,6 @@ if __name__ == "__main__":
     opt_kde = config.getboolean("Graph", "opt_kde")  # 1
     kde_line_color = config.get("Graph", "kde_line_color")  # red
     kde_line_width = config.get("Graph", "kde_line_width")  # 2
-    opt_hist_density = config.getboolean("Graph", "opt_hist_density")
 
     # cumulative probability density
     # 1 sigma (68.3), 2 sigma (95.4%), and 3 sigma (99.7%)
@@ -1839,10 +2098,10 @@ if __name__ == "__main__":
     timeX = [t for t in time if t >= tX_min and t <= tX_max]
     timeY = [t for t in time if t >= tY_min and t <= tY_max]
     if len(timeX) < len(timeY):
-        timeXY = timeX + [tX_max]
+        timeXY = timeX + [tX_max * 1.1]
         timeXY.insert(0, tX_min)
     else:
-        timeXY = timeY + [tY_max]
+        timeXY = timeY + [tY_max * 1.1]
         timeXY.insert(0, tY_min)
 
     Xconv, Yconv = ConcLineConv(np.array(timeXY))
@@ -1867,7 +2126,7 @@ if __name__ == "__main__":
     ry = [range_xy[1][0], range_xy[1][1]]
     tx_min, tx_max = TimeRangeTW(rx)
     timexy = [float(t) for t in time if t >= tx_min and t <= tx_max]
-    timexy += [tx_max]
+    timexy += [tx_max * 1.1]
     timexy.insert(0, tx_min)
     Xtw, Ytw = ConcLineTW(np.array(timexy))
     line_tw = [[Xtw[i], Ytw[i]] for i, j in enumerate(Xtw)]
@@ -1889,12 +2148,12 @@ if __name__ == "__main__":
     # Data formatting
 
     dt_name_column = [
-        "7Pb_5U",
-        "7Pb_5U_1s",
-        "6Pb_8U",
-        "6Pb_8U_1s",
-        "7Pb_6Pb",
-        "7Pb_6Pb_1s",
+        "r75",
+        "r75e",
+        "r68",
+        "r68e",
+        "r76",
+        "r76e",
     ]
 
     column_num_isotopic_ratio = [
@@ -1913,47 +2172,48 @@ if __name__ == "__main__":
     else:
         delim = " "
 
-    data = np.loadtxt(
+    d = np.loadtxt(
         infile,
         delimiter=delim,
         usecols=column_num_isotopic_ratio,
         skiprows=rows_of_header,
     )
 
-    data = DataFrame(data, columns=dt_name_column)
+    d = pd.DataFrame(d, columns=dt_name_column)
 
     # if 207Pb/206Pb is given by 206Pb/207Pb
     if c_7Pb6Pb_i:
-        data["7Pb_6Pb"] = 1.0 / data["7Pb_6Pb"]
+        d["r76"] = 1.0 / d["r76"]
 
     # if error is shown in percentage
     if not error_real:
-        data["7Pb_5U_1s"] = data["7Pb_5U"] * data["7Pb_5U_1s"] / 100.0
-        data["6Pb_8U_1s"] = data["6Pb_8U"] * data["6Pb_8U_1s"] / 100.0
-        data["7Pb_6Pb_1s"] = data["7Pb_6Pb"] * data["7Pb_6Pb_1s"] / 100.0
+        d["r75e"] = d["r75"] * d["r75e"] / 100.0
+        d["r68e"] = d["r68"] * d["r68e"] / 100.0
+        d["r76e"] = d["r76"] * d["r76e"] / 100.0
     # if error range is given by other than 1 sigma
     if input_error_sigma != 1.0:
-        data["7Pb_5U_1s"] = data["7Pb_5U_1s"] / input_error_sigma
-        data["6Pb_8U_1s"] = data["6Pb_8U_1s"] / input_error_sigma
-        data["7Pb_6Pb_1s"] = data["7Pb_6Pb_1s"] / input_error_sigma
+        d["r75e"] = d["r75e"] / input_error_sigma
+        d["r68e"] = d["r68e"] / input_error_sigma
+        d["r76e"] = d["r76e"] / input_error_sigma
 
     # Conventional concordia diagrams
     # (X, Y) = (207Pb/235U, 206Pb/238U)
     # Conventional concordia diagram
-    X = data["7Pb_5U"]
-    Y = data["6Pb_8U"]
-    sigma_X = data["7Pb_5U_1s"]
-    sigma_Y = data["6Pb_8U_1s"]
+    X = d["r75"]
+    Y = d["r68"]
+
+    sigma_X = d["r75e"]
+    sigma_Y = d["r68e"]
     SX = sigma_X / X
     SY = sigma_Y / Y
 
     # Tera-Wasserburg concordia diagrams
     # (x, y) = (238U/206Pb, 207Pb/206Pb)
     x = 1 / Y
-    y = data["7Pb_6Pb"]
+    y = d["r76"]
 
     sigma_x = SY * x
-    sigma_y = data["7Pb_6Pb_1s"]
+    sigma_y = d["r76e"]
     # Sx = sigma_x/x
     Sx = SY
     Sy = sigma_y / y
@@ -1981,26 +2241,39 @@ if __name__ == "__main__":
             Th_U_e = Th_U * 0.0
 
     # ------------------------------------------------
-    # Ages
-    age_7Pb_5U = 1 / l235U * np.log(X + 1)
-    age_7Pb_5U_se = np.empty(len(y))
-    age_6Pb_8U = 1 / l238U * np.log(Y + 1)
-    age_6Pb_8U_se = np.empty(len(y))
-    age_7Pb_6Pb = np.empty(len(y))
-    age_7Pb_6Pb_se_plus = np.empty(len(y))  # 1sigma error
-    age_7Pb_6Pb_se_minus = np.empty(len(y))  # 1sigma error
-    age_7Pb_6Pb_min = np.empty(len(y))  # 1sigma error
-    age_7Pb_6Pb_max = np.empty(len(y))  # 1sigma error
-    (age_7Pb_6Pb, age_7Pb_6Pb_se_plus, age_7Pb_6Pb_se_minus) = calc_age_7Pb_6Pb(
-        age_unit, y, sigma_y, age_7Pb_6Pb, ca_cr
-    )
+    # Common Pb correction (207Pb method)
+    # (Williams, 1998)
+    #
+    if opt_correct_common_Pb:
+        # Correction of common Pb (207Pb-corrected)
+        # xcorr, ycorr, f206, T68corr = Pb76c(x, y)
+        d["86cor"], d["76cor"], d["f206p"], d["t68cor"] = func_Pb76c(x, y)
+        x = d["86cor"]
+        y = d["76cor"]
+        Y = 1 / x
+        Sy = sigma_y / y
+        Sx = sigma_x / x
+        SY = sigma_Y / Y
+        # rho_XY = (SX ** 2 + SY ** 2 - Sy ** 2) / (2.0 * SX * SY)
+        # rho_xy = (SY ** 2 - SX * SY * rho_XY) / (Sx * Sy)
+        # cov_XY = rho_XY * sigma_X * sigma_Y
+        # cov_xy = rho_xy * sigma_x * sigma_y
 
-    # print(age_7Pb_5U/age_unit)
-    # print(age_7Pb_5U*SX/age_unit*2)
-    # print(age_6Pb_8U/age_unit)
-    # print(age_6Pb_8U*SY/age_unit*2)
-    # print(age_7Pb_6Pb*Sy/age_unit*2)
-    # 207Pb/206Pb age error
+    # ------------------------------------------------
+    # Ages
+    d["t75"] = 1 / l235U * np.log(X + 1)
+    d["t75e"] = np.empty(len(y))
+    d["t68"] = 1 / l238U * np.log(Y + 1)
+    d["t68e"] = np.empty(len(y))
+    d["t76"] = np.empty(len(y))
+    d["t76e_plus"] = np.empty(len(y))  # 1sigma error
+    d["t76e_minus"] = np.empty(len(y))  # 1sigma error
+    d["t76_min"] = np.empty(len(y))  # 1sigma error
+    d["t76_max"] = np.empty(len(y))  # 1sigma error
+    (d["t76"], d["t76e_plus"], d["t76e_minus"]) = calc_t76(age_unit, y, sigma_y, ca_cr)
+    if opt_correct_disequilibrium:
+        d["t68"] = SI_Tdiseq(d["r75"], d["r68"], rtype=68)
+        d["t75"] = SI_Tdiseq(d["r75"], d["r68"], rtype=75)
 
     # ------------------------------------------------
     # Initialize list
@@ -2017,36 +2290,40 @@ if __name__ == "__main__":
 
     # ------------------------------------------------
     # Exclusion of discordant data for calculation
-    if disc_type == 5:
-        # 206Pb/238U--207Pb/235U
-        ind, outd_disc = discordant_judge(
-            X, Y, sigma_X, sigma_Y, cov_XY, dp_ee_cr, ind, outd_disc, line_cc
-        )
-        # # 207Pb/206Pb--238U/206Pb
-        ind, outd_disc = discordant_judge(
-            x, y, sigma_x, sigma_y, cov_xy, dp_ee_cr, ind, outd_disc, line_tw
-        )
+    if opt_exclude_disc:
+        if disc_type == 5:
+            # 206Pb/238U--207Pb/235U
+            ind, outd_disc = discordant_judge(
+                X, Y, sigma_X, sigma_Y, cov_XY, dp_ee_cr, ind, outd_disc, line_cc
+            )
+            # 207Pb/206Pb--238U/206Pb
+            ind, outd_disc = discordant_judge(
+                x, y, sigma_x, sigma_y, cov_xy, dp_ee_cr, ind, outd_disc, line_tw
+            )
+        else:
+            disc_percent = discordance(
+                d["t75"],
+                d["t75e"],
+                d["t68"],
+                d["t68e"],
+                d["t76"],
+                d["t76_min"],
+                d["t76_max"],
+                input_error_sigma,
+                method=disc_type,
+            )
+            # outd_disc = np.where((np.abs(disc_percent) >= disc_thres) | (disc_percent < 0))
+            if np.max(disc_percent) >= disc_thres:
+                outd_disc = np.where(np.abs(disc_percent) >= disc_thres)
     else:
-        disc_percent = discordance(
-            age_7Pb_5U,
-            age_7Pb_5U_se,
-            age_6Pb_8U,
-            age_6Pb_8U_se,
-            age_7Pb_6Pb,
-            age_7Pb_6Pb_min,
-            age_7Pb_6Pb_max,
-            input_error_sigma,
-            method=disc_type,
-        )
-        # outd_disc = np.where((np.abs(disc_percent) >= disc_thres) | (disc_percent < 0))
-        outd_disc = np.where(np.abs(disc_percent) >= disc_thres)
-        ind = np.delete(ind, np.append(outd_disc))
+        outd_disc = []
+        ind = np.delete(ind, outd_disc)
 
     # ################################################
     # List of the configurations
 
     # input file
-    print("\n\n")
+    print("\n")
     print("============================================================")
     print(("Data filename is %s") % infile)
     print(("Configuration filename is %s") % conffile)
@@ -2080,97 +2357,20 @@ if __name__ == "__main__":
     print("------------------------------------------------------------")
     # Range of data
     print("Range of data")
-    print("207Pb/235U: %.5f--%.5f" % (data["7Pb_5U"].min(), data["7Pb_5U"].max()))
-    print("206Pb/238U: %.5f--%.5f" % (data["6Pb_8U"].min(), data["6Pb_8U"].max()))
-    print("207Pb/206Pb: %.5f--%.5f" % (data["7Pb_6Pb"].min(), data["7Pb_6Pb"].max()))
-    print("238U/206Pb: %.5f--%.5f" % (1 / data["6Pb_8U"].max(), 1 / data["6Pb_8U"].min()))
+    print("207Pb/235U: %.5f--%.5f" % (d["r75"].min(), d["r75"].max()))
+    print("206Pb/238U: %.5f--%.5f" % (d["r68"].min(), d["r68"].max()))
+    print("207Pb/206Pb: %.5f--%.5f" % (d["r76"].min(), d["r76"].max()))
+    print("238U/206Pb: %.5f--%.5f" % (1 / d["r68"].max(), 1 / d["r68"].min()))
 
     print("------------------------------------------------------------")
     # discordance
     if opt_exclude_disc:
         if disc_type == 5:
             print(
-                "Discordant data means that the error ellipse doesn't intersect the concordia line."
+                "Discordant data means that the error ellipses do not intersect the concordia line."
             )
         else:
-            if disc_type == 0:
-                print("Discordance is calculated by", end=" ")
-                print("100*(1-([206Pb/238U age]/[207Pb/206Pb age]))")
-                # Discordant data points
-                print("Discordant data points [n = %d] are" % len(outd_disc))
-                for i in outd_disc:
-                    print(
-                        "%d: %s%% = (1-%.1f/%.1f) x 100"
-                        % (
-                            i,
-                            format(disc_percent[i], dignum),
-                            age_6Pb_8U[i] / age_unit,
-                            age_7Pb_5U[i] / age_unit,
-                        )
-                    )
-            elif disc_type == 1:
-                print("Discordance is calculated by", end=" ")
-                print("100*(1-([207Pb/235U age]/[207Pb/206Pb age]))")
-                # Discordant data points
-                print("Discordant data points [n = %d] are" % len(outd_disc))
-                for i in outd_disc:
-                    print(
-                        "%d: %s%% = (1-%.1f/%.1f) x 100"
-                        % (
-                            i,
-                            format(disc_percent[i], dignum),
-                            age_7Pb_5U[i] / age_unit,
-                            age_7Pb_6Pb[i] / age_unit,
-                        )
-                    )
-            elif disc_type == 2:
-                print("Discordance is calculated by", end=" ")
-                print("100*(1-([206Pb/238U age]/[207Pb/235U age])")
-                # Discordant data points
-                print("Discordant data points [n = %d] are" % len(outd_disc))
-                for i in outd_disc:
-                    print(
-                        "%d: %s%% = (1-%.1f/%.1f) x 100"
-                        % (
-                            i,
-                            format(disc_percent[i], dignum),
-                            age_6Pb_8U[i] / age_unit,
-                            age_7Pb_5U[i] / age_unit,
-                        )
-                    )
-            elif disc_type == 3:
-                print("Discordance is calculated by", end=" ")
-                print("100*(1-([207Pb/235U age]/[206Pb/238U age])")
-                # Discordant data points
-                print("Discordant data points [n = %d] are" % len(outd_disc))
-                for i in outd_disc:
-                    print(
-                        "%d: %s%% = (1-%.1f/%.1f) x 100"
-                        % (
-                            i,
-                            format(disc_percent[i], dignum),
-                            age_7Pb_5U[i] / age_unit,
-                            age_6Pb_8U[i] / age_unit,
-                        )
-                    )
-            elif disc_type == 4:
-                print("Discordance is calculated by", end=" ")
-                print("100*(1-(min[207Pb/235U age] / max[206Pb/238U age])")
-                # Discordant data points
-                print("Discordant data points [n = %d] are" % len(outd_disc))
-                for i in outd_disc:
-                    print(
-                        "%d: %s%% = (1-%.1f/%.1f) x 100"
-                        % (
-                            i,
-                            format(disc_percent[i], dignum),
-                            (age_7Pb_5U[i] - age_7Pb_5U_se[i] * input_error_sigma)
-                            / age_unit,
-                            (age_6Pb_8U[i] + age_6Pb_8U_se[i] * input_error_sigma)
-                            / age_unit,
-                        )
-                    )
-
+            print_discordant_data(disc_type, outd_disc, disc_percent, input_error_sigma)
     else:
         print("Discordant data are not excluded from calculation")
 
@@ -2189,28 +2389,65 @@ if __name__ == "__main__":
         [print("%d %.2f" % (i, rho_xy[i])) for i in range(len(rho_xy)) if rho_xy[i] > 1]
         sys.exit("rho_xy is more than 1")
 
+    # ------------------------------------------------
+    # corrections for common Pb and initial disequilibria
+    if opt_correct_common_Pb:
+        if opt_correct_disequilibrium:
+            d["t68"] = d["t68cor"]
+        else:
+            d["t68"] = (1 - d["f206p"] / 100) * d["t68cor"]
+
     # ################################################
     # print ages
     print("------------------------------------------------------------")
-    print("U-Pb ages (%s) [%d sigma]" % (age_unit_name, ca_sigma))
-    print("#\t6/8\t+-s\t7/5\t+-s\t7/6\t+s\t-s\t")
-    for i in range(len(y)):
-        age_6Pb_8U_se[i] = age_6Pb_8U[i] * SY[i]
-        age_7Pb_5U_se[i] = age_7Pb_5U[i] * SX[i]
+    if opt_correct_disequilibrium:
+        print("U-Pb ages^ (%s) [%d sigma]" % (age_unit_name, ca_sigma))
+    else:
+        print("U-Pb ages (%s) [%d sigma]" % (age_unit_name, ca_sigma))
 
-        print(
-            "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s"
-            % (
-                i,
-                format(age_6Pb_8U[i] / age_unit, dignum),
-                format(age_6Pb_8U_se[i] / age_unit, dignum),
-                format(age_7Pb_5U[i] / age_unit, dignum),
-                format(age_7Pb_5U_se[i] / age_unit, dignum),
-                format(age_7Pb_6Pb[i] / age_unit, dignum),
-                format(age_7Pb_6Pb_se_plus[i] / age_unit, dignum),
-                format(age_7Pb_6Pb_se_minus[i] / age_unit, dignum),
+    if opt_correct_common_Pb:
+        print("#\tf206%\t6/8*\t+-s\t7/5\t+-s\t7/6*\t+s\t-s\t")
+    else:
+        print("#\t6/8\t+-s\t7/5\t+-s\t7/6\t+s\t-s\t")
+
+    for i in range(len(y)):
+        d["t68e"].iloc[i] = d["t68"].iloc[i] * SY[i]
+        d["t75e"].iloc[i] = d["t75"].iloc[i] * SX[i]
+
+        if opt_correct_common_Pb:
+            print(
+                "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s"
+                % (
+                    i + 1,
+                    format(d["f206p"].iloc[i], dignum),
+                    format(d["t68"].iloc[i] / age_unit, dignum),
+                    format(d["t68e"].iloc[i] / age_unit, dignum),
+                    format(d["t75"].iloc[i] / age_unit, dignum),
+                    format(d["t75e"].iloc[i] / age_unit, dignum),
+                    format(d["t76"].iloc[i] / age_unit, dignum),
+                    format(d["t76e_plus"].iloc[i] / age_unit, dignum),
+                    format(d["t76e_minus"].iloc[i] / age_unit, dignum),
+                )
             )
-        )
+        else:
+            print(
+                "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s"
+                % (
+                    i + 1,
+                    format(d["t68"].iloc[i] / age_unit, dignum),
+                    format(d["t68e"].iloc[i] / age_unit, dignum),
+                    format(d["t75"].iloc[i] / age_unit, dignum),
+                    format(d["t75e"].iloc[i] / age_unit, dignum),
+                    format(d["t76"].iloc[i] / age_unit, dignum),
+                    format(d["t76e_plus"].iloc[i] / age_unit, dignum),
+                    format(d["t76e_minus"].iloc[i] / age_unit, dignum),
+                )
+            )
+
+    if opt_correct_common_Pb:
+        print("* Correction for common Pb by 207Pb method")
+    if opt_correct_disequilibrium:
+        print("^ Correction for initial disequilibria.")
 
     # ################################################
     print("------------------------------------------------------------")
@@ -2230,22 +2467,28 @@ if __name__ == "__main__":
 
         if len(ii) > 0:
             ind = ii
-            print("Inliers are ", end=" ")
-            print(ind)
+            print("Concordants (accepted) are ", end=" ")
+            print(ind + 1)
+        if len(oo) > 0:
+            outd = np.unique(np.append(outd, oo))
+            print("Concordants (excluded) are ", end=" ")
+            print(outd + 1)
         if len(outd_disc) > 0:
             print("Discordants are ", end=" ")
-            print(outd_disc)
-        if len(oo) > 0:
-            outd = oo
-            print("Outliers are ", end=" ")
-            print(outd)
+            print(outd_disc + 1)
     else:
-        print("Inliers are ", end=" ")
+        print("Concordants (accepted) are ", end=" ")
         print(ind)
+        print("Concordants (excluded) are ", end=" ")
+        print(outd)
         print("Discordants are ", end=" ")
         print(outd_disc)
-        print("Outliers are ", end=" ")
-        print(outd)
+
+    # excluded data points
+    if excluded_points:
+        # print('Manually excluded data points are'),  # python2
+        print("Manually excluded data points are", end=" ")  # python3
+        print(excluded_points)
 
     # ------------------------------------------------
     # Number of data points
@@ -2253,40 +2496,9 @@ if __name__ == "__main__":
     # total number
     N = len(X)
 
-    print("------------------------------------------------------------")
-    # excluded data points
-    if excluded_points:
-        # print('Manually excluded data points are'),  # python2
-        print("Manually excluded data points are", end=" ")  # python3
-        print(excluded_points)
-
     # ################################################
     # plotting
-    #
-    # ax1 = fig.add_subplot(221) # Conventional concordia
-    # ax2 = fig.add_subplot(222) # Tera-Wasserburg concordia
-    # ax3 = fig.add_subplot(223) # 238U/206Pb age
-    # ax4 = fig.add_subplot(224) # Th/U - histogram
-
-    if np.sum(plot_diagrams) == 1:
-        fig, ax = plt.subplots(2, 1, figsize=(6, 8))
-        ax[1].axis("off")
-    elif np.sum(plot_diagrams) == 2:
-        fig, ax = plt.subplots(1, 2, figsize=(12, 4))
-    elif np.sum(plot_diagrams) == 3:
-        fig, ax = plt.subplots(3, 1, figsize=(6, 12))
-    elif np.sum(plot_diagrams) == 4:
-        fig, ax = plt.subplots(2, 2, figsize=(12, 8))
-    else:
-        sys.exit("Error in plot_diagrams")
-
-    mpl.rcParams["xtick.labelsize"] = legend_font_size
-    mpl.rcParams["ytick.labelsize"] = legend_font_size
-
-    ax = ax.ravel()
-
-    fig.canvas.set_window_title("%s" % infile)
-    fig.suptitle("%s" % infile)
+    fig, ax = makefigures(plot_diagrams)
 
     # ------------------------------------------------
     # A: Conventional concordia plot
@@ -2305,13 +2517,12 @@ if __name__ == "__main__":
         ax[axn].set_ylim(rY)
 
         PlotConcConv(
-            ax,
-            axn,
+            ax[axn],
             Xconv,
             Yconv,
             timeXY,
             age_unit,
-            int(graph_label_interval),
+            math.ceil(graph_label_interval),
             legend_font_size,
         )
 
@@ -2358,10 +2569,6 @@ if __name__ == "__main__":
                     outd,
                     outd_disc,
                 )
-
-        print("    Excluded data are ", outd)
-        print("    Concordant data are ", ind)
-        print("    Discordant data are ", outd_disc)
 
         # plot data point
         if opt_data_point:
@@ -2542,13 +2749,12 @@ if __name__ == "__main__":
         ax[axn].set_ylim(ry)
 
         PlotConcTW(
-            ax,
-            axn,
+            ax[axn],
             Xtw,
             Ytw,
             timexy,
             age_unit,
-            int(graph_label_interval),
+            math.ceil(graph_label_interval),
             legend_font_size,
         )
 
@@ -2596,10 +2802,6 @@ if __name__ == "__main__":
                     outd,
                     outd_disc,
                 )
-
-        print("    Excluded data are ", outd)
-        print("    Concordant data are ", ind)
-        print("    Discordant data are ", outd_disc)
 
         # weighted mean
         if opt_2D_wm:
@@ -2776,10 +2978,6 @@ if __name__ == "__main__":
 
         print(("%s: One-dimensional bar plot") % axn_title)
 
-        print("    Excluded data are ", outd)
-        print("    Accepted data are ", ind)
-        print("    Discordant data are ", outd_disc)
-
         ax[axn].set_title(axn_title, loc="left", fontsize=legend_font_size + 6)
         ax[axn].set_xlim([0, N + 1])
         ax[axn].set_ylim(range_oneD_y[0], range_oneD_y[1])
@@ -2792,8 +2990,7 @@ if __name__ == "__main__":
             [[(N + 1) * 0.05, (N + 1) * 0.05], range_oneD_y]
         )
         T_owm, S_owm, MSWD_owm = plot_oneD_weighted_mean(
-            ax,
-            axn,
+            ax[axn],
             oneD_age_type,
             Tall,
             s1,
@@ -2866,92 +3063,9 @@ if __name__ == "__main__":
             )
 
         if opt_kde:
-            ls = np.linspace(range_hist_x[0], range_hist_x[1], num=400)
-            x = Tall
-            x = x[(x > range_hist_x[0]) & (x < range_hist_x[1])]
-            if len(x) == 0:
-                sys.exit("Please set appropriate axis age range in configuration file.")
-            kde_all = stats.gaussian_kde(x)
-            kde_multi_all = len(x)  # replace len(ls) 20190606
+            plot_kde(ax[axn], range_hist_x, Tall, ind)
 
-            x = Tall[ind]
-            x = x[(x > range_hist_x[0]) & (x < range_hist_x[1])]
-            kde = stats.gaussian_kde(x)
-            kde_multi = len(x)  # replace len(ls) 20190606
-
-        if opt_hist_density:
-            ax[axn].set_ylabel("Density of samples", fontsize=legend_font_size + 4)
-
-            n, bins, rects = ax[axn].hist(
-                (Tall[ind], Tall[outd_disc], Tall[outd]),
-                hist_bin_num,
-                histtype="barstacked",
-                color=(hist_bin_color1, hist_bin_color2, hist_bin_color0),
-                alpha=hist_bin_alpha,
-                edgecolor="k",
-                zorder=0,
-                range=ax[axn].get_xlim(),
-                density=True,
-            )
-
-            ax_yticklocs = ax[axn].yaxis.get_ticklocs()
-            ax_yticklocs = list(
-                map(
-                    lambda x: x
-                    * len(np.arange(range_hist_x[0], range_hist_x[1]))
-                    * 1.0
-                    / hist_bin_num,
-                    ax_yticklocs,
-                )
-            )
-
-            # ax[axn].yaxis.set_ticklabels(list(map(lambda x: "%0.2f" % x, ax_yticklocs)))
-
-            if opt_kde:
-                ax[axn].plot(
-                    ls,
-                    kde_all(ls),
-                    linestyle="--",
-                    color=kde_line_color,
-                    linewidth=kde_line_width,
-                )
-                ax[axn].plot(
-                    ls,
-                    kde(ls),
-                    linestyle="-",
-                    color=kde_line_color,
-                    linewidth=kde_line_width,
-                )
-
-        else:
-
-            ax[axn].set_ylabel("Number of samples", fontsize=legend_font_size + 4)
-            n, bins, rects = ax[axn].hist(
-                (Tall[ind], Tall[outd_disc], Tall[outd]),
-                hist_bin_num,
-                histtype="barstacked",
-                color=(hist_bin_color1, hist_bin_color2, hist_bin_color0),
-                alpha=hist_bin_alpha,
-                edgecolor="k",
-                zorder=0,
-                range=ax[axn].get_xlim(),
-            )
-
-            if opt_kde:
-                ax[axn].plot(
-                    ls,
-                    kde_all(ls) * kde_multi_all,
-                    linestyle="--",
-                    color=kde_line_color,
-                    linewidth=kde_line_width,
-                )
-                ax[axn].plot(
-                    ls,
-                    kde(ls) * kde_multi,
-                    linestyle="-",
-                    color=kde_line_color,
-                    linewidth=kde_line_width,
-                )
+        plot_hist(ax[axn], Tall, ind, outd_disc, outd)
 
     print("All done.")
 
