@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2020/05/30 16:46:56.
+# Last updated: 2020/05/31 00:12:41.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -27,7 +27,8 @@
 # __version__ = "0.1.1"  # May/23/2020
 # __version__ = "0.1.2"  # May/24/2020
 # __version__ = "0.1.3"  # May/27/2020
-__version__ = "0.1.4"  # May/30/2020
+# __version__ = "0.1.4"  # May/30/2020
+__version__ = "0.1.5"  # May/31/2020
 
 # [Citation]
 #
@@ -260,17 +261,16 @@ def PlotConcConv(axcc, Xconv, Yconv, time, age_unit, L, legend_font_size):
 
 def ConcLineTW(t):
     if opt_correct_disequilibrium:
-        Xr = (
-            np.exp(l238U * t)
-            - 1
-            + l238U
-            / l230Th
-            * (f_Th_U - 1)
-            * (1 - np.exp(-l230Th * t))
-            * np.exp(l238U * t)
-        )
+        Xr = (np.exp(l238U * t) - 1) + l238U / l230Th * (f_Th_U - 1) * (
+            1 - np.exp(-l230Th * t)
+        ) * np.exp(l238U * t)
+        Yr = (np.exp(l235U * t) - 1) + l235U / l231Pa * (f_Pa_U - 1) * (
+            1 - np.exp(-l231Pa * t)
+        ) * np.exp(l235U * t)
+
         X = 1.0 / Xr
-        Y = ((1.0 / X + 1.0) ** (l235U / l238U) - 1.0) * X / U85r
+        Y = (Yr / Xr) / U85r
+        # Y = ((1.0 / X + 1.0) ** (l235U / l238U) - 1.0) * X / U85r
     else:
         X = 1.0 / (np.exp(l238U * t) - 1)
         Y = ((1.0 / X + 1.0) ** (l235U / l238U) - 1.0) * X / U85r
@@ -341,6 +341,27 @@ def calc_t76(age_unit, j, je, conf):
             t76[i] = 0.0
 
     return (t76, t76_se_plus, t76_se_minus)
+
+
+#
+def func_t76c(t, r76):
+    "opt_correct_disequilibrium"
+    Xr = (np.exp(l238U * t) - 1) + l238U / l230Th * (f_Th_U - 1) * (
+        1 - np.exp(-l230Th * t)
+    ) * np.exp(l238U * t)
+    Yr = (np.exp(l235U * t) - 1) + l235U / l231Pa * (f_Pa_U - 1) * (
+        1 - np.exp(-l231Pa * t)
+    ) * np.exp(l235U * t)
+    res = abs((Yr / Xr) / U85r - r76)
+    return res
+
+
+def calc_t76c(r76):
+    t76c = []
+    for i, r in enumerate(r76):
+        tc = optimize.leastsq(func_t76c, age_unit, args=(r))[0][0]
+        t76c.append(tc)
+    return t76c
 
 
 # ------------------------------------------------
@@ -1115,8 +1136,17 @@ def SI_Pb76c(R76c, R76m, R86m):
     return T
 
 
-def func_Pb76c(X, Y):
+def func_Pb76c(t1):
     "Calculate common 207Pb/206Pb at t1 age"
+    Pb64c_t1 = Pb64i + U8Pb4 * (np.exp(l238U * t2nd) - np.exp(l238U * t1))
+    Pb74c_t1 = Pb74i + U8Pb4 / U85r * (np.exp(l235U * t2nd) - np.exp(l235U * t1))
+    Pb76c0 = Pb74c_t1 / Pb64c_t1
+    return Pb76c0
+
+
+def func_corPb76c(X, Y):
+    # X = 1 / d["r68"]  <==  238U/206Pb
+    # Y = d["r76"]      <== 207Pb/206Pb
     # y0 = common 207Pb/206Pb at time t1
     # x1 = measured 238U/206Pb
     # y1 = measured 207Pb/206Pb
@@ -1129,9 +1159,9 @@ def func_Pb76c(X, Y):
     for i, y1 in enumerate(Y):
         x1 = X[i]
         t1 = 1 / l238U * np.log(1 / x1 + 1)
-        Pb64c_t1 = Pb64i + U8Pb4 * (np.exp(l238U * t2nd) - np.exp(l238U * t1))
-        Pb74c_t1 = Pb74i + U8Pb4 / U85r * (np.exp(l235U * t2nd) - np.exp(l235U * t1))
-        Pb76c0 = Pb74c_t1 / Pb64c_t1
+        if opt_correct_disequilibrium:
+            t1 = optimize.leastsq(func_Tdiseq, t1, args=(1 / x1, 68))[0][0]
+        Pb76c0 = func_Pb76c(t1)
         x0 = 0
         y0 = Pb76c0
         line0 = LineString([(0.0, y0), (10 ** 5, y0)])
@@ -1148,16 +1178,17 @@ def func_Pb76c(X, Y):
         x2 = res1[1].x  # np.max(res1.bounds)
         y2 = res1[1].y  # np.min(res1.bounds)
         f = (y1 - y2) / (y0 - y2) * 100
-        t68c = SI_Pb76c(y0, y1, x1)  # y0 = R76c, y1 = R76m, x1 = R86m
-        t68 = 1 / l238U * np.log(1 / x1 + 1)
+
+        if opt_correct_disequilibrium:
+            t68c = SI_Pb76c(y0, y1, x1)  # y0 = R76c, y1 = R76m, x1 = R86m
+        else:
+            t68 = 1 / l238U * np.log(1 / x1 + 1)
+            t68c = (1 - f / 100) * t68
 
         xx2.append(x2)
         yy2.append(y2)
         f206p.append(f)
-        if opt_correct_disequilibrium:
-            T.append(t68c)
-        else:
-            T.append(t68)
+        T.append(t68c)
 
     return (xx2, yy2, f206p, T)
 
@@ -2209,7 +2240,7 @@ if __name__ == "__main__":
 
     # Tera-Wasserburg concordia diagrams
     # (x, y) = (238U/206Pb, 207Pb/206Pb)
-    x = 1 / Y
+    x = 1 / d["r68"]
     y = d["r76"]
 
     sigma_x = SY * x
@@ -2241,25 +2272,6 @@ if __name__ == "__main__":
             Th_U_e = Th_U * 0.0
 
     # ------------------------------------------------
-    # Common Pb correction (207Pb method)
-    # (Williams, 1998)
-    #
-    if opt_correct_common_Pb:
-        # Correction of common Pb (207Pb-corrected)
-        # xcorr, ycorr, f206, T68corr = Pb76c(x, y)
-        d["86cor"], d["76cor"], d["f206p"], d["t68cor"] = func_Pb76c(x, y)
-        x = d["86cor"]
-        y = d["76cor"]
-        Y = 1 / x
-        Sy = sigma_y / y
-        Sx = sigma_x / x
-        SY = sigma_Y / Y
-        # rho_XY = (SX ** 2 + SY ** 2 - Sy ** 2) / (2.0 * SX * SY)
-        # rho_xy = (SY ** 2 - SX * SY * rho_XY) / (Sx * Sy)
-        # cov_XY = rho_XY * sigma_X * sigma_Y
-        # cov_xy = rho_xy * sigma_x * sigma_y
-
-    # ------------------------------------------------
     # Ages
     d["t75"] = 1 / l235U * np.log(X + 1)
     d["t75e"] = np.empty(len(y))
@@ -2271,7 +2283,26 @@ if __name__ == "__main__":
     d["t76_min"] = np.empty(len(y))  # 1sigma error
     d["t76_max"] = np.empty(len(y))  # 1sigma error
     (d["t76"], d["t76e_plus"], d["t76e_minus"]) = calc_t76(age_unit, y, sigma_y, ca_cr)
-    if opt_correct_disequilibrium:
+
+    if opt_correct_common_Pb:
+        # Correction of common Pb (207Pb-corrected)
+        # xcorr, ycorr, f206, T68corr = Pb76c(x, y)
+        d["r86cor"], d["r76cor"], d["f206p"], d["t68cor"] = func_corPb76c(
+            1 / d["r68"], d["r76"]
+        )
+        x = d["r86cor"]
+        y = d["r76cor"]
+        Y = 1 / x
+        Sy = sigma_y / y
+        Sx = sigma_x / x
+        SY = sigma_Y / Y
+        rho_XY = (SX ** 2 + SY ** 2 - Sy ** 2) / (2.0 * SX * SY)
+        rho_xy = (SY ** 2 - SX * SY * rho_XY) / (Sx * Sy)
+        cov_XY = rho_XY * sigma_X * sigma_Y
+        cov_xy = rho_xy * sigma_x * sigma_y
+        d["t68"] = d["t68cor"]
+        d["t76"] = calc_t76c(d["r76cor"])
+    else:
         d["t68"] = SI_Tdiseq(d["r75"], d["r68"], rtype=68)
         d["t75"] = SI_Tdiseq(d["r75"], d["r68"], rtype=75)
 
@@ -2323,7 +2354,6 @@ if __name__ == "__main__":
     # List of the configurations
 
     # input file
-    print("\n")
     print("============================================================")
     print(("Data filename is %s") % infile)
     print(("Configuration filename is %s") % conffile)
@@ -2388,14 +2418,6 @@ if __name__ == "__main__":
         print("Correlation coefficient: rho_xy")
         [print("%d %.2f" % (i, rho_xy[i])) for i in range(len(rho_xy)) if rho_xy[i] > 1]
         sys.exit("rho_xy is more than 1")
-
-    # ------------------------------------------------
-    # corrections for common Pb and initial disequilibria
-    if opt_correct_common_Pb:
-        if opt_correct_disequilibrium:
-            d["t68"] = d["t68cor"]
-        else:
-            d["t68"] = (1 - d["f206p"] / 100) * d["t68cor"]
 
     # ################################################
     # print ages
@@ -3011,6 +3033,13 @@ if __name__ == "__main__":
                 format(MSWD_owm, dignum),
             )
         )
+
+        Pb76c_T_owm = func_Pb76c(T_owm)
+        if opt_correct_common_Pb:
+            print(
+                u"    common 207Pb/206Pb = %s (%s %s)"
+                % (format(Pb76c_T_owm, ".5f"), format(T_owm, dignum), age_unit_name)
+            )
 
         # reduced chi-squared (Spencer2016gf)
         chi2_red, res_chi2_red = calc_chi2_red(Tall[ind], s1[ind], T_owm, len(ind), opt=1)

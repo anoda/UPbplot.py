@@ -1,3 +1,13 @@
+2020-05-31 Version 0.1.5
+
+	* Main script
+
+	ConcLineTW: correct calculation procedure
+
+	func_t76: modify for opt_correct_disequilibrium
+
+	func_corPb76c: correction for common Pb (207Pb method)
+
 2020-05-30 Version 0.1.4
 
 	Corrections for common Pb and initial disequilibra are available.

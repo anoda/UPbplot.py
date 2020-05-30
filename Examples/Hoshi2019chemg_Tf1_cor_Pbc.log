@@ -1,5 +1,3 @@
-
-
 ============================================================
 Data filename is Hoshi2019chemg_Tf1.csv
 Configuration filename is Hoshi2019chemg_Tf1_cor_Pbc.cfg
@@ -73,6 +71,7 @@ b: Tera-Wasserburg concordia diagram
     P-value concordance / equivalence / combined = 0.98 / 0.27 / 0.32
 c: One-dimensional bar plot
     1D weighted mean age = 16.96 ± 0.08 Ma [95% conf.] (MSDW=2.27)
+    common 207Pb/206Pb = 0.83568 (16.96 Ma)
     Reduced Chi-squared = 2.27 (Failed, over dispersion or uncertainties underestimated)
 d: Histogram
 All done.
