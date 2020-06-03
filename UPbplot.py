@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2020/05/31 00:12:41.
+# Last updated: 2020/06/01 19:10:44.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -132,6 +132,15 @@ U8Pb4 = 9.74  # 238U/204Pb
 time_ka = np.array(list(range(1000, 5 * 10 ** 6, 1 * 10 ** 3)))  # 1-5000 ka
 # 0.1-4601 Ma
 time_ma = np.array(list(range(10 ** 5, 4600 * 10 ** 6, 10 ** 5)))
+timeall = np.concatenate(
+    [
+        list(range(10 ** 4, 10 ** 5, 10 ** 3)),
+        list(range(10 ** 5, 10 ** 6, 10 ** 4)),
+        list(range(10 ** 6, 10 ** 7, 10 ** 5)),
+        list(range(10 ** 7, 10 ** 8, 10 ** 6)),
+        list(range(10 ** 8, 5 * 10 ** 9, 10 ** 7)),
+    ]
+)
 
 # ################################################
 # Setting of file names
@@ -232,7 +241,7 @@ def ConcLineConv(t):
 
 
 # Plot a conventional concordia curve
-def PlotConcConv(axcc, Xconv, Yconv, time, age_unit, L, legend_font_size):
+def PlotConcConv(axcc, Xconv, Yconv, time, age_unit, legend_font_size):
     li = graph_label_interval * age_unit
     axcc.plot(Xconv, Yconv, color="k", linewidth=1)
     t0 = math.floor(time[0] / age_unit) * age_unit
@@ -278,7 +287,7 @@ def ConcLineTW(t):
 
 
 # Plot a Terra-Wasserburg concordia curve
-def PlotConcTW(axtw, Xtw, Ytw, time, age_unit, L, legend_font_size):
+def PlotConcTW(axtw, Xtw, Ytw, time, age_unit, legend_font_size):
     li = graph_label_interval * age_unit
     axtw.plot(Xtw, Ytw, color="k", linewidth=1)
     t0 = math.floor(time[0] / age_unit) * age_unit
@@ -313,55 +322,6 @@ def TimeRangeTW(rx):
     txmax = np.log(1.0 / rx[0] + 1) / l238U
     txmin = np.log(1.0 / rx[1] + 1) / l238U
     return (txmin, txmax)
-
-
-# ------------------------------------------------
-# Age calculation of 207Pb/206Pb
-
-
-def func_t76(t, j):
-    res = abs(U85r * j - (np.exp(l235U * t) - 1) / (np.exp(l238U * t) - 1))
-    return res
-
-
-def calc_t76(age_unit, j, je, conf):
-    t76 = np.empty(len(j))  # 7Pb/6Pb age
-    t76upper = np.empty(len(j))  # upper 7Pb/6Pb age with error
-    t76lower = np.empty(len(j))  # lower 7Pb/6Pb age
-    t76_se_plus = np.empty(len(j))
-    t76_se_minus = np.empty(len(j))
-    cr = stats.norm.ppf(conf + (1 - conf) / 2.0)
-    for i in range(len(j)):
-        t76[i] = optimize.leastsq(func_t76, age_unit, args=(j[i]))[0][0]
-        t76upper[i] = optimize.leastsq(func_t76, age_unit, args=(j[i] + je[i] * cr))[0][0]
-        t76lower[i] = optimize.leastsq(func_t76, age_unit, args=(j[i] - je[i] * cr))[0][0]
-        t76_se_plus[i] = t76upper[i] - t76[i]
-        t76_se_minus[i] = t76[i] - t76lower[i]
-        if t76[i] < 0.0:
-            t76[i] = 0.0
-
-    return (t76, t76_se_plus, t76_se_minus)
-
-
-#
-def func_t76c(t, r76):
-    "opt_correct_disequilibrium"
-    Xr = (np.exp(l238U * t) - 1) + l238U / l230Th * (f_Th_U - 1) * (
-        1 - np.exp(-l230Th * t)
-    ) * np.exp(l238U * t)
-    Yr = (np.exp(l235U * t) - 1) + l235U / l231Pa * (f_Pa_U - 1) * (
-        1 - np.exp(-l231Pa * t)
-    ) * np.exp(l235U * t)
-    res = abs((Yr / Xr) / U85r - r76)
-    return res
-
-
-def calc_t76c(r76):
-    t76c = []
-    for i, r in enumerate(r76):
-        tc = optimize.leastsq(func_t76c, age_unit, args=(r))[0][0]
-        t76c.append(tc)
-    return t76c
 
 
 # ------------------------------------------------
@@ -1054,86 +1014,136 @@ def print_discordant_data(tdisc, odisc, pdisc, sigma):
 
 
 # ------------------------------------------------
-# ages for correction for initial disequilibria
-# eqs. (1) and (2) in Sakata (2018) Geochemical Journal
-def func_Tdiseq(t, r, rtype):
-    if rtype == 68:
-        F = abs(
-            (np.exp(l238U * t) - 1)
-            + l238U
-            / l230Th
-            * (f_Th_U - 1)
-            * (1 - np.exp(-l230Th * t))
-            * np.exp(l238U * t)
-            - r
-        )
-    elif rtype == 75:
-        F = abs(
-            (np.exp(l235U * t) - 1)
-            + l235U
-            / l231Pa
-            * (f_Pa_U - 1)
-            * (1 - np.exp(-l231Pa * t))
-            * np.exp(l235U * t)
-            - r
-        )
-    return F
+# Age calculation for isotopic ratios (no correction)
 
 
-def SI_Tdiseq(R75m, R68m, rtype):
-    T = []  # corrected age for initial disequilibria
-    if rtype == 68:
-        for i, r in enumerate(R68m):
-            t = 1 / l238U * np.log(r + 1)
-            T68 = optimize.leastsq(func_Tdiseq, t, args=(r, rtype))[0][0]
-            T.append(T68)
-    elif rtype == 75:
-        for i, r in enumerate(R75m):
-            t = 1 / l235U * np.log(r + 1)
-            T75 = optimize.leastsq(func_Tdiseq, t, args=(r, rtype))[0][0]
-            T.append(T75)
-    else:
-        print("Please define rtype = 68 or 75.")
-        exit
+def calc_t75(r):
+    """ Calculation for 207Pb/235U age."""
+    t = 1 / l235U * np.log(r + 1)
+    return t
+
+
+def calc_t68(r):
+    """ Calculation for 207Pb/235U age."""
+    t = 1 / l238U * np.log(r + 1)
+    return t
+
+
+def func_t76(t, r):
+    """ Function for calc_t76."""
+    res = abs(U85r * r - (np.exp(l235U * t) - 1) / (np.exp(l238U * t) - 1))
+    return res
+
+
+def calc_t76(r76):
+    T = []
+    for i, r in enumerate(r76):
+        t = 1 / l238U * np.log(r + 1)  # initial time for calculation
+        T76 = optimize.leastsq(func_t76, t, args=(r))[0][0]
+        T.append(T76)
     return T
 
 
 # ------------------------------------------------
-# Common-Pb correction: 207Pb method
-
-# Zricon crystalization age from eq (5) in Sakata2018GeochemJ
-def func_tPb76c(t, R76c, R76m, R86m):
+# Age calculation for isotopic ratios (correction for initial disequilibria)
+# eqs. (1) and (2) in Sakata (2018) Geochemical Journal
+def func_t68diseq(t, r):
     F = abs(
-        (
-            1
-            / U85r
-            * (
-                (np.exp(l235U * t) - 1)
-                + l235U
-                / l231Pa
-                * (f_Pa_U - 1)
-                * (1 - np.exp(-l235U * t))
-                * np.exp(l235U * t)
-            )
-            - (R76m - R76c) / R86m
-        )
-        / (
-            (np.exp(l238U * t) - 1)
-            + l238U
-            / l230Th
-            * (f_Th_U - 1)
-            * (1 - np.exp(-l230Th * t))
-            * np.exp(-l238U * t)
-        )
-        - R76c
+        (np.exp(l238U * t) - 1)
+        + l238U / l230Th * (f_Th_U - 1) * (1 - np.exp(-l230Th * t)) * np.exp(l238U * t)
+        - r
     )
     return F
 
 
-def SI_Pb76c(R76c, R76m, R86m):
-    t = 1 / l238U * np.log(1 / R86m + 1)
-    T = optimize.leastsq(func_tPb76c, t, args=(R76c, R76m, R86m))[0][0]
+def func_t75diseq(t, r):
+    F = abs(
+        (np.exp(l235U * t) - 1)
+        + l235U / l231Pa * (f_Pa_U - 1) * (1 - np.exp(-l231Pa * t)) * np.exp(l235U * t)
+        - r
+    )
+    return F
+
+
+def func_t76diseq(t, r):
+    if t < np.min(timeall):
+        t = np.min(timeall)
+    R68 = (np.exp(l238U * t) - 1) + l238U / l230Th * (f_Th_U - 1) * (
+        1 - np.exp(-l230Th * t)
+    ) * np.exp(l238U * t)
+    R75 = (np.exp(l235U * t) - 1) + l235U / l231Pa * (f_Pa_U - 1) * (
+        1 - np.exp(-l231Pa * t)
+    ) * np.exp(l235U * t)
+    F = abs(R75 / R68 - r * U85r)
+    return F
+
+
+def calc_t68diseq(R68m):
+    T = []  # corrected age for initial disequilibria
+    for i, r in enumerate(R68m):
+        t = calc_t68(r)  # assumed time for calculation
+        T68 = optimize.leastsq(func_t68diseq, t, args=(r))[0][0]
+        T.append(T68)
     return T
+
+
+def calc_t75diseq(R75m):
+    T = []  # corrected age for initial disequilibria
+    for i, r in enumerate(R75m):
+        t = calc_t75(r)  # assumed time for calculation
+        T75 = optimize.leastsq(func_t75diseq, t, args=(r))[0][0]
+        T.append(T75)
+    return T
+
+
+def calc_t76diseq(R68m, R76m):
+    T = []  # corrected age for initial disequilibria
+    for i, r in enumerate(R76m):
+        t = calc_t68(R68m[i])  # initial time for calculation
+        T76 = optimize.leastsq(func_t76diseq, t, args=(r))[0][0]
+        if T76 < 0:
+            T76 = 0.0
+        T.append(T76)
+    return T
+
+
+# # ------------------------------------------------
+# # Zricon crystalization age from eq (5) in Sakata2018GeochemJ
+# def func_tPb76c(t, R76c, R76m, R86m):
+#     F = abs(
+#         (
+#             1
+#             / U85r
+#             * (
+#                 (np.exp(l235U * t) - 1)
+#                 + l235U
+#                 / l231Pa
+#                 * (f_Pa_U - 1)
+#                 * (1 - np.exp(-l235U * t))
+#                 * np.exp(l235U * t)
+#             )
+#             - (R76m - R76c) / R86m
+#         )
+#         / (
+#             (np.exp(l238U * t) - 1)
+#             + l238U
+#             / l230Th
+#             * (f_Th_U - 1)
+#             * (1 - np.exp(-l230Th * t))
+#             * np.exp(-l238U * t)
+#         )
+#         - R76c
+#     )
+#     return F
+
+
+# def calc_tPb76c(R76c, R76m, R86m):
+#     t = calc_t68(1 / R86m)
+#     T = optimize.leastsq(func_tPb76c, t, args=(R76c, R76m, R86m))[0][0]
+
+
+# ------------------------------------------------
+# Common-Pb correction: 207Pb method
 
 
 def func_Pb76c(t1):
@@ -1144,7 +1154,7 @@ def func_Pb76c(t1):
     return Pb76c0
 
 
-def func_corPb76c(X, Y):
+def func_corPb76c(r68, r75, r76):
     # X = 1 / d["r68"]  <==  238U/206Pb
     # Y = d["r76"]      <== 207Pb/206Pb
     # y0 = common 207Pb/206Pb at time t1
@@ -1154,43 +1164,47 @@ def func_corPb76c(X, Y):
     # y2 = corrected (radiogenic) 207Pb/206Pb
     xx2 = []  # corrected (radiogenic) 238U/206Pb
     yy2 = []  # corrected (radiogenic) 207Pb/206Pb
+    yy0 = []  # common 207Pb/206Pb
     f206p = []  # fraction of common 206Pb
     T = []  # zircon crystalization age from eq. (5) in Sakata2018GeochemJ
+    X = 1 / r68
+    Y = r76
+    Xtw, Ytw = ConcLineTW(timeall)
+    line_tw = LineString([(Xtw[i], Ytw[i]) for i, j in enumerate(Xtw)])
     for i, y1 in enumerate(Y):
         x1 = X[i]
-        t1 = 1 / l238U * np.log(1 / x1 + 1)
+        t1 = calc_t68(r68[i])
         if opt_correct_disequilibrium:
-            t1 = optimize.leastsq(func_Tdiseq, t1, args=(1 / x1, 68))[0][0]
+            t1 = optimize.leastsq(func_t68diseq, t1, args=(r68[i]))[0][0]
         Pb76c0 = func_Pb76c(t1)
         x0 = 0
         y0 = Pb76c0
-        line0 = LineString([(0.0, y0), (10 ** 5, y0)])
-        Xtw, Ytw = ConcLineTW(np.array(list(range(10 ** 5, 5 * 10 ** 9, 10 ** 5))))
-        line_tw = LineString([(Xtw[i], Ytw[i]) for i, j in enumerate(Xtw)])
-        res = line0.intersection(line_tw)
-        # y = a x + b
+        # Y = a x + b
         # a = delta(207Pb/206Pb)/delta(238U/206Pb)
         a = (y1 - y0) / (x1 - x0)
         b = y1 - a * x1
         x3 = -b / a
-        line1 = LineString([[x0, y0], [x1, y1], [x3, 0]])
+        line1 = LineString([[x0, y0], [x3, 0]])
         res1 = line1.intersection(line_tw)
-        x2 = res1[1].x  # np.max(res1.bounds)
-        y2 = res1[1].y  # np.min(res1.bounds)
+
+        if res1.geom_type == "Point":
+            x2 = res1.x
+            y2 = res1.y
+        elif res1.geom_type == "MultiPoint":
+            x2 = res1[1].x
+            y2 = res1[1].y
+        else:
+            print("More than 2 points?")
         f = (y1 - y2) / (y0 - y2) * 100
 
-        if opt_correct_disequilibrium:
-            t68c = SI_Pb76c(y0, y1, x1)  # y0 = R76c, y1 = R76m, x1 = R86m
-        else:
-            t68 = 1 / l238U * np.log(1 / x1 + 1)
-            t68c = (1 - f / 100) * t68
-
-        xx2.append(x2)
+        xx2.append(1 / x2)
         yy2.append(y2)
+        yy0.append(y0)
         f206p.append(f)
-        T.append(t68c)
+        # T.append(t68c)
 
-    return (xx2, yy2, f206p, T)
+    # return corrected R68cor, R76cor, f206%
+    return (xx2, yy2, yy0, f206p)
 
 
 # ------------------------------------------------
@@ -1672,17 +1686,16 @@ def makefigures(pd):
     mpl.rcParams["ytick.labelsize"] = legend_font_size
     ax = ax.ravel()
 
+    figtitle = outfile
     if opt_correct_disequilibrium:
-        figtitle = outfile + " (correct disequilibria"
+        figtitle += " (correct disequilibria"
         if opt_correct_common_Pb:
-            figtitle = figtitle + " and correct common Pb"
-    else:
-        figtitle = outfile + " ("
-        if opt_correct_common_Pb:
-            figtitle = figtitle + "correct common Pb"
+            figtitle += " and correct common Pb)"
         else:
-            figtitle = figtitle + "no correction"
-    figtitle += ")"
+            figtitle += ")"
+    else:
+        if opt_correct_common_Pb:
+            figtitle += " (correct common Pb)"
 
     fig.canvas.set_window_title("%s" % figtitle)
     fig.suptitle("%s" % figtitle)
@@ -2178,14 +2191,7 @@ if __name__ == "__main__":
     # ================================================
     # Data formatting
 
-    dt_name_column = [
-        "r75",
-        "r75e",
-        "r68",
-        "r68e",
-        "r76",
-        "r76e",
-    ]
+    dt_name_column = ["r75", "r75e", "r68", "r68e", "r76", "r76e"]
 
     column_num_isotopic_ratio = [
         c_7Pb5U,
@@ -2272,39 +2278,37 @@ if __name__ == "__main__":
             Th_U_e = Th_U * 0.0
 
     # ------------------------------------------------
-    # Ages
-    d["t75"] = 1 / l235U * np.log(X + 1)
-    d["t75e"] = np.empty(len(y))
-    d["t68"] = 1 / l238U * np.log(Y + 1)
-    d["t68e"] = np.empty(len(y))
-    d["t76"] = np.empty(len(y))
-    d["t76e_plus"] = np.empty(len(y))  # 1sigma error
-    d["t76e_minus"] = np.empty(len(y))  # 1sigma error
-    d["t76_min"] = np.empty(len(y))  # 1sigma error
-    d["t76_max"] = np.empty(len(y))  # 1sigma error
-    (d["t76"], d["t76e_plus"], d["t76e_minus"]) = calc_t76(age_unit, y, sigma_y, ca_cr)
-
+    # Correction of common Pb (207Pb-corrected)
+    # R68corr, R76corr, f206, T68corr = Pb76c(x, y)
     if opt_correct_common_Pb:
-        # Correction of common Pb (207Pb-corrected)
-        # xcorr, ycorr, f206, T68corr = Pb76c(x, y)
-        d["r86cor"], d["r76cor"], d["f206p"], d["t68cor"] = func_corPb76c(
-            1 / d["r68"], d["r76"]
+        d["r68cor"], d["r76cor"], d["r76com"], d["f206p"] = func_corPb76c(
+            d["r68"], d["r75"], d["r76"]
         )
-        x = d["r86cor"]
-        y = d["r76cor"]
-        Y = 1 / x
-        Sy = sigma_y / y
-        Sx = sigma_x / x
-        SY = sigma_Y / Y
-        rho_XY = (SX ** 2 + SY ** 2 - Sy ** 2) / (2.0 * SX * SY)
-        rho_xy = (SY ** 2 - SX * SY * rho_XY) / (Sx * Sy)
-        cov_XY = rho_XY * sigma_X * sigma_Y
-        cov_xy = rho_xy * sigma_x * sigma_y
-        d["t68"] = d["t68cor"]
-        d["t76"] = calc_t76c(d["r76cor"])
+        d["r68"] = d["r68cor"]
+        d["r76"] = d["r76cor"]
+        d["r75"] = d["r76"] * d["r68"] * U85r
+        opt_exclude_disc = 0
+
+    # ------------------------------------------------
+    # Ages and 1sigma error
+
+    if opt_correct_disequilibrium:
+        d["t68"] = calc_t68diseq(d["r68"])
+        d["t75"] = calc_t75diseq(d["r75"])
+        d["t76"] = calc_t76diseq(d["r68"], d["r76"])
+        d["t76_min"] = calc_t76diseq(d["r68"], d["r76"] - d["r76e"])
+        d["t76_max"] = calc_t76diseq(d["r68"], d["r76"] + d["r76e"])
     else:
-        d["t68"] = SI_Tdiseq(d["r75"], d["r68"], rtype=68)
-        d["t75"] = SI_Tdiseq(d["r75"], d["r68"], rtype=75)
+        d["t68"] = calc_t68(d["r68"])
+        d["t75"] = calc_t75(d["r75"])
+        d["t76"] = calc_t76(d["r76"])
+        d["t76_min"] = calc_t76(d["r76"] - d["r76e"])
+        d["t76_max"] = calc_t76(d["r76"] + d["r76e"])
+
+    d["t76e_plus"] = d["t76_max"] - d["t76"]
+    d["t76e_minus"] = d["t76"] - d["t76_min"]
+    d["t75e"] = d["t75"] * d["r75e"] / d["r75"]
+    d["t68e"] = d["t68"] * d["r68e"] / d["r68"]
 
     # ------------------------------------------------
     # Initialize list
@@ -2381,7 +2385,14 @@ if __name__ == "__main__":
     for i in range(0, Nc):
         print(
             "%.5f     %.5f   %.5f    %.5f    %.5f    %.5f"
-            % (X[i], sigma_X[i], Y[i], sigma_Y[i], y[i], sigma_y[i])
+            % (
+                d["r75"].iloc[i],
+                d["r75e"].iloc[i],
+                d["r68"].iloc[i],
+                d["r68e"].iloc[i],
+                d["r76"].iloc[i],
+                d["r75e"].iloc[i],
+            )
         )
 
     print("------------------------------------------------------------")
@@ -2433,8 +2444,6 @@ if __name__ == "__main__":
         print("#\t6/8\t+-s\t7/5\t+-s\t7/6\t+s\t-s\t")
 
     for i in range(len(y)):
-        d["t68e"].iloc[i] = d["t68"].iloc[i] * SY[i]
-        d["t75e"].iloc[i] = d["t75"].iloc[i] * SX[i]
 
         if opt_correct_common_Pb:
             print(
@@ -2539,13 +2548,7 @@ if __name__ == "__main__":
         ax[axn].set_ylim(rY)
 
         PlotConcConv(
-            ax[axn],
-            Xconv,
-            Yconv,
-            timeXY,
-            age_unit,
-            math.ceil(graph_label_interval),
-            legend_font_size,
+            ax[axn], Xconv, Yconv, timeXY, age_unit, legend_font_size,
         )
 
         # Legend
@@ -2771,13 +2774,7 @@ if __name__ == "__main__":
         ax[axn].set_ylim(ry)
 
         PlotConcTW(
-            ax[axn],
-            Xtw,
-            Ytw,
-            timexy,
-            age_unit,
-            math.ceil(graph_label_interval),
-            legend_font_size,
+            ax[axn], Xtw, Ytw, timexy, age_unit, legend_font_size,
         )
 
         # Legend data number

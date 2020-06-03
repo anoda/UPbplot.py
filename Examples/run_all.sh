@@ -7,7 +7,7 @@ flist=(Chang2006ggg_Fig2.csv Christiansen2009a.csv Christiansen2009b.csv Gonzale
 for i in ${flist[@]}; do
 	echo $i
 	UPbplot.py -i ${i} -c ${i%.csv}.cfg -f > ${i%.csv}.log
-done	
+done
 
 
 for j in 1 2; do
