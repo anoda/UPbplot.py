@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2020/06/03 15:38:27.
+# Last updated: 2020/06/18 21:22:19.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -29,7 +29,8 @@
 # __version__ = "0.1.3"  # May/27/2020
 # __version__ = "0.1.4"  # May/30/2020
 # __version__ = "0.1.5"  # May/31/2020
-__version__ = "0.1.6"  # June/03/2020
+# __version__ = "0.1.6"  # June/03/2020
+__version__ = "0.1.7"  # June/03/2020
 
 # [Citation]
 #
@@ -114,11 +115,17 @@ debug = 1
 # ################################################
 # Initial coefficient
 
-l238U = 1.55125 * 10 ** (-10)  # lambda_238U
-l235U = 9.8485 * 10 ** (-10)  # lambda_235U
-l232Th = 4.9475 * 10 ** (-11)  # lambda_232Th
-l231Pa = 2.13 * 10 ** (-5)  # Rempfer2017epsl
-l230Th = 9.1705 * 10 ** (-6)  # Cheng2013epsl
+# l238U = 1.55125 * 10 ** (-10)  # lambda_238U
+# l235U = 9.8485 * 10 ** (-10)  # lambda_235U
+# 232Th = 4.9475 * 10 ** (-11)  # lambda_232Th
+# l231Pa = 2.13 * 10 ** (-5)  # Rempfer2017epsl
+# l230Th = 9.1705 * 10 ** (-6)  # Cheng2013epsl
+# U85r = 137.818  # 238U/235U
+l238U = 1.55136 * 10 ** (-10)  # lambda_238U
+l235U = 9.84864 * 10 ** (-10)  # lambda_235U
+l232Th = 4.95 * 10 ** (-11)  # lambda_232Th
+l231Pa = 2.10 * 10 ** (-5)  # Rempfer2017epsl
+l230Th = 9.17 * 10 ** (-6)  # Cheng2013epsl
 U85r = 137.818  # 238U/235U
 
 # common-Pb correction
@@ -237,7 +244,7 @@ def ConcLineConv(t):
         )
     else:
         X = np.exp(l235U * t) - 1
-        Y = (X + 1) ** (l238U / l235U) - 1
+        Y = np.exp(l238U * t) - 1
     return (X, Y)
 
 
@@ -246,15 +253,20 @@ def PlotConcConv(axcc, Xconv, Yconv, time, age_unit, legend_font_size):
     li = graph_label_interval * age_unit
     axcc.plot(Xconv, Yconv, color="k", linewidth=1)
     t0 = math.floor(time[0] / age_unit) * age_unit
+    if t0 > 1000:
+        t0 = math.ceil(t0 / 1000)
+    elif t0 > 100:
+        t0 = math.ceil(t0 / 100)
+    elif t0 > 10:
+        t0 = math.ceil(t0 / 10)
     tann = np.arange(t0, time[-1], li)
     xa, ya = ConcLineConv(tann)
-
     for i, x in enumerate(xa):
         axcc.plot(xa[i], ya[i], "o", mfc="white", mec="grey", mew=1, ms=2)
         if li < age_unit:
             tlabel = "{:.1f}".format(tann[i] / age_unit)
         else:
-            tlabel = "{:}".format(tann[i] / age_unit)
+            tlabel = int(tann[i] / age_unit)
         axcc.annotate(
             tlabel,
             xy=(xa[i], ya[i]),
@@ -280,10 +292,11 @@ def ConcLineTW(t):
 
         X = 1.0 / Xr
         Y = (Yr / Xr) / U85r
-        # Y = ((1.0 / X + 1.0) ** (l235U / l238U) - 1.0) * X / U85r
     else:
-        X = 1.0 / (np.exp(l238U * t) - 1)
-        Y = ((1.0 / X + 1.0) ** (l235U / l238U) - 1.0) * X / U85r
+        Xr = np.exp(l238U * t) - 1
+        Yr = np.exp(l235U * t) - 1
+        X = 1.0 / Xr
+        Y = (Yr / Xr) / U85r
     return (X, Y)
 
 
@@ -291,7 +304,12 @@ def ConcLineTW(t):
 def PlotConcTW(axtw, Xtw, Ytw, time, age_unit, legend_font_size):
     li = graph_label_interval * age_unit
     axtw.plot(Xtw, Ytw, color="k", linewidth=1)
-    t0 = math.floor(time[0] / age_unit) * age_unit
+    t0 = math.floor(time[0] / age_unit)
+    if t0 > 100:
+        t0 = math.ceil(t0 / 100)
+    elif t0 > 10:
+        t0 = math.ceil(t0 / 10)
+
     tann = np.arange(t0, time[-1], li)
     xa, ya = ConcLineTW(tann)
     for i, x in enumerate(xa):
@@ -299,7 +317,7 @@ def PlotConcTW(axtw, Xtw, Ytw, time, age_unit, legend_font_size):
         if li < age_unit:
             tlabel = "{:.1f}".format(tann[i] / age_unit)
         else:
-            tlabel = "{:}".format(tann[i] / age_unit)
+            tlabel = int(tann[i] / age_unit)
         axtw.annotate(
             tlabel,
             xy=(xa[i], ya[i]),
@@ -337,12 +355,12 @@ def myEllipse(i, x, y, sigma_x, sigma_y, cov_xy, conf="none"):
     cov = ([sigma_x ** 2, cov_xy], [cov_xy, sigma_y ** 2])
     vals, vecs = eigsorted(cov)
     theta = np.degrees(np.arctan2(*vecs[:, 0][::-1]))
+    n = 100
     if (vals[0] < 0.0) | (vals[1] < 0.0):
         print("!!! Unable to draw an error ellipse [Data %s] !!!" % str(i))
-        ell = 0
+        return (np.repeat(0, n), np.repeat(0, n))
     else:
         width, height = 2 * np.sqrt(stats.chi2.ppf(conf, 2)) * np.sqrt(vals)
-        n = 100
         tpi = np.linspace(0, 2 * np.pi, n, endpoint=True)
         st = np.sin(tpi)
         ct = np.cos(tpi)
@@ -353,7 +371,10 @@ def myEllipse(i, x, y, sigma_x, sigma_y, cov_xy, conf="none"):
         # p = np.empty((n, 2))
         xelip = x + width / 2 * ca * ct - height / 2 * sa * st
         yelip = y + width / 2 * sa * ct + height / 2 * ca * st
-    return (xelip, yelip)
+        if len(xelip) > 0:
+            return (xelip, yelip)
+        else:
+            return (np.repeat(0, n), np.repeat(0, n))
 
 
 # ------------------------------------------------
@@ -671,6 +692,94 @@ def FitFuncSIageConv(t, a, b, sigma_a, sigma_b, x_bar, y_bar, conf, case):
     return S
 
 
+# ------------------------------------------------
+# Intercept age
+def calc_intercept_age(line1, ctype):
+    # Intercept age with concordia curve
+    shapely_line = LineString(line1)
+    if ctype == "conv":
+        line2 = line_cc
+        # line2 = [[np.exp(l238U * t) - 1, np.exp(l235U * t) - 1] for t in time_ma]
+        shapely_curve = LineString(line2)
+    elif ctype == "tw":
+        line2 = line_tw
+        # line2 = [
+        #     [
+        #         1 / (np.exp(l238U * t) - 1),
+        #         1.0 / U85r * (np.exp(l235U * t) - 1) / (np.exp(l238U * t) - 1),
+        #     ]
+        #     for t in time_ma
+        # ]
+        shapely_curve = LineString(line2)
+
+    mp = shapely_line.intersection(shapely_curve)
+
+    tsi = []
+    if mp.geom_type == "Point":
+        if ctype == "conv":
+            tsi = calc_t68(mp.y) / age_unit
+        else:
+            tsi = calc_t68(1 / mp.x) / age_unit
+
+    elif mp.geom_type == "MultiPoint":
+        xy = [[float(p.x), float(p.y)] for p in mp]
+        if ctype == "conv":
+            for j, pp in enumerate(xy):
+                tsi.append(calc_t68(pp[1]) / age_unit)
+        elif ctype == "tw":
+            for j, pp in enumerate(xy):
+                tsi.append(calc_t68(1 / pp[0]) / age_unit)
+
+    return tsi
+
+
+def format_intercept_age(t, t1, t2):
+    tsi1 = [0, 0, 0]  # lower intercept age (age, plus, minus)
+    tsi2 = [0, 0, 0]  # upper intercept age (age, plus, minus)
+
+    if isinstance(t, float):
+        tsi1[0] = t
+        if t1 > t2:
+            tsi1[1] = t1
+            tsi1[2] = t2
+        else:
+            tsi1[1] = t2
+            tsi1[2] = t1
+    else:
+        if t[0] < t[1]:
+            tsi1[0] = t[0]
+            if t[0] > t1[0]:
+                tsi1[1] = t2[0]
+                tsi1[2] = t1[0]
+            else:
+                tsi1[1] = t1[0]
+                tsi1[2] = t2[0]
+            tsi2[0] = t[1]
+            if t[1] > t1[1]:
+                tsi2[1] = t2[1]
+                tsi2[2] = t1[1]
+            else:
+                tsi2[1] = t1[1]
+                tsi2[2] = t2[1]
+        else:
+            tsi1[0] = t[1]
+            if t[1] > t1[1]:
+                tsi1[1] = t2[1]
+                tsi1[2] = t1[1]
+            else:
+                tsi1[1] = t1[1]
+                tsi1[2] = t2[1]
+            tsi2[0] = t[0]
+            if t[0] > t1[0]:
+                tsi2[1] = t2[0]
+                tsi2[2] = t1[0]
+            else:
+                tsi2[1] = t1[0]
+                tsi2[2] = t2[0]
+
+    return (tsi1, tsi2)
+
+
 def SIageConv(a, b, sigma_a, sigma_b, x_bar, y_bar, init_t=10 ** 6, conf=0.95):
     T = optimize.leastsq(
         FitFuncSIageConv, init_t, args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf, 0)
@@ -806,8 +915,11 @@ def GESDtest(Tall, s1, ind, cr):
 
 # ------------------------------------------------
 # range calculation
-def calc_legend_pos(range_XY):
-    legend_pos_x = [0.02] * 10
+def calc_legend_pos(range_XY, ctype):
+    if ctype == "conv":
+        legend_pos_x = [0.02] * 10
+    else:
+        legend_pos_x = [0.3] * 10
     legend_pos_y = [0] * 10
     for i in range(0, 10):
         legend_pos_y[i] = 0.98 - 0.05 * i
@@ -817,13 +929,13 @@ def calc_legend_pos(range_XY):
 
 # ------------------------------------------------
 # Legend
-def legend_data_number(ax, axn, x, y, ind):
+def legend_data_number(ax, axn, x, y, ind, ctype):
     # ax[axn].text(x, y, '$N$ = %d, $n$ = %d' % (N, n_in),
     #             fontsize=legend_font_size)
     n_in = len(ind)
     ax[axn].text(
-        0.02,
-        0.98,
+        x,
+        y,
         "$N$ = %d, $n$ = %d" % (N, n_in),
         transform=ax[axn].transAxes,
         verticalalignment="top",
@@ -1330,6 +1442,27 @@ def concordia_age(ctype, X, Y, sigma_X, sigma_Y, rho_XY, cr):
 
     else:
         sys.exit('Please choose type of concordia, "conv" or "tw"')
+
+    print(
+        u"    Concordia age = %s ± %s [%d%% conf.] / ± %s [t√MSWD] %s"
+        % (
+            format(T_lsq / age_unit, dignum),
+            format(S_lsq / age_unit, dignum),
+            (ca_cr * 100),
+            format(S_lsq / age_unit * np.sqrt(MSWDcomb), dignum),
+            age_unit_name,
+        )
+    )
+
+    print(
+        "    MSWD concordance / equivalence / combined = %.2f / %.2f / %.2f"
+        % (MSWDconc, MSWDeq, MSWDcomb)
+    )
+    print(
+        "    P-value concordance / equivalence / combined = %.2f / %.2f / %.2f"
+        % (Pconc, Peq, Pcomb)
+    )
+
     return (T_lsq, S_lsq, X_lsq, Y_lsq, MSWDconc, MSWDeq, MSWDcomb, Pconc, Peq, Pcomb)
 
 
@@ -1420,6 +1553,7 @@ def plot_concordia_intercept_age(
     legend_pos_x,
     legend_pos_y,
 ):
+
     xx = np.linspace(range_XY[0][0], range_XY[0][1], 5000)
     Xsi_bar, Ysi_bar, ai, bi, sigma_a, sigma_b = SlopeIntercept(
         X, Y, sigma_X, sigma_Y, rho_XY, case
@@ -1434,6 +1568,7 @@ def plot_concordia_intercept_age(
         Tsi, Tmin, Tmax = SIageTW(
             ai, bi, sigma_a, sigma_b, Xsi_bar, Ysi_bar, init_t=T_lsq, conf=cr
         )
+    yy = bi * xx + ai
 
     # confidence band
     sigma = SIsigma(xx, Xsi_bar, Ysi_bar, bi, sigma_a, sigma_b, conf=cr)
@@ -1443,6 +1578,15 @@ def plot_concordia_intercept_age(
     #     xx, Xsi_bar, Ysi_bar, bi, sigma_a, sigma_b, conf=cr)
     # y1 = b2*xx+a2-sigma2
     # y2 = b2*xx+a2+sigma2
+
+    line_yy = [[xx[i], yy[i]] for i, j in enumerate(xx)]
+    line_y1 = [[xx[i], y1[i]] for i, j in enumerate(xx)]
+    line_y2 = [[xx[i], y2[i]] for i, j in enumerate(xx)]
+
+    tsi = calc_intercept_age(line_yy, ctype)
+    tsip1 = calc_intercept_age(line_y1, ctype)
+    tsip2 = calc_intercept_age(line_y2, ctype)
+    tsi1, tsi2 = format_intercept_age(tsi, tsip1, tsip2)
 
     ax[axn].fill_between(
         xx,
@@ -1454,26 +1598,72 @@ def plot_concordia_intercept_age(
         alpha=ia_alpha,
         interpolate=True,
     )
-    ax[axn].plot(xx, bi * xx + ai, linewidth=ia_line_width, color=ia_line_color)
+    ax[axn].plot(xx, yy, linewidth=ia_line_width, color=ia_line_color)
 
     # legend
-    ax[axn].text(
-        legend_pos_x,
-        legend_pos_y,
-        "Intercept age = %s +%s %s %s (%d%% conf.)"
-        % (
-            format(Tsi / age_unit, dignum),
-            format((Tmax - Tsi) / age_unit, dignum),
-            format((Tmin - Tsi) / age_unit, dignum),
-            age_unit_name,
-            cr * 100,
-        ),
-        transform=ax[axn].transAxes,
-        verticalalignment="top",
-        fontsize=legend_font_size,
-    )
+    if tsi2[0] == 0:
+        ax[axn].text(
+            legend_pos_x,
+            legend_pos_y,
+            "Intercept age = %s +%s -%s %s (%d%% conf.)"
+            % (
+                format(tsi1[0], dignum),
+                format(tsi1[1] - tsi1[0], dignum),
+                format(tsi1[0] - tsi1[2], dignum),
+                age_unit_name,
+                cr * 100,
+            ),
+            transform=ax[axn].transAxes,
+            verticalalignment="top",
+            fontsize=legend_font_size,
+        )
+    else:
+        ax[axn].text(
+            legend_pos_x,
+            legend_pos_y,
+            "Intercept age = %s +%s -%s &\n                        %s +%s -%s %s (%d%% conf.)"
+            % (
+                format(tsi1[0], dignum),
+                format(tsi1[1] - tsi1[0], dignum),
+                format(tsi1[0] - tsi1[2], dignum),
+                format(tsi2[0], dignum),
+                format(tsi2[1] - tsi2[0], dignum),
+                format(tsi2[0] - tsi2[2], dignum),
+                age_unit_name,
+                cr * 100,
+            ),
+            transform=ax[axn].transAxes,
+            verticalalignment="top",
+            fontsize=legend_font_size,
+        )
 
-    return (Tsi, Tmax, Tmin)
+    if tsi2[0] == 0:
+        print(
+            "    Intercept age = %s +%s -%s %s (%d%% conf.)"
+            % (
+                format(tsi1[0], dignum),
+                format(tsi1[1] - tsi1[0], dignum),
+                format(tsi1[0] - tsi1[2], dignum),
+                age_unit_name,
+                cr * 100,
+            )
+        )
+    else:
+        print(
+            "    Intercept age = %s +%s -%s & %s +%s -%s %s (%d%% conf.)"
+            % (
+                format(tsi1[0], dignum),
+                format(tsi1[1] - tsi1[0], dignum),
+                format(tsi1[0] - tsi1[2], dignum),
+                format(tsi2[0], dignum),
+                format(tsi2[1] - tsi2[0], dignum),
+                format(tsi2[0] - tsi2[2], dignum),
+                age_unit_name,
+                cr * 100,
+            )
+        )
+
+    return (tsi, tsip1, tsip2)
 
 
 # ------------------------------------------------
@@ -1570,7 +1760,7 @@ def plot_oneD_weighted_mean(
         )
 
     # legend
-    legend_data_number(ax, axn, legend_pos_x[0], legend_pos_y[0], ind)
+    legend_data_number(ax, axn, legend_pos_x[0], legend_pos_y[0], ind, ctype="conv")
 
     oneD_xticks = np.arange(1, len(Tall) + 1, 1)
     ax_1D.set_xticks(oneD_xticks)
@@ -1612,7 +1802,18 @@ def plot_oneD_weighted_mean(
         fontsize=legend_font_size,
     )
 
-    return (Twm, sm, MSWD)
+    print(
+        u"    1D weighted mean age = %s ± %s %s [%d%% conf.] (MSDW=%s)"
+        % (
+            format(Twm, dignum),
+            format(sm, dignum),
+            age_unit_name,
+            cr * 100,
+            format(MSWD, dignum),
+        )
+    )
+
+    return Twm
 
 
 # ------------------------------------------------
@@ -1859,13 +2060,13 @@ if __name__ == "__main__":
             "opt_Th_U": False,
             "opt_correct_disequilibrium": True,
             "f_Th_U": "0.2",
-            "f_Pa_U": "3.5",
+            "f_Pa_U": "3.4",
             "opt_correct_common_Pb": False,
             "Th_U_inverse": False,
             "Th_U_row_num": "[8]",
             "Th_U_error_num": "[]",
             "digits_number_output": "1",
-            "legend_font_size": "8",
+            "legend_font_size": "10",
             "plot_diagrams": "[1, 1, 1, 1]",
             "opt_data_point": False,
             "opt_data_point_ee": True,
@@ -1994,7 +2195,7 @@ if __name__ == "__main__":
     Th_U_inverse = config.getboolean("File", "Th_U_inverse")
     Th_U_row_num = loads(config.get("File", "Th_U_row_num"))
     Th_U_error_num = loads(config.get("File", "Th_U_error_num"))
-    dig_num_output = config.getint("Graph", "digits_number_output")  # 2
+    dig_num_output = loads(config.get("Graph", "digits_number_output"))  # 2
     plot_diagrams = loads(config.get("Graph", "plot_diagrams"))  # [1, 1, 1, 1]
     graph_age_min = config.getfloat("Graph", "graph_age_min")
     graph_age_max = config.getfloat("Graph", "graph_age_max")
@@ -2257,9 +2458,10 @@ if __name__ == "__main__":
     Sy = sigma_y / y
 
     # error correlation
-    rho_XY = (SX ** 2 + SY ** 2 - Sy ** 2) / (2.0 * SX * SY)
+    rho_XY = (SX ** 2 + SY ** 2 - Sy ** 2) / (2 * SX * SY)
     # rho_xy = (SY**2-SX**2*rho_XY)/Sy # Equation in p. 27 of Ludwig2012
-    rho_xy = (SY ** 2 - SX * SY * rho_XY) / (Sx * Sy)
+    # rho_xy = (SY ** 2 - SX * SY * rho_XY) / (Sx * Sy) # A13 in Noda2017bgsj
+    rho_xy = (Sx ** 2 + Sy ** 2 - SX ** 2) / (2 * Sx * Sy)
 
     # covariance
     cov_XY = rho_XY * sigma_X * sigma_Y
@@ -2288,7 +2490,6 @@ if __name__ == "__main__":
         d["r68"] = d["r68cor"]
         d["r76"] = d["r76cor"]
         d["r75"] = d["r76"] * d["r68"] * U85r
-        opt_exclude_disc = 0
 
     # ------------------------------------------------
     # Ages and 1sigma error
@@ -2440,9 +2641,9 @@ if __name__ == "__main__":
         print("U-Pb ages (%s) [%d sigma]" % (age_unit_name, ca_sigma))
 
     if opt_correct_common_Pb:
-        print("#\tf206%\t6/8*\t+-s\t7/5\t+-s\t7/6*\t+s\t-s\t")
+        print("#\tf206%\tT68*\t+-s\tT75\t+-s\tT76*\t+s\t-s\t")
     else:
-        print("#\t6/8\t+-s\t7/5\t+-s\t7/6\t+s\t-s\t")
+        print("#\tT68\t+-s\tT75\t+-s\tT76\t+s\t-s\t")
 
     for i in range(len(y)):
 
@@ -2553,8 +2754,13 @@ if __name__ == "__main__":
         )
 
         # Legend
-        legend_pos_x, legend_pos_y = calc_legend_pos(range_XY)
+        legend_pos_x, legend_pos_y = calc_legend_pos(range_XY, ctype="conv")
         legend_pos = 0
+
+        # Sample number
+        legend_data_number(
+            ax, axn, legend_pos_x[legend_pos], legend_pos_y[legend_pos], ind, ctype="conv"
+        )
 
         # draw error ellipses
         if opt_data_point_ee:
@@ -2669,25 +2875,6 @@ if __name__ == "__main__":
                 legend_pos_y[legend_pos],
             )
 
-            print(
-                u"    Concordia age = %s ± %s [%d%% conf.] / ± %s [t√MSWD] %s"
-                % (
-                    format(T_lsq / age_unit, dignum),
-                    format(S_lsq / age_unit, dignum),
-                    (ca_cr * 100),
-                    format(S_lsq / age_unit * np.sqrt(MSWDcomb), dignum),
-                    age_unit_name,
-                )
-            )
-            print(
-                "    MSWD concordance / equivalence / combined = %.2f / %.2f / %.2f"
-                % (MSWDconc, MSWDeq, MSWDcomb)
-            )
-            print(
-                "    P-value concordance / equivalence / combined = %.2f / %.2f / %.2f"
-                % (Pconc, Peq, Pcomb)
-            )
-
         # plot intercept line and band
         if opt_concordia_ia:
             if (concordia_ia_case_cc == 0) or (concordia_ia_case_cc == 2):
@@ -2709,16 +2896,6 @@ if __name__ == "__main__":
                     legend_pos_x[legend_pos],
                     legend_pos_y[legend_pos],
                 )
-                print(
-                    "    Intercept age = %s +%s %s %s [%d%% conf.]"
-                    % (
-                        format(Tsi / age_unit, dignum),
-                        format((Tmax - Tsi) / age_unit, dignum),
-                        format((Tmin - Tsi) / age_unit, dignum),
-                        age_unit_name,
-                        ia_cr * 100,
-                    )
-                )
 
             if (concordia_ia_case_cc == 1) or (concordia_ia_case_cc == 2):
                 legend_pos += 1
@@ -2739,21 +2916,6 @@ if __name__ == "__main__":
                     legend_pos_x[legend_pos],
                     legend_pos_y[legend_pos],
                 )
-                print(
-                    "    Intercept age = %s +%s %s %s [%d%% conf.]"
-                    % (
-                        format(Tsi / age_unit, dignum),
-                        format((Tmax - Tsi) / age_unit, dignum),
-                        format((Tmin - Tsi) / age_unit, dignum),
-                        age_unit_name,
-                        ia_cr * 100,
-                    )
-                )
-
-        # Sample number
-        legend_data_number(
-            ax, axn, legend_pos_x[legend_pos], legend_pos_y[legend_pos], ind
-        )
 
     # ------------------------------------------------
     # B: Tera-Wasserburg concordia plot
@@ -2779,8 +2941,13 @@ if __name__ == "__main__":
         )
 
         # Legend data number
-        legend_pos_x, legend_pos_y = calc_legend_pos(range_xy)
+        legend_pos_x, legend_pos_y = calc_legend_pos(range_xy, ctype="tw")
         legend_pos = 0
+
+        # Sample number
+        legend_data_number(
+            ax, axn, legend_pos_x[legend_pos], legend_pos_y[legend_pos], ind, ctype="tw"
+        )
 
         # plot data point
         if opt_data_point:
@@ -2891,26 +3058,6 @@ if __name__ == "__main__":
                 legend_pos_y[legend_pos],
             )
 
-            print(
-                u"    Concordia age = %s ± %s [%d%% conf.] / ± %s [t√MSWD] %s"
-                % (
-                    format(t_lsq / age_unit, dignum),
-                    format(s_lsq / age_unit, dignum),
-                    (ca_cr * 100),
-                    format(s_lsq / age_unit * np.sqrt(mswd_comb), dignum),
-                    age_unit_name,
-                )
-            )
-
-            print(
-                "    MSWD concordance / equivalence / combined = %.2f / %.2f / %.2f"
-                % (mswd_conc, mswd_eq, mswd_comb)
-            )
-            print(
-                "    P-value concordance / equivalence / combined = %.2f / %.2f / %.2f"
-                % (p_conc, p_eq, p_comb)
-            )
-
         # plot intercept line and band
         if opt_concordia_ia:
             if (concordia_ia_case_tw == 0) or (concordia_ia_case_tw == 2):
@@ -2932,18 +3079,6 @@ if __name__ == "__main__":
                     legend_pos_x[legend_pos],
                     legend_pos_y[legend_pos],
                 )
-                print(
-                    (
-                        "    Intercept age = %s +%s %s %s [%d%% conf.]"
-                        % (
-                            format(Tsi / age_unit, dignum),
-                            format((Tmax - Tsi) / age_unit, dignum),
-                            format((Tmin - Tsi) / age_unit, dignum),
-                            age_unit_name,
-                            ia_cr * 100,
-                        )
-                    )
-                )
 
             if (concordia_ia_case_tw == 1) or (concordia_ia_case_tw == 2):
                 legend_pos += 1
@@ -2964,23 +3099,6 @@ if __name__ == "__main__":
                     legend_pos_x[legend_pos],
                     legend_pos_y[legend_pos],
                 )
-                print(
-                    (
-                        "    Intercept age = %s +%s %s %s [%d%% conf.]"
-                        % (
-                            format(Tsi / age_unit, dignum),
-                            format((Tmax - Tsi) / age_unit, dignum),
-                            format((Tmin - Tsi) / age_unit, dignum),
-                            age_unit_name,
-                            ia_cr * 100,
-                        )
-                    )
-                )
-
-        # Sample number
-        legend_data_number(
-            ax, axn, legend_pos_x[legend_pos], legend_pos_y[legend_pos], ind
-        )
 
     # ------------------------------------------------
     # C: Bar plot of 206Pb/238U ages with 1D weighted mean
@@ -3007,9 +3125,9 @@ if __name__ == "__main__":
         ax[axn].set_ylabel(label_selected, fontsize=legend_font_size + 4)
 
         legend_pos_x, legend_pos_y = calc_legend_pos(
-            [[(N + 1) * 0.05, (N + 1) * 0.05], range_oneD_y]
+            [[(N + 1) * 0.05, (N + 1) * 0.05], range_oneD_y], ctype="conv"
         )
-        T_owm, S_owm, MSWD_owm = plot_oneD_weighted_mean(
+        T_owm = plot_oneD_weighted_mean(
             ax[axn],
             oneD_age_type,
             Tall,
@@ -3020,16 +3138,6 @@ if __name__ == "__main__":
             oneD_cr,
             legend_pos_x,
             legend_pos_y,
-        )
-        print(
-            u"    1D weighted mean age = %s ± %s %s [%d%% conf.] (MSDW=%s)"
-            % (
-                format(T_owm, dignum),
-                format(S_owm, dignum),
-                age_unit_name,
-                oneD_cr * 100,
-                format(MSWD_owm, dignum),
-            )
         )
 
         Pb76c_T_owm = func_Pb76c(T_owm)

@@ -1,3 +1,13 @@
+2020-06-03 Version 0.1.7
+
+	Upper/Lower intercept ages can be calculated in this version.
+	This is an experimental option. Some bugs may still remain.
+
+	* Main script: new functions for obtaining intercept ages.
+
+	calc_intercept_age
+	format_intercept_age
+
 2020-06-03 Version 0.1.6
 
 	* Main script: cleanup

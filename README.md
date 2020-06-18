@@ -24,7 +24,7 @@ concordia-intercept ages with errors on both concordia diagrams.
 
 Noda, Atsushi (2017) A new tool for calculation and visualization
 of U-Pb age data: UPbplot.py.  Bulletin of the Geological Survey of
-Japan, 68(3), 131-140.
+Japan, 68(3), 131-140, https://doi.org/10.9795/bullgsj.68.131.
 
 
 [Development environment]
@@ -109,6 +109,8 @@ Command-line options:
 3. Correction for initial disequilibria can be applied based on Sakata (2017, 2018), when ``opt_correction_disequilibrium: True''
 
 4. Correction for common Pb by 207Pb method can be applicable, when ``opt_correction_common_Pb: True''
+
+5. Upper and lower intercept ages can be calculated.
 
 
 [References]:

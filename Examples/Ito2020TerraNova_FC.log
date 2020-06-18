@@ -21,25 +21,25 @@ Range of data
 Discordant data means that the error ellipses do not intersect the concordia line.
 ------------------------------------------------------------
 U-Pb ages^ (Ma) [2 sigma]
-#	6/8	+-s	7/5	+-s	7/6	+s	-s	
-1	27.60	0.33	26.08	1.60	22.15	23.86	0.00
-2	27.54	0.38	29.92	3.18	239.48	208.14	217.33
-3	28.02	0.71	23.39	1.49	22.15	0.00	-0.00
-4	27.66	0.85	31.88	2.00	376.57	119.28	129.14
-5	30.74	1.85	47.32	6.92	1006.92	276.76	337.16
-6	28.99	0.34	30.37	0.91	154.01	83.88	91.89
-7	29.52	0.51	28.14	2.28	22.15	103.82	-0.00
-8	31.04	0.61	33.56	2.31	229.88	132.25	146.82
-9	28.65	0.58	28.68	1.77	33.31	171.59	11.17
-10	27.70	0.51	25.22	2.37	22.15	-0.00	0.00
-11	27.85	0.44	25.62	1.81	22.15	-0.00	-0.00
-12	32.70	0.70	63.27	6.78	1469.62	194.89	223.79
-13	29.06	0.41	30.28	2.85	140.82	219.00	118.67
-14	28.00	0.95	31.00	3.47	283.46	252.06	261.31
-15	29.19	0.77	27.44	2.64	22.15	92.77	0.00
-16	31.58	1.03	42.65	2.92	730.98	127.28	138.51
-17	26.30	1.02	21.80	2.79	22.15	0.00	-0.00
-18	28.43	0.59	31.95	2.32	319.30	165.51	185.88
+#	T68	+-s	T75	+-s	T76	+s	-s	
+1	27.60	0.33	26.09	1.60	21.98	24.41	-0.00
+2	27.53	0.38	29.92	3.18	239.64	208.12	217.66
+3	28.01	0.71	23.39	1.49	21.98	0.00	-0.00
+4	27.66	0.85	31.88	2.00	376.72	119.28	129.13
+5	30.74	1.85	47.33	6.92	1007.04	276.75	337.15
+6	28.99	0.34	30.37	0.91	154.19	83.85	91.78
+7	29.52	0.51	28.14	2.28	21.98	104.18	0.00
+8	31.04	0.61	33.56	2.31	230.05	132.23	146.74
+9	28.64	0.58	28.69	1.77	33.94	171.14	11.96
+10	27.70	0.51	25.23	2.37	21.98	0.00	-0.00
+11	27.85	0.44	25.62	1.81	21.98	-0.00	-0.00
+12	32.70	0.70	63.28	6.78	1469.73	194.89	223.78
+13	29.05	0.41	30.28	2.85	141.01	218.96	119.03
+14	28.00	0.95	31.00	3.47	283.61	252.04	261.63
+15	29.18	0.77	27.44	2.64	21.98	93.14	-0.00
+16	31.58	1.03	42.65	2.92	731.11	127.27	138.50
+17	26.30	1.02	21.80	2.79	21.98	0.00	-0.00
+18	28.43	0.59	31.96	2.32	319.45	165.49	185.84
 ^ Correction for initial disequilibria.
 ------------------------------------------------------------
 Normality test: failed (p = 0.13)
@@ -51,15 +51,15 @@ a: Conventional concordia diagram
     Error ellipses are 95% for data points
     Error ellipse is 95% for 2D weighted mean
     Concordia age = 28.19 ± 0.23 [95% conf.] / ± 0.45 [t√MSWD] Ma
-    MSWD concordance / equivalence / combined = 12.38 / 3.46 / 3.79
+    MSWD concordance / equivalence / combined = 12.41 / 3.46 / 3.79
     P-value concordance / equivalence / combined = 0.00 / 0.00 / 0.00
 b: Tera-Wasserburg concordia diagram
     Concordia age = 28.28 ± 0.23 [95% conf.] / ± 0.45 [t√MSWD] Ma
-    MSWD concordance / equivalence / combined = 12.26 / 3.46 / 3.79
+    MSWD concordance / equivalence / combined = 12.29 / 3.46 / 3.79
     P-value concordance / equivalence / combined = 0.00 / 0.00 / 0.00
 c: One-dimensional bar plot
-    1D weighted mean age = 28.29 ± 0.27 Ma [95% conf.] (MSDW=2.47)
-    Reduced Chi-squared = 2.47 (Failed, over dispersion or uncertainties underestimated)
+    1D weighted mean age = 28.29 ± 0.27 Ma [95% conf.] (MSDW=2.46)
+    Reduced Chi-squared = 2.46 (Failed, over dispersion or uncertainties underestimated)
 d: Histogram
 All done.
 Saving Ito2020TerraNova_FC.pdf

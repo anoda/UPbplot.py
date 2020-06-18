@@ -21,21 +21,21 @@ Range of data
 Discordant data means that the error ellipses do not intersect the concordia line.
 ------------------------------------------------------------
 U-Pb ages (Ma) [2 sigma]
-#	6/8	+-s	7/5	+-s	7/6	+s	-s	
-1	323.7	5.1	325.2	6.7	333.8	29.9	30.4
-2	311.5	5.0	302.0	10.0	230.3	65.9	68.6
-3	325.0	4.9	329.4	6.9	361.3	31.9	32.6
-4	310.2	4.7	312.5	5.9	329.5	25.4	25.8
-5	317.0	4.8	318.8	5.9	331.6	24.1	24.4
-6	323.7	4.9	319.2	6.8	283.9	33.7	34.4
-7	315.1	4.7	304.3	8.3	223.0	51.7	53.4
-8	334.7	5.2	333.5	5.6	323.5	14.0	14.1
-9	318.2	4.8	315.1	6.4	292.3	31.2	31.8
-10	331.7	5.0	325.4	6.0	278.2	24.3	24.7
-11	323.1	4.8	321.6	8.3	308.4	46.9	48.3
-12	312.7	4.7	318.5	5.9	361.3	24.2	24.5
-13	318.2	4.9	316.1	9.0	299.7	53.6	55.4
-14	313.9	4.7	315.1	6.8	321.3	34.6	35.4
+#	T68	+-s	T75	+-s	T76	+s	-s	
+1	323.7	5.0	325.2	6.7	333.9	29.9	30.4
+2	311.4	5.0	302.0	10.0	230.4	65.9	68.6
+3	324.9	4.9	329.4	6.9	361.4	31.9	32.6
+4	310.2	4.7	312.5	5.9	329.6	25.4	25.8
+5	317.0	4.8	318.8	5.9	331.8	24.1	24.4
+6	323.7	4.9	319.2	6.8	284.1	33.7	34.4
+7	315.1	4.7	304.3	8.3	223.1	51.7	53.4
+8	334.7	5.2	333.5	5.6	323.6	14.0	14.1
+9	318.2	4.8	315.1	6.4	292.4	31.2	31.8
+10	331.7	5.0	325.4	6.0	278.3	24.3	24.7
+11	323.1	4.8	321.6	8.3	308.5	46.9	48.3
+12	312.7	4.7	318.4	5.9	361.4	24.2	24.5
+13	318.2	4.9	316.1	9.0	299.8	53.6	55.4
+14	313.9	4.7	315.1	6.8	321.5	34.6	35.4
 ------------------------------------------------------------
 Normality test: failed (p = 0.40)
 Concordants (accepted) are  [ 1  2  3  4  5  6  8  9 11 13 14]
@@ -44,13 +44,13 @@ Discordants are  [ 7. 10. 12.]
 a: Conventional concordia diagram
     Error ellipses are 68% for data points
     Error ellipse is 95% for 2D weighted mean
-    Concordia age = 319.7 ± 2.8 [95% conf.] / ± 3.2 [t√MSWD] Ma
-    MSWD concordance / equivalence / combined = 0.06 / 1.38 / 1.32
-    P-value concordance / equivalence / combined = 0.81 / 0.12 / 0.15
+    Concordia age = 319.6 ± 2.8 [95% conf.] / ± 3.2 [t√MSWD] Ma
+    MSWD concordance / equivalence / combined = 0.07 / 1.38 / 1.32
+    P-value concordance / equivalence / combined = 0.79 / 0.12 / 0.15
 b: Tera-Wasserburg concordia diagram
     Concordia age = 320.1 ± 2.8 [95% conf.] / ± 3.3 [t√MSWD] Ma
     MSWD concordance / equivalence / combined = 0.01 / 1.40 / 1.33
-    P-value concordance / equivalence / combined = 0.93 / 0.11 / 0.14
+    P-value concordance / equivalence / combined = 0.92 / 0.11 / 0.14
 c: One-dimensional bar plot
     1D weighted mean age = 319.6 ± 2.9 Ma [95% conf.] (MSDW=2.0)
     Reduced Chi-squared = 2.0 (Failed, over dispersion or uncertainties underestimated)

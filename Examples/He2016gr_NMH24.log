@@ -1,0 +1,67 @@
+============================================================
+Data filename is He2016gr_NMH24.csv
+Configuration filename is He2016gr_NMH24.cfg
+Output filename is He2016gr_NMH24.pdf
+# Input data (first 5 lines)
+------------------------------------------------------------
+207Pb/235U  1s     206Pb/238U  1s     207Pb/206Pb  1s
+column[6]   column[7] column[8]   column[9] column[4]    column[5]
+1.77797     0.03202   0.16578    0.00239    0.07778    0.03202
+1.79801     0.05659   0.17110    0.00290    0.07620    0.05659
+1.92602     0.05321   0.17691    0.00287    0.07894    0.05321
+2.02313     0.08304   0.17809    0.00352    0.08237    0.08304
+2.32022     0.10347   0.18993    0.00406    0.08858    0.10347
+------------------------------------------------------------
+Range of data
+207Pb/235U: 1.77797--3.65160
+206Pb/238U: 0.16578--0.26337
+207Pb/206Pb: 0.07620--0.10295
+238U/206Pb: 3.79694--6.03209
+------------------------------------------------------------
+Discordant data are not excluded from calculation
+------------------------------------------------------------
+U-Pb ages (Ma) [2 sigma]
+#	T68	+-s	T75	+-s	T76	+s	-s	
+1	989	14	1037	19	1140	63	66
+2	1018	17	1045	33	1100	81	86
+3	1050	17	1090	30	1170	75	79
+4	1056	21	1123	46	1254	94	100
+5	1121	24	1218	54	1394	97	104
+6	1134	18	1196	32	1310	72	75
+7	1143	17	1201	24	1304	64	67
+8	1155	17	1235	26	1376	64	67
+9	1187	18	1246	26	1348	64	67
+10	1190	18	1284	26	1444	63	66
+11	1195	17	1284	24	1435	61	64
+12	1203	17	1256	23	1348	61	64
+13	1287	22	1406	41	1590	72	76
+14	1291	20	1377	30	1511	64	67
+15	1322	24	1446	46	1632	76	80
+16	1330	20	1417	27	1549	61	63
+17	1347	20	1481	26	1677	58	61
+18	1351	22	1457	35	1613	66	69
+19	1415	22	1490	32	1597	63	66
+20	1420	25	1460	42	1517	72	76
+21	1507	23	1561	33	1633	62	65
+------------------------------------------------------------
+Concordants (accepted) are  [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20]
+Concordants (excluded) are  []
+Discordants are  []
+------------------------------------------------------------
+a: Conventional concordia diagram
+    Error ellipses are 95% for data points
+    Concordia age = 1104 ± 1 [95% conf.] / ± 52 [t√MSWD] Ma
+    MSWD concordance / equivalence / combined = 19173.54 / 3532.43 / 3913.92
+    P-value concordance / equivalence / combined = 0.00 / 0.00 / 0.00
+    Intercept age = 923 +77 -94 & 1857 +163 -133 Ma (95% conf.)
+b: Tera-Wasserburg concordia diagram
+    Concordia age = 1178 ± 1 [95% conf.] / ± 74 [t√MSWD] Ma
+    MSWD concordance / equivalence / combined = 121717.79 / 4016.98 / 6887.74
+    P-value concordance / equivalence / combined = 0.00 / 0.00 / 0.00
+    Intercept age = 924 +72 -105 & 1850 +147 -145 Ma (95% conf.)
+c: One-dimensional bar plot
+    1D weighted mean age = 1391 ± 22 Ma [95% conf.] (MSDW=12)
+    Reduced Chi-squared = 12 (Failed, over dispersion or uncertainties underestimated)
+d: Histogram
+All done.
+Saving He2016gr_NMH24.pdf
