@@ -1,4 +1,21 @@
-2020-06-03 Version 0.1.7
+2020-06-19 Version 0.1.8
+
+	Corrections for calculations of 95% confidence errors.
+	Clean-up some functions.
+
+	* Main script: deleted functions
+
+	FitFuncSIageConv
+	SIageConv
+	FitFuncSIageTW
+	SIageTW
+
+	* Main script: added functions
+
+	calc_conf95_errors
+	func_plot_diagrams
+
+2020-06-18 Version 0.1.7
 
 	Upper/Lower intercept ages can be calculated in this version.
 	This is an experimental option. Some bugs may still remain.

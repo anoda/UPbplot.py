@@ -20,7 +20,7 @@ Range of data
 ------------------------------------------------------------
 Discordant data are not excluded from calculation
 ------------------------------------------------------------
-U-Pb ages (Ma) [2 sigma]
+U-Pb ages (Ma) [2σ]
 #	T68	+-s	T75	+-s	T76	+s	-s	
 1	2635	26	2593	37	2560	21	22
 2	2469	24	2544	36	2604	22	22
@@ -56,17 +56,17 @@ Discordants are  []
 ------------------------------------------------------------
 a: Conventional concordia diagram
     Error ellipses are 95% for data points
-    Concordia age = 2341 ± 5 [95% conf.] / ± 118 [t√MSWD] Ma
+    Concordia age = 2341 ± 5 [2σ] / ± 122 [tσ√MSWD] Ma
     MSWD concordance / equivalence / combined = 5005.39 / 401.23 / 491.51
     P-value concordance / equivalence / combined = 0.00 / 0.00 / 0.00
-    Intercept age = 2583 +10 -10 Ma (95% conf.)
+    Intercept age = 2583 +10 -10 Ma [2σ]
 b: Tera-Wasserburg concordia diagram
-    Concordia age = 2498 ± 5 [95% conf.] / ± 76 [t√MSWD] Ma
+    Concordia age = 2498 ± 5 [2σ] / ± 78 [tσ√MSWD] Ma
     MSWD concordance / equivalence / combined = 440.27 / 187.10 / 192.06
     P-value concordance / equivalence / combined = 0.00 / 0.00 / 0.00
-    Intercept age = 2582 +10 -10 Ma (95% conf.)
+    Intercept age = 2582 +10 -10 Ma [2σ]
 c: One-dimensional bar plot
-    1D weighted mean age = 2588 ± 13 Ma [95% conf.] (MSDW=1)
+    1D weighted mean age = 2588 ± 13 [2σ] / ± 13 [tσ√MSWD] Ma (MSDW=1)
     Reduced Chi-squared = 1 (Passed)
 d: Histogram
 All done.

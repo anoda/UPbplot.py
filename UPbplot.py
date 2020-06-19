@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2020/06/18 21:22:19.
+# Last updated: 2020/06/19 17:05:38.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -30,7 +30,8 @@
 # __version__ = "0.1.4"  # May/30/2020
 # __version__ = "0.1.5"  # May/31/2020
 # __version__ = "0.1.6"  # June/03/2020
-__version__ = "0.1.7"  # June/03/2020
+# __version__ = "0.1.7"  # June/18/2020
+__version__ = "0.1.8"  # June/19/2020
 
 # [Citation]
 #
@@ -677,21 +678,6 @@ def SIsigma2(x, x_bar, y_bar, b, sigma_a, sigma_b, conf=0.95):
     return (a2, sigma_a2, b2, sigma_b2, sigma2)
 
 
-# Intercept age on conventional diagram
-def FitFuncSIageConv(t, a, b, sigma_a, sigma_b, x_bar, y_bar, conf, case):
-    x1 = np.exp(l235U * t) - 1.0
-    y1 = np.exp(l238U * t) - 1.0
-    sigma = SIsigma(x1, x_bar, y_bar, b, sigma_a, sigma_b, conf=conf)
-    if case == 1:
-        y2 = b * x1 + a - sigma
-    elif case == 2:
-        y2 = b * x1 + a + sigma
-    else:
-        y2 = b * x1 + a
-    S = (y2 - y1) ** 2
-    return S
-
-
 # ------------------------------------------------
 # Intercept age
 def calc_intercept_age(line1, ctype):
@@ -778,52 +764,6 @@ def format_intercept_age(t, t1, t2):
                 tsi2[2] = t2[0]
 
     return (tsi1, tsi2)
-
-
-def SIageConv(a, b, sigma_a, sigma_b, x_bar, y_bar, init_t=10 ** 6, conf=0.95):
-    T = optimize.leastsq(
-        FitFuncSIageConv, init_t, args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf, 0)
-    )[0][0]
-    Tmin = optimize.leastsq(
-        FitFuncSIageConv, init_t, args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf, 1)
-    )[0][0]
-    Tmax = optimize.leastsq(
-        FitFuncSIageConv, init_t, args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf, 2)
-    )[0][0]
-    if Tmax < Tmin:
-        Tmax, Tmin = Tmin, Tmax
-    return (T, Tmin, Tmax)
-
-
-# ------------------------------------------------
-# Intercept age on Tera-Wasserburg diagram
-def FitFuncSIageTW(t, a, b, sigma_a, sigma_b, x_bar, y_bar, conf, cs):
-    x1 = 1.0 / (np.exp(l238U * t) - 1)
-    y1 = 1.0 / U85r * (np.exp(l235U * t) - 1) / (np.exp(l238U * t) - 1)
-    sigma = SIsigma(x1, x_bar, y_bar, b, sigma_a, sigma_b, conf=conf)
-    if cs == 1:
-        y2 = b * x1 + a - sigma
-    elif cs == 2:
-        y2 = b * x1 + a + sigma
-    else:
-        y2 = b * x1 + a
-    S = (y2 - y1) ** 2
-    return S
-
-
-def SIageTW(a, b, sigma_a, sigma_b, x_bar, y_bar, init_t=10 ** 6, conf=0.95):
-    T = optimize.leastsq(
-        FitFuncSIageTW, init_t, args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf, 0)
-    )[0][0]
-    Tmin = optimize.leastsq(
-        FitFuncSIageTW, init_t, args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf, 1)
-    )[0][0]
-    Tmax = optimize.leastsq(
-        FitFuncSIageTW, init_t, args=(a, b, sigma_a, sigma_b, x_bar, y_bar, conf, 2)
-    )[0][0]
-    if Tmax < Tmin:
-        Tmax, Tmin = Tmin, Tmax
-    return (T, Tmin, Tmax)
 
 
 # ------------------------------------------------
@@ -1419,11 +1359,27 @@ def plot_2D_wm(ax, axn, X, Y, sigma_X, sigma_Y, rho_XY, cr, legend_pos_x, legend
     ax[axn].text(
         legend_pos_x,
         legend_pos_y,
-        "2D weighted mean [%d%% conf.] (MSWD=%s)" % (cr * 100, format(MSWDwm, dignum)),
+        u"2D weighted mean [%d$\sigma$] (MSWD=%s)"
+        % (int(stats.norm.ppf(cr + (1 - cr) / 2.0)), format(MSWDwm, dignum)),
         transform=ax[axn].transAxes,
         verticalalignment="top",
         fontsize=legend_font_size,
     )
+
+
+def calc_conf95_errors(df, error, MSWD, cr):
+    """
+    95% confidence errors: calculated by multiplying the 1-sigma
+    internal error by the Student’s-t value for the appropriate
+    degrees of freedom, and again by the square root of the MSWD.  The
+    default value for this “minimum probability of fit” parameter is
+    0.15.  (Ludwig, 2012, p. 19)
+    """
+
+    st = stats.t.ppf(0.975, df)  # 0.025 for one-tail or 0.05 for two-tails
+    S1 = error / stats.norm.ppf(cr + (1 - cr) / 2.0)
+    conf95 = S1 * st * np.sqrt(MSWD)
+    return conf95
 
 
 # ------------------------------------------------
@@ -1443,13 +1399,14 @@ def concordia_age(ctype, X, Y, sigma_X, sigma_Y, rho_XY, cr):
     else:
         sys.exit('Please choose type of concordia, "conv" or "tw"')
 
+    conf95 = calc_conf95_errors(len(X) - 2, S_lsq, MSWDcomb, cr)
     print(
-        u"    Concordia age = %s ± %s [%d%% conf.] / ± %s [t√MSWD] %s"
+        u"    Concordia age = %s ± %s [%dσ] / ± %s [tσ√MSWD] %s"
         % (
             format(T_lsq / age_unit, dignum),
             format(S_lsq / age_unit, dignum),
-            (ca_cr * 100),
-            format(S_lsq / age_unit * np.sqrt(MSWDcomb), dignum),
+            int(stats.norm.ppf(cr + (1 - cr) / 2.0)),
+            format(conf95 / age_unit, dignum),
             age_unit_name,
         )
     )
@@ -1486,12 +1443,12 @@ def plot_concordia_age(
     ax[axn].text(
         legend_pos_x,
         legend_pos_y,
-        u"Concordia age = %s ± %s %s [%d%% conf.]"
+        u"Concordia age = %s ± %s %s [%d$\sigma$]"
         % (
             format(T_lsq / age_unit, dignum),
             format(S_lsq / age_unit, dignum),
             age_unit_name,
-            cr * 100,
+            int(stats.norm.ppf(cr + (1 - cr) / 2.0)),
         ),
         transform=ax[axn].transAxes,
         verticalalignment="top",
@@ -1548,36 +1505,23 @@ def plot_concordia_intercept_age(
     cr,
     rho_XY,
     range_XY,
-    T_lsq,
     case,
     legend_pos_x,
     legend_pos_y,
 ):
 
     xx = np.linspace(range_XY[0][0], range_XY[0][1], 5000)
+
+    # intercept line
     Xsi_bar, Ysi_bar, ai, bi, sigma_a, sigma_b = SlopeIntercept(
         X, Y, sigma_X, sigma_Y, rho_XY, case
     )
-
-    # Intercept age
-    if ctype == "conv":
-        Tsi, Tmin, Tmax = SIageConv(
-            ai, bi, sigma_a, sigma_b, Xsi_bar, Ysi_bar, init_t=T_lsq, conf=cr
-        )
-    elif ctype == "tw":
-        Tsi, Tmin, Tmax = SIageTW(
-            ai, bi, sigma_a, sigma_b, Xsi_bar, Ysi_bar, init_t=T_lsq, conf=cr
-        )
     yy = bi * xx + ai
 
     # confidence band
     sigma = SIsigma(xx, Xsi_bar, Ysi_bar, bi, sigma_a, sigma_b, conf=cr)
     y1 = bi * xx + ai - sigma
     y2 = bi * xx + ai + sigma
-    # a2, sigma_a2, b2, sigma_b2, sigma2 = SIsigma2(
-    #     xx, Xsi_bar, Ysi_bar, bi, sigma_a, sigma_b, conf=cr)
-    # y1 = b2*xx+a2-sigma2
-    # y2 = b2*xx+a2+sigma2
 
     line_yy = [[xx[i], yy[i]] for i, j in enumerate(xx)]
     line_y1 = [[xx[i], y1[i]] for i, j in enumerate(xx)]
@@ -1605,13 +1549,13 @@ def plot_concordia_intercept_age(
         ax[axn].text(
             legend_pos_x,
             legend_pos_y,
-            "Intercept age = %s +%s -%s %s (%d%% conf.)"
+            u"Intercept age = %s +%s -%s %s [%d$\sigma$]"
             % (
                 format(tsi1[0], dignum),
                 format(tsi1[1] - tsi1[0], dignum),
                 format(tsi1[0] - tsi1[2], dignum),
                 age_unit_name,
-                cr * 100,
+                int(stats.norm.ppf(cr + (1 - cr) / 2.0)),
             ),
             transform=ax[axn].transAxes,
             verticalalignment="top",
@@ -1621,7 +1565,7 @@ def plot_concordia_intercept_age(
         ax[axn].text(
             legend_pos_x,
             legend_pos_y,
-            "Intercept age = %s +%s -%s &\n                        %s +%s -%s %s (%d%% conf.)"
+            "Intercept age = %s +%s -%s &\n                        %s +%s -%s %s [%d$\sigma$]"
             % (
                 format(tsi1[0], dignum),
                 format(tsi1[1] - tsi1[0], dignum),
@@ -1630,7 +1574,7 @@ def plot_concordia_intercept_age(
                 format(tsi2[1] - tsi2[0], dignum),
                 format(tsi2[0] - tsi2[2], dignum),
                 age_unit_name,
-                cr * 100,
+                int(stats.norm.ppf(cr + (1 - cr) / 2.0)),
             ),
             transform=ax[axn].transAxes,
             verticalalignment="top",
@@ -1639,18 +1583,18 @@ def plot_concordia_intercept_age(
 
     if tsi2[0] == 0:
         print(
-            "    Intercept age = %s +%s -%s %s (%d%% conf.)"
+            "    Intercept age = %s +%s -%s %s [%dσ]"
             % (
                 format(tsi1[0], dignum),
                 format(tsi1[1] - tsi1[0], dignum),
                 format(tsi1[0] - tsi1[2], dignum),
                 age_unit_name,
-                cr * 100,
+                int(stats.norm.ppf(cr + (1 - cr) / 2.0)),
             )
         )
     else:
         print(
-            "    Intercept age = %s +%s -%s & %s +%s -%s %s (%d%% conf.)"
+            "    Intercept age = %s +%s -%s & %s +%s -%s %s [%dσ]"
             % (
                 format(tsi1[0], dignum),
                 format(tsi1[1] - tsi1[0], dignum),
@@ -1659,7 +1603,7 @@ def plot_concordia_intercept_age(
                 format(tsi2[1] - tsi2[0], dignum),
                 format(tsi2[0] - tsi2[2], dignum),
                 age_unit_name,
-                cr * 100,
+                int(stats.norm.ppf(cr + (1 - cr) / 2.0)),
             )
         )
 
@@ -1769,12 +1713,12 @@ def plot_oneD_weighted_mean(
     ax_1D.text(
         legend_pos_x[0],
         legend_pos_y[1],
-        u"Weighted mean = %s ± %s %s [%d%% conf.] (MSWD = %s)"
+        u"Weighted mean = %s ± %s %s [%d$\sigma$] (MSWD = %s)"
         % (
             format(Twm, dignum),
             format(sm, dignum),
             age_unit_name,
-            cr * 100,
+            int(stats.norm.ppf(cr + (1 - cr) / 2.0)),
             format(MSWD, dignum),
         ),
         transform=ax_1D.transAxes,
@@ -1802,13 +1746,15 @@ def plot_oneD_weighted_mean(
         fontsize=legend_font_size,
     )
 
+    conf95 = calc_conf95_errors(len(Tall[ind]) - 1, sm, MSWD, cr)
     print(
-        u"    1D weighted mean age = %s ± %s %s [%d%% conf.] (MSDW=%s)"
+        u"    1D weighted mean age = %s ± %s [%dσ] / ± %s [tσ√MSWD] %s (MSDW=%s)"
         % (
             format(Twm, dignum),
             format(sm, dignum),
+            int(stats.norm.ppf(cr + (1 - cr) / 2.0)),
+            format(conf95, dignum),
             age_unit_name,
-            cr * 100,
             format(MSWD, dignum),
         )
     )
@@ -1959,6 +1905,69 @@ def plot_hist(ax_hist, T, ii, od, oo):
     )
 
     return (n, bins, rects)
+
+
+def func_plot_diagrams(plot_diagrams, ptype):
+    if ptype == "cc":
+        axn = 0
+        if np.sum(plot_diagrams) == 1:
+            axn_title = ""
+        else:
+            axn_title = "a"
+        print("------------------------------------------------------------")
+        print(("%s: Conventional concordia diagram") % axn_title)
+        ax[axn].set_xlabel("$^{207}$Pb* / $^{235}$U", fontsize=legend_font_size + 4)
+        ax[axn].set_ylabel("$^{206}$Pb* / $^{238}$U", fontsize=legend_font_size + 4)
+
+    if ptype == "tw":
+        if plot_diagrams[0] == 1:
+            axn = 1
+            axn_title = "b"
+        else:
+            axn = 0
+            if np.sum(plot_diagrams) == 1:
+                axn_title = ""
+            else:
+                axn_title = "a"
+        print(("%s: Tera-Wasserburg concordia diagram") % axn_title)
+        ax[axn].set_xlabel("$^{238}$U / $^{206}$Pb*", fontsize=legend_font_size + 4)
+        ax[axn].set_ylabel("$^{207}$Pb* / $^{206}$Pb*", fontsize=legend_font_size + 4)
+
+    if ptype == "oneD":
+        if np.sum(plot_diagrams[0:2]) == 2:
+            axn = 2
+            axn_title = "c"
+        elif np.sum(plot_diagrams[0:2]) == 1:
+            axn = 1
+            axn_title = "b"
+        else:
+            axn = 0
+            if np.sum(plot_diagrams) == 1:
+                axn_title = ""
+            else:
+                axn_title = "a"
+        print(("%s: One-dimensional bar plot") % axn_title)
+
+    if ptype == "hist":
+        if np.sum(plot_diagrams[0:3]) == 3:
+            axn = 3
+            axn_title = "d"
+        elif np.sum(plot_diagrams[0:3]) == 2:
+            axn = 2
+            axn_title = "c"
+        elif np.sum(plot_diagrams[0:3]) == 1:
+            axn = 1
+            axn_title = "b"
+        else:
+            axn = 0
+            if np.sum(plot_diagrams) == 1:
+                axn_title = ""
+            else:
+                axn_title = "a"
+        print(("%s: Histogram") % axn_title)
+
+    ax[axn].set_title(axn_title, loc="left", fontsize=legend_font_size + 6)
+    return (axn, axn_title)
 
 
 # ################################################
@@ -2636,9 +2645,9 @@ if __name__ == "__main__":
     # print ages
     print("------------------------------------------------------------")
     if opt_correct_disequilibrium:
-        print("U-Pb ages^ (%s) [%d sigma]" % (age_unit_name, ca_sigma))
+        print("U-Pb ages^ (%s) [%dσ]" % (age_unit_name, ca_sigma))
     else:
-        print("U-Pb ages (%s) [%d sigma]" % (age_unit_name, ca_sigma))
+        print("U-Pb ages (%s) [%dσ]" % (age_unit_name, ca_sigma))
 
     if opt_correct_common_Pb:
         print("#\tf206%\tT68*\t+-s\tT75\t+-s\tT76*\t+s\t-s\t")
@@ -2737,15 +2746,7 @@ if __name__ == "__main__":
     # A: Conventional concordia plot
 
     if plot_diagrams[0] == 1:
-        axn = 0
-        axn_title = "a"
-
-        print("------------------------------------------------------------")
-        print(("%s: Conventional concordia diagram") % axn_title)
-
-        ax[axn].set_title(axn_title, loc="left", fontsize=legend_font_size + 6)
-        ax[axn].set_xlabel("$^{207}$Pb* / $^{235}$U", fontsize=legend_font_size + 4)
-        ax[axn].set_ylabel("$^{206}$Pb* / $^{238}$U", fontsize=legend_font_size + 4)
+        axn, axn_title = func_plot_diagrams(plot_diagrams, ptype="cc")
         ax[axn].set_xlim(rX)
         ax[axn].set_ylim(rY)
 
@@ -2824,7 +2825,7 @@ if __name__ == "__main__":
             )
 
         # Concordia age
-        if opt_concordia_age or opt_concordia_ia:
+        if opt_concordia_age:
             (
                 T_lsq,
                 S_lsq,
@@ -2850,7 +2851,6 @@ if __name__ == "__main__":
                 MSWD = MSWDcomb
                 Pvalue = Pcomb
 
-        if opt_concordia_age:
             legend_pos += 1
             plot_concordia_age(
                 ax,
@@ -2864,6 +2864,7 @@ if __name__ == "__main__":
                 legend_pos_x[legend_pos],
                 legend_pos_y[legend_pos],
             )
+
             legend_pos += 1
             plot_concordia_age_MSWD(
                 ax,
@@ -2891,7 +2892,6 @@ if __name__ == "__main__":
                     ia_cr,
                     rho_XY[ind],
                     range_XY,
-                    T_lsq,
                     case,
                     legend_pos_x[legend_pos],
                     legend_pos_y[legend_pos],
@@ -2911,7 +2911,6 @@ if __name__ == "__main__":
                     ia_cr,
                     rho_XY[ind],
                     range_XY,
-                    T_lsq,
                     case,
                     legend_pos_x[legend_pos],
                     legend_pos_y[legend_pos],
@@ -2919,26 +2918,12 @@ if __name__ == "__main__":
 
     # ------------------------------------------------
     # B: Tera-Wasserburg concordia plot
-
     if plot_diagrams[1] == 1:
-        if plot_diagrams[0] == 1:
-            axn = 1
-            axn_title = "b"
-        else:
-            axn = 0
-            axn_title = "a"
-
-        print(("%s: Tera-Wasserburg concordia diagram") % axn_title)
-
-        ax[axn].set_title(axn_title, loc="left", fontsize=legend_font_size + 6)
-        ax[axn].set_xlabel("$^{238}$U / $^{206}$Pb*", fontsize=legend_font_size + 4)
-        ax[axn].set_ylabel("$^{207}$Pb* / $^{206}$Pb*", fontsize=legend_font_size + 4)
+        axn, axn_title = func_plot_diagrams(plot_diagrams, ptype="tw")
         ax[axn].set_xlim(rx)
         ax[axn].set_ylim(ry)
 
-        PlotConcTW(
-            ax[axn], Xtw, Ytw, timexy, age_unit, legend_font_size,
-        )
+        PlotConcTW(ax[axn], Xtw, Ytw, timexy, age_unit, legend_font_size)
 
         # Legend data number
         legend_pos_x, legend_pos_y = calc_legend_pos(range_xy, ctype="tw")
@@ -3007,7 +2992,7 @@ if __name__ == "__main__":
             )
 
         # Concordia age
-        if opt_concordia_age or opt_concordia_ia:
+        if opt_concordia_age:
             (
                 t_lsq,
                 s_lsq,
@@ -3033,7 +3018,6 @@ if __name__ == "__main__":
                 mswd = mswd_comb
                 pvalue = p_comb
 
-        if opt_concordia_age:
             legend_pos += 1
             plot_concordia_age(
                 ax,
@@ -3074,7 +3058,6 @@ if __name__ == "__main__":
                     ia_cr,
                     rho_xy[ind],
                     range_xy,
-                    T_lsq,
                     case,
                     legend_pos_x[legend_pos],
                     legend_pos_y[legend_pos],
@@ -3094,7 +3077,6 @@ if __name__ == "__main__":
                     ia_cr,
                     rho_xy[ind],
                     range_xy,
-                    T_lsq,
                     case,
                     legend_pos_x[legend_pos],
                     legend_pos_y[legend_pos],
@@ -3102,25 +3084,11 @@ if __name__ == "__main__":
 
     # ------------------------------------------------
     # C: Bar plot of 206Pb/238U ages with 1D weighted mean
-
     if plot_diagrams[2] == 1:
-        if np.sum(plot_diagrams[0:2]) == 2:
-            axn = 2
-            axn_title = "c"
-        elif np.sum(plot_diagrams[0:2]) == 1:
-            axn = 1
-            axn_title = "b"
-        else:
-            axn = 0
-            axn_title = "a"
-
-        print(("%s: One-dimensional bar plot") % axn_title)
-
-        ax[axn].set_title(axn_title, loc="left", fontsize=legend_font_size + 6)
+        axn, axn_title = func_plot_diagrams(plot_diagrams, ptype="oneD")
         ax[axn].set_xlim([0, N + 1])
         ax[axn].set_ylim(range_oneD_y[0], range_oneD_y[1])
         ax[axn].set_xlabel("Number of samples", fontsize=legend_font_size + 4)
-
         Tall, s1, label_selected = select_age_type(oneD_age_type)
         ax[axn].set_ylabel(label_selected, fontsize=legend_font_size + 4)
 
@@ -3155,29 +3123,14 @@ if __name__ == "__main__":
         )
 
     # ------------------------------------------------
-    # Histogram
+    # D: Histogram
     # Th/U and age histogram plots
-
     if plot_diagrams[3] == 1:
-        if np.sum(plot_diagrams[0:3]) == 3:
-            axn = 3
-            axn_title = "d"
-        elif np.sum(plot_diagrams[0:3]) == 2:
-            axn = 2
-            axn_title = "c"
-        elif np.sum(plot_diagrams[0:3]) == 1:
-            axn = 1
-            axn_title = "b"
-        else:
-            axn = 0
-            axn_title = "a"
-
-        print(("%s: Histogram") % axn_title)
-
-        ax[axn].set_title(axn_title, loc="left", fontsize=legend_font_size + 6)
+        axn, axn_title = func_plot_diagrams(plot_diagrams, ptype="hist")
         ax[axn].set_xlim(range_hist_x[0], range_hist_x[1])
         Tall, s1, label_selected = select_age_type(hist_age_type)
         ax[axn].set_xlabel(label_selected, fontsize=legend_font_size + 4)
+        plot_hist(ax[axn], Tall, ind, outd_disc, outd)
 
         # Optional: Th/U ratio
         if opt_Th_U:
@@ -3199,8 +3152,6 @@ if __name__ == "__main__":
 
         if opt_kde:
             plot_kde(ax[axn], range_hist_x, Tall, ind)
-
-        plot_hist(ax[axn], Tall, ind, outd_disc, outd)
 
     print("All done.")
 

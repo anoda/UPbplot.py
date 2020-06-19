@@ -20,7 +20,7 @@ Range of data
 ------------------------------------------------------------
 Discordant data means that the error ellipses do not intersect the concordia line.
 ------------------------------------------------------------
-U-Pb ages (Ma) [2 sigma]
+U-Pb ages (Ma) [2σ]
 #	f206%	T68*	+-s	T75	+-s	T76*	+s	-s	
 1	0.02	17.12	0.19	17.12	0.98	17.13	128.71	139.59
 2	0.07	17.11	0.13	17.11	0.40	17.12	52.25	53.95
@@ -62,15 +62,15 @@ Concordants (excluded) are  [15. 18. 20. 21. 28.]
 a: Conventional concordia diagram
     Error ellipses are 95% for data points
     Error ellipse is 95% for 2D weighted mean
-    Concordia age = 16.95 ± 0.06 [95% conf.] / ± 0.06 [t√MSWD] Ma
+    Concordia age = 16.95 ± 0.06 [2σ] / ± 0.06 [tσ√MSWD] Ma
     MSWD concordance / equivalence / combined = 0.00 / 0.96 / 0.94
     P-value concordance / equivalence / combined = 0.99 / 0.55 / 0.59
 b: Tera-Wasserburg concordia diagram
-    Concordia age = 17.02 ± 0.06 [95% conf.] / ± 0.06 [t√MSWD] Ma
+    Concordia age = 17.02 ± 0.06 [2σ] / ± 0.06 [tσ√MSWD] Ma
     MSWD concordance / equivalence / combined = 0.00 / 0.92 / 0.90
     P-value concordance / equivalence / combined = 0.97 / 0.63 / 0.67
 c: One-dimensional bar plot
-    1D weighted mean age = 16.95 ± 0.06 Ma [95% conf.] (MSDW=1.92)
+    1D weighted mean age = 16.95 ± 0.06 [2σ] / ± 0.09 [tσ√MSWD] Ma (MSDW=1.92)
     common 207Pb/206Pb = 0.83566 (16.95 Ma)
     Reduced Chi-squared = 1.92 (Failed, over dispersion or uncertainties underestimated)
 d: Histogram
