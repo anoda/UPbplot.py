@@ -1,3 +1,9 @@
+2020-12-24 Version 0.1.9
+
+	* Main script
+
+	Fixed a bug for producing array outd_disc (lines 2603-2604)
+
 2020-06-19 Version 0.1.8
 
 	Corrections for calculations of 95% confidence errors.

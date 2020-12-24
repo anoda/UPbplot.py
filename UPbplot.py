@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2020/06/19 17:05:38.
+# Last updated: 2020/12/24 16:06:41.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -31,7 +31,8 @@
 # __version__ = "0.1.5"  # May/31/2020
 # __version__ = "0.1.6"  # June/03/2020
 # __version__ = "0.1.7"  # June/18/2020
-__version__ = "0.1.8"  # June/19/2020
+# __version__ = "0.1.8"  # June/19/2020
+__version__ = "0.1.9"  # Dec/24/2020
 
 # [Citation]
 #
@@ -951,7 +952,13 @@ def discordant_judge(xd, yd, sigma_xd, sigma_yd, cov_xdyd, conf, i_in, i_disc, l
     i_ind = i_in
     for j, i in enumerate(i_in):
         dp_ell_x, dp_ell_y = myEllipse(
-            i, xd[i], yd[i], sigma_xd[i], sigma_yd[i], cov_xdyd[i], conf,
+            i,
+            xd[i],
+            yd[i],
+            sigma_xd[i],
+            sigma_yd[i],
+            cov_xdyd[i],
+            conf,
         )
         if not intersections_ellipse(dp_ell_x, dp_ell_y, line):
             i_disc = np.append(i_disc, i)
@@ -964,7 +971,15 @@ def discordant_judge(xd, yd, sigma_xd, sigma_yd, cov_xdyd, conf, i_in, i_disc, l
 # ------------------------------------------------
 # Discordance (%) = [1 - A/B] * 100
 def discordance(
-    t75, t75e, t68, t68e, t76, t76_min, t76_max, sd, method,
+    t75,
+    t75e,
+    t68,
+    t68e,
+    t76,
+    t76_min,
+    t76_max,
+    sd,
+    method,
 ):
 
     if method == 0:
@@ -994,6 +1009,7 @@ def print_discordant_data(tdisc, odisc, pdisc, sigma):
         print("100*(1-([206Pb/238U age]/[207Pb/206Pb age]))")
         # Discordant data points
         print("Discordant data points [n = %d] are" % len(odisc))
+        print(odisc)
         for i in odisc:
             print(
                 "%d: %s%% = (1-%.1f/%.1f) x 100"
@@ -1267,7 +1283,13 @@ def plot_data_point_error_ellipse_disc(
 ):
     for i in range(len(X)):
         dp_ell_x, dp_ell_y = myEllipse(
-            i, X[i], Y[i], sigma_X[i], sigma_Y[i], cov_XY[i], conf=cr,
+            i,
+            X[i],
+            Y[i],
+            sigma_X[i],
+            sigma_Y[i],
+            cov_XY[i],
+            conf=cr,
         )
 
         if i in outd:
@@ -1308,7 +1330,13 @@ def plot_data_point_error_ellipse(
 ):
     for i in range(len(X)):
         dp_ell_x, dp_ell_y = myEllipse(
-            i, X[i], Y[i], sigma_X[i], sigma_Y[i], cov_XY[i], conf=cr,
+            i,
+            X[i],
+            Y[i],
+            sigma_X[i],
+            sigma_Y[i],
+            cov_XY[i],
+            conf=cr,
         )
         if i in ind:
             ax[axn].plot(
@@ -1346,13 +1374,25 @@ def plot_2D_wm(ax, axn, X, Y, sigma_X, sigma_Y, rho_XY, cr, legend_pos_x, legend
         X, Y, sigma_X, sigma_Y, rho_XY, conf=cr
     )
     twm_ell_x, twm_ell_y = myEllipse(
-        0, Xwm_bar, Ywm_bar, sigma_Xwm_bar, sigma_Ywm_bar, cov_XYwm_bar, conf=cr,
+        0,
+        Xwm_bar,
+        Ywm_bar,
+        sigma_Xwm_bar,
+        sigma_Ywm_bar,
+        cov_XYwm_bar,
+        conf=cr,
     )
     ax[axn].fill(
-        twm_ell_x, twm_ell_y, fc=twm_ee_fc, alpha=twm_ee_alpha,
+        twm_ell_x,
+        twm_ell_y,
+        fc=twm_ee_fc,
+        alpha=twm_ee_alpha,
     )
     ax[axn].plot(
-        twm_ell_x, twm_ell_y, color=twm_ee_ec, linewidth=twm_ee_ew,
+        twm_ell_x,
+        twm_ell_y,
+        color=twm_ee_ec,
+        linewidth=twm_ee_ew,
     )
 
     # legend
@@ -2558,9 +2598,10 @@ if __name__ == "__main__":
                 input_error_sigma,
                 method=disc_type,
             )
-            # outd_disc = np.where((np.abs(disc_percent) >= disc_thres) | (disc_percent < 0))
-            if np.max(disc_percent) >= disc_thres:
-                outd_disc = np.where(np.abs(disc_percent) >= disc_thres)
+            # # outd_disc = np.where((np.abs(disc_percent) >= disc_thres) | (disc_percent < 0))
+            # if np.max(disc_percent) >= disc_thres:
+            outd_disc = np.where(np.abs(disc_percent) >= disc_thres)[0]
+            ind = np.delete(ind, outd_disc)
     else:
         outd_disc = []
         ind = np.delete(ind, outd_disc)
@@ -2623,6 +2664,7 @@ if __name__ == "__main__":
             )
         else:
             print_discordant_data(disc_type, outd_disc, disc_percent, input_error_sigma)
+
     else:
         print("Discordant data are not excluded from calculation")
 
@@ -2751,7 +2793,12 @@ if __name__ == "__main__":
         ax[axn].set_ylim(rY)
 
         PlotConcConv(
-            ax[axn], Xconv, Yconv, timeXY, age_unit, legend_font_size,
+            ax[axn],
+            Xconv,
+            Yconv,
+            timeXY,
+            age_unit,
+            legend_font_size,
         )
 
         # Legend
