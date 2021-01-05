@@ -1,3 +1,13 @@
+2021-01-05 Version 0.2.0
+
+	* Main script
+
+	Fixed a bug for filling the error ellipses.
+
+	* config
+
+	Add a new option for drawing the line of 1D weight mean in the 1D bar plot.
+
 2020-12-24 Version 0.1.9
 
 	* Main script

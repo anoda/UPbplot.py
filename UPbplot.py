@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2020/12/24 16:06:41.
+# Last updated: 2021/01/05 10:51:22.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -32,7 +32,8 @@
 # __version__ = "0.1.6"  # June/03/2020
 # __version__ = "0.1.7"  # June/18/2020
 # __version__ = "0.1.8"  # June/19/2020
-__version__ = "0.1.9"  # Dec/24/2020
+# __version__ = "0.1.9"  # Dec/24/2020
+__version__ = "0.2.0"  # Jan/05/2021
 
 # [Citation]
 #
@@ -1293,30 +1294,33 @@ def plot_data_point_error_ellipse_disc(
         )
 
         if i in outd:
-            ax[axn].plot(
+            ax[axn].fill(
                 dp_ell_x,
                 dp_ell_y,
                 alpha=dp0_ee_alpha,
                 linestyle=dp0_ee_ls,
-                color=dp0_ee_ec,
+                edgecolor=dp0_ee_ec,
+                facecolor=dp0_ee_fc,
                 linewidth=dp0_ee_ew,
             )
         elif i in ind:
-            ax[axn].plot(
+            ax[axn].fill(
                 dp_ell_x,
                 dp_ell_y,
                 alpha=dp1_ee_alpha,
                 linestyle=dp1_ee_ls,
-                color=dp1_ee_ec,
+                edgecolor=dp1_ee_ec,
+                facecolor=dp1_ee_fc,
                 linewidth=dp1_ee_ew,
             )
         elif i in outd_disc:
-            ax[axn].plot(
+            ax[axn].fill(
                 dp_ell_x,
                 dp_ell_y,
                 alpha=dp2_ee_alpha,
                 linestyle=dp2_ee_ls,
-                color=dp2_ee_ec,
+                edgecolor=dp2_ee_ec,
+                facecolor=dp2_ee_fc,
                 linewidth=dp2_ee_ew,
             )
 
@@ -1338,32 +1342,36 @@ def plot_data_point_error_ellipse(
             cov_XY[i],
             conf=cr,
         )
-        if i in ind:
-            ax[axn].plot(
-                dp_ell_x,
-                dp_ell_y,
-                alpha=dp1_ee_alpha,
-                linestyle=dp1_ee_ls,
-                color=dp1_ee_ec,
-                linewidth=dp1_ee_ew,
-            )
-        elif i in outd_disc:
-            ax[axn].plot(
-                dp_ell_x,
-                dp_ell_y,
-                alpha=dp2_ee_alpha,
-                linestyle=dp2_ee_ls,
-                color=dp2_ee_ec,
-                linewidth=dp2_ee_ew,
-            )
-        else:
-            ax[axn].plot(
+
+        if i in outd:
+            ax[axn].fill(
                 dp_ell_x,
                 dp_ell_y,
                 alpha=dp0_ee_alpha,
                 linestyle=dp0_ee_ls,
-                color=dp0_ee_ec,
+                edgecolor=dp0_ee_ec,
+                facecolor=dp0_ee_fc,
                 linewidth=dp0_ee_ew,
+            )
+        elif i in ind:
+            ax[axn].fill(
+                dp_ell_x,
+                dp_ell_y,
+                alpha=dp1_ee_alpha,
+                linestyle=dp1_ee_ls,
+                edgecolor=dp1_ee_ec,
+                facecolor=dp1_ee_fc,
+                linewidth=dp1_ee_ew,
+            )
+        elif i in outd_disc:
+            ax[axn].fill(
+                dp_ell_x,
+                dp_ell_y,
+                linestyle=dp2_ee_ls,
+                edgecolor=dp2_ee_ec,
+                linewidth=dp2_ee_ew,
+                facecolor=dp2_ee_fc,
+                alpha=dp2_ee_alpha,
             )
 
 
@@ -1682,16 +1690,17 @@ def plot_oneD_weighted_mean(
 
     Twm, sm, MSWD = oneWM(Tall[ind], s1[ind], conf=cr)
 
-    # confidence band of the weighted mean
-    ax_1D.axhspan(Twm - sm, Twm + sm, facecolor=oneD_band_fc, alpha=oneD_band_alpha)
+    if opt_oneD_wm:
+        # confidence band of the weighted mean
+        ax_1D.axhspan(Twm - sm, Twm + sm, facecolor=oneD_band_fc, alpha=oneD_band_alpha)
 
-    # plot 2D weighted mean
-    ax_1D.plot(
-        [0.0, len(Tall) + 1],
-        [Twm, Twm],
-        linewidth=oneD_wm_line_width,
-        color=oneD_wm_line_color,
-    )
+        # plot 1D weighted mean
+        ax_1D.plot(
+            [0.0, len(Tall) + 1],
+            [Twm, Twm],
+            linewidth=oneD_wm_line_width,
+            color=oneD_wm_line_color,
+        )
 
     # Sorting age data
     if oneD_plot_sort == 1:
@@ -2140,6 +2149,7 @@ if __name__ == "__main__":
             "oneD_yaxis_log": False,
             "oneD_plot_sort": True,
             "oneD_sigma": "2",
+            "opt_oneD_weighted_mean": True,
             "range_automatic_hist": True,
             "range_hist_x": "[0,1500]",
             "hist_age_type": "68",
@@ -2323,6 +2333,7 @@ if __name__ == "__main__":
     oneD_band_fc = config.get("Graph", "oneD_band_fillcolor")  # 0.8
     oneD_band_alpha = config.getfloat("Graph", "oneD_band_alpha")  # 0.5
     oneD_yaxis_log = config.getboolean("Graph", "oneD_yaxis_log")  # 0
+    opt_oneD_wm = config.getboolean("Graph", "opt_oneD_weighted_mean")
     dp0_bar_line_style = config.get("Graph", "dp0_bar_line_style")  # solid
     dp0_bar_line_width = config.getfloat("Graph", "dp0_bar_line_width")  # 1
     dp0_bar_color = config.get("Graph", "dp0_bar_color")  # black
@@ -3142,6 +3153,7 @@ if __name__ == "__main__":
         legend_pos_x, legend_pos_y = calc_legend_pos(
             [[(N + 1) * 0.05, (N + 1) * 0.05], range_oneD_y], ctype="conv"
         )
+
         T_owm = plot_oneD_weighted_mean(
             ax[axn],
             oneD_age_type,
@@ -3154,8 +3166,8 @@ if __name__ == "__main__":
             legend_pos_x,
             legend_pos_y,
         )
-
         Pb76c_T_owm = func_Pb76c(T_owm)
+
         if opt_correct_common_Pb:
             print(
                 u"    common 207Pb/206Pb = %s (%s %s)"
