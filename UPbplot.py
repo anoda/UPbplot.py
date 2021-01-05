@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2021/01/05 10:51:22.
+# Last updated: 2021/01/05 11:27:08.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -1759,25 +1759,28 @@ def plot_oneD_weighted_mean(
     ax_1D.set_xticks(oneD_xticks)
     ax_1D.set_xticklabels(Tnumd + 1, rotation=270, fontsize="small")
 
-    ax_1D.text(
-        legend_pos_x[0],
-        legend_pos_y[1],
-        u"Weighted mean = %s ± %s %s [%d$\sigma$] (MSWD = %s)"
-        % (
-            format(Twm, dignum),
-            format(sm, dignum),
-            age_unit_name,
-            int(stats.norm.ppf(cr + (1 - cr) / 2.0)),
-            format(MSWD, dignum),
-        ),
-        transform=ax_1D.transAxes,
-        verticalalignment="top",
-        fontsize=legend_font_size,
-    )
+    legend_pos = 0
+    if opt_oneD_wm:
+        legend_pos += 1
+        ax_1D.text(
+            legend_pos_x[0],
+            legend_pos_y[legend_pos],
+            u"Weighted mean = %s ± %s %s [%d$\sigma$] (MSWD = %s)"
+            % (
+                format(Twm, dignum),
+                format(sm, dignum),
+                age_unit_name,
+                int(stats.norm.ppf(cr + (1 - cr) / 2.0)),
+                format(MSWD, dignum),
+            ),
+            transform=ax_1D.transAxes,
+            verticalalignment="top",
+            fontsize=legend_font_size,
+        )
 
     ax_1D.text(
         legend_pos_x[0],
-        legend_pos_y[2],
+        legend_pos_y[legend_pos + 1],
         "Error bars are %d%% conf." % (cr * 100),
         transform=ax_1D.transAxes,
         verticalalignment="top",
@@ -1788,7 +1791,7 @@ def plot_oneD_weighted_mean(
 
     ax_1D.text(
         legend_pos_x[0],
-        legend_pos_y[3],
+        legend_pos_y[legend_pos + 2],
         "$\chi^2_{red}$ = %s (%s)" % (format(chi2_red, dignum), res_chi2_red),
         transform=ax[axn].transAxes,
         verticalalignment="top",
