@@ -1,3 +1,9 @@
+2021-01-05 Version 0.2.1
+
+	* Main script
+
+	The 1D weighted mean does is not shown in the 1D bar plot, when opt_oneD_weight_mean is False.
+
 2021-01-05 Version 0.2.0
 
 	* Main script

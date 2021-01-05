@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2021/01/05 11:27:08.
+# Last updated: 2021/01/05 11:32:51.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -33,7 +33,8 @@
 # __version__ = "0.1.7"  # June/18/2020
 # __version__ = "0.1.8"  # June/19/2020
 # __version__ = "0.1.9"  # Dec/24/2020
-__version__ = "0.2.0"  # Jan/05/2021
+# __version__ = "0.2.0"  # Jan/05/2021
+__version__ = "0.2.1"  # Jan/05/2021
 
 # [Citation]
 #
