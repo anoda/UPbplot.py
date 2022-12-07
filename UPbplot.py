@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2022/12/06 13:49:07.
+# Last updated: 2022/12/07 15:26:03.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -93,6 +93,7 @@ __version__ = "0.2.2"  # Dec/06/2022
 #        -o FILE, --out=FILE   Name of output file (when pdf driver is used)
 #        -d DRIVER, --driver=DRIVER
 #                              Choose from [pdf (default), qt5agg]
+#        -D, --debug           Turn on debug
 #        -f, --force-overwrite
 #                              Force overwrite the pre-existing pdf
 #
@@ -115,8 +116,6 @@ from matplotlib.patches import Ellipse
 # Intersections between concordia line and error ellipses
 from shapely.geometry import Polygon, LineString, LinearRing
 
-debug = 1
-
 # ################################################
 # Initial coefficient
 
@@ -136,22 +135,22 @@ U85r = 137.818  # 238U/235U
 # common-Pb correction
 # Two-stage model for 207Pb-correction
 # Stacey and Kramers (1975) EPSL
-t2nd = 3.7 * 10 ** 9  # 2nd-stage startting  (3.7 Ga)
+t2nd = 3.7 * 10**9  # 2nd-stage startting  (3.7 Ga)
 Pb64i = 11.152  # (206Pb/204Pb) at 3.7 Ga
 Pb74i = 12.998  # (207Pb/204Pb) at 3.7 Ga
 U8Pb4 = 9.74  # 238U/204Pb
 
 # Time (year)
-time_ka = np.array(list(range(1000, 5 * 10 ** 6, 1 * 10 ** 3)))  # 1-5000 ka
+time_ka = np.array(list(range(1000, 5 * 10**6, 1 * 10**3)))  # 1-5000 ka
 # 0.1-4601 Ma
-time_ma = np.array(list(range(10 ** 5, 4600 * 10 ** 6, 10 ** 5)))
+time_ma = np.array(list(range(10**5, 4600 * 10**6, 10**5)))
 timeall = np.concatenate(
     [
-        list(range(10 ** 4, 10 ** 5, 10 ** 3)),
-        list(range(10 ** 5, 10 ** 6, 10 ** 4)),
-        list(range(10 ** 6, 10 ** 7, 10 ** 5)),
-        list(range(10 ** 7, 10 ** 8, 10 ** 6)),
-        list(range(10 ** 8, 5 * 10 ** 9, 10 ** 7)),
+        list(range(10**4, 10**5, 10**3)),
+        list(range(10**5, 10**6, 10**4)),
+        list(range(10**6, 10**7, 10**5)),
+        list(range(10**7, 10**8, 10**6)),
+        list(range(10**8, 5 * 10**9, 10**7)),
     ]
 )
 
@@ -198,8 +197,7 @@ def set_filename_conf(filename):
                     # conffile = raw_input()  # python2
                     conffile = input()  # python3
                     if not os.path.exists(conffile):
-                        sys.exit(
-                            "Configuration file %s is not found.") % conffile
+                        sys.exit("Configuration file %s is not found.") % conffile
     return conffile
 
 
@@ -211,8 +209,7 @@ def set_filename_output(filename, driver, opt_force_overwrite):
             # print(('Output file %s exists.') % outfile)
             if not (opt_force_overwrite):
                 # answer = raw_input('Do you set a new file name?: [y/N] ')  #
-                answer = input(
-                    "Do you set a new file name?: [y/N] ")  # python3
+                answer = input("Do you set a new file name?: [y/N] ")  # python3
                 if (len(answer) != 0) and (answer or answer[0].lower()) == "y":
                     print("Please enter output file name (*.pdf): ")
                     # outfile = raw_input()  # python2
@@ -359,7 +356,7 @@ def eigsorted(cov):
 
 
 def myEllipse(i, x, y, sigma_x, sigma_y, cov_xy, conf="none"):
-    cov = ([sigma_x ** 2, cov_xy], [cov_xy, sigma_y ** 2])
+    cov = ([sigma_x**2, cov_xy], [cov_xy, sigma_y**2])
     vals, vecs = eigsorted(cov)
     theta = np.degrees(np.arctan2(*vecs[:, 0][::-1]))
     n = 100
@@ -392,12 +389,11 @@ def myEllipse(i, x, y, sigma_x, sigma_y, cov_xy, conf="none"):
 def oneWM(X, s1, conf):
     w = s1 ** (-2) / np.sum(s1 ** (-2))  # weight
     Twm = np.sum(w * X)  # weight mean of age
-    S = np.sum((X - Twm) ** 2 / s1 ** 2)  # S
+    S = np.sum((X - Twm) ** 2 / s1**2)  # S
     # Mean Square of the Weighted Deviation
     MSWD = S / (len(X) - 1)
     # standard deviation of the weighted mean [eq. 66]
-    sm = stats.norm.ppf(conf + (1 - conf) / 2.0) * \
-        np.sqrt(1.0 / np.sum(s1 ** (-2)))
+    sm = stats.norm.ppf(conf + (1 - conf) / 2.0) * np.sqrt(1.0 / np.sum(s1 ** (-2)))
 
     # # p.177 in Talyer1997book
     # w = s1**(-2)                # weight
@@ -418,9 +414,9 @@ def twoWM(Xi, Yi, sXi, sYi, rhoXYi, conf):
     #    sX, sY: SD of X or Y
     N = len(Xi)
     covXYi = rhoXYi * sXi * sYi
-    o11 = sYi ** 2 / ((sXi ** 2) * (sYi ** 2) - covXYi ** 2)  # eq(3)
-    o22 = sXi ** 2 / ((sXi ** 2) * (sYi ** 2) - covXYi ** 2)  # eq(3)
-    o12 = -covXYi / ((sXi ** 2) * (sYi ** 2) - covXYi ** 2)  # eq(3)
+    o11 = sYi**2 / ((sXi**2) * (sYi**2) - covXYi**2)  # eq(3)
+    o22 = sXi**2 / ((sXi**2) * (sYi**2) - covXYi**2)  # eq(3)
+    o12 = -covXYi / ((sXi**2) * (sYi**2) - covXYi**2)  # eq(3)
     # eq(6)
     x_bar = (
         np.sum(o22) * np.sum(Xi * o11 + Yi * o12)
@@ -434,16 +430,13 @@ def twoWM(Xi, Yi, sXi, sYi, rhoXYi, conf):
     # eq(2)
     (Ri, ri) = (Xi - x_bar, Yi - y_bar)
     # eq(4)
-    S = np.sum(((Ri ** 2.0) * o11) +
-               ((ri ** 2.0) * o22) + (2.0 * Ri * ri * o12))
+    S = np.sum(((Ri**2.0) * o11) + ((ri**2.0) * o22) + (2.0 * Ri * ri * o12))
     # eq(8)
     MSWD = S / (2 * N - 2)
     # eq(9)
-    sigma_x_bar = np.sqrt(
-        np.sum(o22) / (np.sum(o11) * np.sum(o22) - np.sum(o12) ** 2))
+    sigma_x_bar = np.sqrt(np.sum(o22) / (np.sum(o11) * np.sum(o22) - np.sum(o12) ** 2))
     # eq(9)
-    sigma_y_bar = np.sqrt(
-        np.sum(o11) / (np.sum(o11) * np.sum(o22) - np.sum(o12) ** 2))
+    sigma_y_bar = np.sqrt(np.sum(o11) / (np.sum(o11) * np.sum(o22) - np.sum(o12) ** 2))
     # eq(9)
     cov_xy_bar = -np.sum(o12) / (np.sum(o11) * np.sum(o22) - np.sum(o12) ** 2)
     return (x_bar, y_bar, MSWD, sigma_x_bar, sigma_y_bar, cov_xy_bar)
@@ -459,43 +452,39 @@ def FitFuncConv(t, x, y, sigma_x, sigma_y, rho_xy):
     A = (x - (np.exp(l235U * t) - 1)) / sigma_x
     B = (y - (np.exp(l238U * t) - 1)) / sigma_y
     # eq(5)
-    S = np.sum((A ** 2 + B ** 2 - 2 * A * B * rho_xy) / (1 - rho_xy ** 2))
+    S = np.sum((A**2 + B**2 - 2 * A * B * rho_xy) / (1 - rho_xy**2))
     return S
 
 
 # Terra-Wasserburg concordia curve by Ludwig (1998)
 def FitFuncTW(t, x, y, sigma_x, sigma_y, rho_xy):
     A = (x - 1 / (np.exp(l238U * t) - 1)) / sigma_x
-    B = (y - (1 / U85r) * (np.exp(l235U * t) - 1) /
-         (np.exp(l238U * t) - 1)) / sigma_y
+    B = (y - (1 / U85r) * (np.exp(l235U * t) - 1) / (np.exp(l238U * t) - 1)) / sigma_y
     # eq(5)
-    S = np.sum((A ** 2 + B ** 2 - 2 * A * B * rho_xy) / (1 - rho_xy ** 2))
+    S = np.sum((A**2 + B**2 - 2 * A * B * rho_xy) / (1 - rho_xy**2))
     return S
 
 
-def ConcAgeConv(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
+def ConcAgeConv(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0**6, conf=0.95):
     X_bar, Y_bar, MSWD_bar, sigma_X_bar, sigma_Y_bar, cov_XY_bar = twoWM(
         Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, conf
     )
     rho_XY_bar = cov_XY_bar / (sigma_X_bar * sigma_Y_bar)
     T_leastsq = optimize.leastsq(
-        FitFuncConv, Tinit, args=(
-            X_bar, Y_bar, sigma_X_bar, sigma_Y_bar, rho_XY_bar)
+        FitFuncConv, Tinit, args=(X_bar, Y_bar, sigma_X_bar, sigma_Y_bar, rho_XY_bar)
     )[0][0]
     # eq(3)
-    oi = np.linalg.inv([[sigma_X_bar ** 2, cov_XY_bar],
-                       [cov_XY_bar, sigma_Y_bar ** 2]])
+    oi = np.linalg.inv([[sigma_X_bar**2, cov_XY_bar], [cov_XY_bar, sigma_Y_bar**2]])
     # eq(14)
     Q235 = l235U * np.exp(l235U * T_leastsq)
     Q238 = l238U * np.exp(l238U * T_leastsq)
     # eq(13)
-    QQ = (Q235 ** 2 * oi[0][0] + Q238 ** 2 * oi[1][1] + 2 * Q235 * Q238 * oi[0][1]) ** (
+    QQ = (Q235**2 * oi[0][0] + Q238**2 * oi[1][1] + 2 * Q235 * Q238 * oi[0][1]) ** (
         -1
     )
     T_1sigma = np.sqrt(QQ)
     T_sigma = stats.norm.ppf(conf + (1 - conf) / 2.0) * T_1sigma
-    S_bar = FitFuncConv(T_leastsq, X_bar, Y_bar,
-                        sigma_X_bar, sigma_Y_bar, rho_XY_bar)
+    S_bar = FitFuncConv(T_leastsq, X_bar, Y_bar, sigma_X_bar, sigma_Y_bar, rho_XY_bar)
     S = FitFuncConv(T_leastsq, Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi)
 
     df_concordance = 1
@@ -521,7 +510,7 @@ def ConcAgeConv(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
 
 
 # Tera-Wasserburg concordia age
-def ConcAgeTW(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
+def ConcAgeTW(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0**6, conf=0.95):
 
     x = Xi  # eq. (21) = 1/(np.exp(l238U * t) - 1)
     # eq. (22) = 1/U85r * (np.exp(l235U * t) - 1)/(np.exp(l238U * t) - 1)
@@ -535,33 +524,27 @@ def ConcAgeTW(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0 ** 6, conf=0.95):
     )
     rho_xy_bar = cov_xy_bar / (sigma_x_bar * sigma_y_bar)
     T_leastsq = optimize.leastsq(
-        FitFuncTW, Tinit, args=(
-            x_bar, y_bar, sigma_x_bar, sigma_y_bar, rho_xy_bar)
+        FitFuncTW, Tinit, args=(x_bar, y_bar, sigma_x_bar, sigma_y_bar, rho_xy_bar)
     )[0][0]
     # eq(3)
-    oi = np.linalg.inv([[sigma_x_bar ** 2, cov_xy_bar],
-                       [cov_xy_bar, sigma_y_bar ** 2]])
+    oi = np.linalg.inv([[sigma_x_bar**2, cov_xy_bar], [cov_xy_bar, sigma_y_bar**2]])
     # modified from eq(14) using eq(10, 11)
     # A and B are derivative of x(t) and y(t), respectively.
-    A = -l238U * np.exp(l238U * T_leastsq) / \
-        (np.exp(l238U * T_leastsq) - 1) ** 2
+    A = -l238U * np.exp(l238U * T_leastsq) / (np.exp(l238U * T_leastsq) - 1) ** 2
     B = (
         1
         / U85r
         * (
             l235U * np.exp(l235U * T_leastsq) * (np.exp(l238U * T_leastsq) - 1)
-            - l238U * np.exp(l238U * T_leastsq) *
-            (np.exp(l235U * T_leastsq) - 1)
+            - l238U * np.exp(l238U * T_leastsq) * (np.exp(l235U * T_leastsq) - 1)
         )
         / (np.exp(l238U * T_leastsq) - 1) ** 2
     )
     # eq(13)
-    QQtw = (A ** 2 * oi[0][0] + B ** 2 * oi[1]
-            [1] + 2 * A * B * oi[0][1]) ** (-1)
+    QQtw = (A**2 * oi[0][0] + B**2 * oi[1][1] + 2 * A * B * oi[0][1]) ** (-1)
     T_1sigma = np.sqrt(QQtw)
     T_sigma = stats.norm.ppf(conf + (1 - conf) / 2.0) * T_1sigma
-    S_bar = FitFuncTW(T_leastsq, x_bar, y_bar,
-                      sigma_x_bar, sigma_y_bar, rho_xy_bar)
+    S_bar = FitFuncTW(T_leastsq, x_bar, y_bar, sigma_x_bar, sigma_y_bar, rho_xy_bar)
     S = FitFuncTW(T_leastsq, x, y, sigma_x, sigma_y, rhoxy)
 
     df_concordance = 1.0
@@ -600,8 +583,7 @@ def FitFuncSI_LS(parameter, x, y):
 # Calculate slope (b) and intercept (b) by leastsq
 def SlopeIntercept_LS(x, y):
     init_ab = [0.0, 0.0]
-    result = optimize.leastsq(FitFuncSI_LS, init_ab,
-                              args=(x, y), full_output=1)
+    result = optimize.leastsq(FitFuncSI_LS, init_ab, args=(x, y), full_output=1)
     parameter_optimal = result[0]
     return (parameter_optimal[1], parameter_optimal[0], result)
 
@@ -615,7 +597,7 @@ def SlopeIntercept_LS(x, y):
 # Number of equations corresponds with those in York (1969)
 def Fit_XYZ(b, x, y, wx, wy, r):
     # eq(2)
-    z = wx * wy / (b ** 2 * wy + wx - 2.0 * b * r * np.sqrt(wx * wy))
+    z = wx * wy / (b**2 * wy + wx - 2.0 * b * r * np.sqrt(wx * wy))
     # eq(4)
     x_bar = np.sum(z * x) / np.sum(z)
     y_bar = np.sum(z * y) / np.sum(z)
@@ -628,14 +610,14 @@ def Fit_XYZ(b, x, y, wx, wy, r):
 def FitFuncSI(b, X, Y, wx, wy, r, case):
     X_bar, Y_bar, Z, S = Fit_XYZ(b, X, Y, wx, wy, r)
     (U, V) = (X - X_bar, Y - Y_bar)  # eq(4) in York1969epsl
-    A = np.sum(Z ** 2 * ((U * V / wx) - (r * U ** 2) / np.sqrt(wx * wy)))
-    B = np.sum(Z ** 2 * ((U ** 2 / wy) - (V ** 2) / wx))
-    C = np.sum(Z ** 2 * ((U * V / wy) - (r * V ** 2) / np.sqrt(wx * wy)))
+    A = np.sum(Z**2 * ((U * V / wx) - (r * U**2) / np.sqrt(wx * wy)))
+    B = np.sum(Z**2 * ((U**2 / wy) - (V**2) / wx))
+    C = np.sum(Z**2 * ((U * V / wy) - (r * V**2) / np.sqrt(wx * wy)))
     if case == 1:
         # eq(2) in Titterington1979chemg
-        S = (-B + np.sqrt(B ** 2 + 4 * A * C)) / (2 * A) - b
+        S = (-B + np.sqrt(B**2 + 4 * A * C)) / (2 * A) - b
     else:
-        S = (-B - np.sqrt(B ** 2 + 4 * A * C)) / (2 * A) - b
+        S = (-B - np.sqrt(B**2 + 4 * A * C)) / (2 * A) - b
     return S
 
 
@@ -647,12 +629,10 @@ def SlopeIntercept(x, y, sigma_x, sigma_y, rho_xy, case):
 
     # compare two solutions of b
     if case == 1:
-        bi1 = optimize.leastsq(FitFuncSI, init_b, args=(
-            x, y, wx, wy, rho_xy, case))[0][0]
+        bi1 = optimize.leastsq(FitFuncSI, init_b, args=(x, y, wx, wy, rho_xy, case))[0][0]
         X_bar1, Y_bar1, Z1, S1 = Fit_XYZ(bi1, x, y, wx, wy, rho_xy)
     else:
-        bi2 = optimize.leastsq(FitFuncSI, init_b, args=(
-            x, y, wx, wy, rho_xy, case))[0][0]
+        bi2 = optimize.leastsq(FitFuncSI, init_b, args=(x, y, wx, wy, rho_xy, case))[0][0]
         X_bar2, Y_bar2, Z2, S2 = Fit_XYZ(bi2, x, y, wx, wy, rho_xy)
 
     # Compare the residuals between two solituion
@@ -670,8 +650,7 @@ def SlopeIntercept(x, y, sigma_x, sigma_y, rho_xy, case):
     # Appendix in Titterngton1979chemg
     sigma_bi = np.sqrt(1.0 / np.sum(Z * (x - X_bar) ** 2))
     # sigma_ai = np.sqrt(np.sum(x**2*Z)/(np.sum(Z)*np.sum(Z*(x-X_bar)**2)))
-    sigma_ai = np.sqrt(1.0 / np.sum(Z) + X_bar ** 2 *
-                       sigma_bi ** 2)  # York2004ajp
+    sigma_ai = np.sqrt(1.0 / np.sum(Z) + X_bar**2 * sigma_bi**2)  # York2004ajp
     return (X_bar, Y_bar, ai, bi, sigma_ai, sigma_bi)
 
 
@@ -685,7 +664,7 @@ def SIsigma(x, x_bar, y_bar, b, sigma_a, sigma_b, conf=0.95):
     # eq(29)
     sigma_a2 = stats.norm.ppf(conf + (1 - conf) / 2.0) * sigma_a
     sigma_b2 = stats.norm.ppf(conf + (1 - conf) / 2.0) * sigma_b
-    sigma2 = np.sqrt(sigma_a2 ** 2.0 + sigma_b2 ** 2.0 * x * (x - 2.0 * x_bar))
+    sigma2 = np.sqrt(sigma_a2**2.0 + sigma_b2**2.0 * x * (x - 2.0 * x_bar))
     return sigma2
 
 
@@ -694,13 +673,12 @@ def SIsigma2(x, x_bar, y_bar, b, sigma_a, sigma_b, conf=0.95):
     dtheta = sigma_b * np.cos(np.arctan(b)) ** 2.0
     b2 = (np.tan(np.arctan(b) + dtheta) + np.tan(np.arctan(b) - dtheta)) / 2.0
     a2 = y_bar - b2 * x_bar
-    sigma_b2 = (np.tan(np.arctan(b) + dtheta) -
-                np.tan(np.arctan(b) - dtheta)) / 2.0
+    sigma_b2 = (np.tan(np.arctan(b) + dtheta) - np.tan(np.arctan(b) - dtheta)) / 2.0
     sigma_a2 = sigma_a + (sigma_b2 - sigma_b) * x_bar
     sigma_b2 = stats.norm.ppf(conf + (1 - conf) / 2.0) * sigma_b2
     sigma_a2 = stats.norm.ppf(conf + (1 - conf) / 2.0) * sigma_a2
     # eq(31)
-    sigma2 = np.sqrt(sigma_a2 ** 2 + sigma_b2 ** 2.0 * x * (x - 2.0 * x_bar))
+    sigma2 = np.sqrt(sigma_a2**2 + sigma_b2**2.0 * x * (x - 2.0 * x_bar))
     return (a2, sigma_a2, b2, sigma_b2, sigma2)
 
 
@@ -800,7 +778,7 @@ def calc_chi2_red(x, s1, wm, n, opt):
     # s1: errors (1 sigma) of each sample
     # wm: weighted mean age
     # n: number of sample
-    chi2_red = 1 / (n - 1) * np.sum((x - wm) ** 2 / s1 ** 2)
+    chi2_red = 1 / (n - 1) * np.sum((x - wm) ** 2 / s1**2)
     error_min = 1 - 2 * np.sqrt(2 / (n - 1))
     error_max = 1 + 2 * np.sqrt(2 / (n - 1))
     if (chi2_red <= error_max) & (chi2_red >= error_min):
@@ -911,7 +889,7 @@ def legend_data_number(ax, axn, x, y, ind, ctype):
 
 # ------------------------------------------------
 # plot data points
-def plot_data_point(ax, X, Y, ind, outd, outd_disc):
+def plot_data_point(ax, X, Y, ind, outd_ex, outd_disc):
     for i in range(len(X)):
         if i in ind:
             ax.plot(
@@ -935,7 +913,7 @@ def plot_data_point(ax, X, Y, ind, outd, outd_disc):
                 markeredgecolor=dp2_marker_ec,
                 markeredgewidth=dp2_marker_ew,
             )
-        else:
+        elif i in outd_ex:
             ax.plot(
                 X[i],
                 Y[i],
@@ -1112,19 +1090,19 @@ def print_discordant_data(tdisc, odisc, pdisc, sigma):
 
 
 def calc_t75(r):
-    """ Calculation for 207Pb/235U age."""
+    """Calculation for 207Pb/235U age."""
     t = 1 / l235U * np.log(r + 1)
     return t
 
 
 def calc_t68(r):
-    """ Calculation for 207Pb/235U age."""
+    """Calculation for 207Pb/235U age."""
     t = 1 / l238U * np.log(r + 1)
     return t
 
 
 def func_t76(t, r):
-    """ Function for calc_t76."""
+    """Function for calc_t76."""
     res = abs(U85r * r - (np.exp(l235U * t) - 1) / (np.exp(l238U * t) - 1))
     return res
 
@@ -1144,8 +1122,7 @@ def calc_t76(r76):
 def func_t68diseq(t, r):
     F = abs(
         (np.exp(l238U * t) - 1)
-        + l238U / l230Th * (f_Th_U - 1) *
-        (1 - np.exp(-l230Th * t)) * np.exp(l238U * t)
+        + l238U / l230Th * (f_Th_U - 1) * (1 - np.exp(-l230Th * t)) * np.exp(l238U * t)
         - r
     )
     return F
@@ -1154,8 +1131,7 @@ def func_t68diseq(t, r):
 def func_t75diseq(t, r):
     F = abs(
         (np.exp(l235U * t) - 1)
-        + l235U / l231Pa * (f_Pa_U - 1) *
-        (1 - np.exp(-l231Pa * t)) * np.exp(l235U * t)
+        + l235U / l231Pa * (f_Pa_U - 1) * (1 - np.exp(-l231Pa * t)) * np.exp(l235U * t)
         - r
     )
     return F
@@ -1245,8 +1221,7 @@ def calc_t76diseq(R68m, R76m):
 def func_Pb76c(t1):
     "Calculate common 207Pb/206Pb at t1 age"
     Pb64c_t1 = Pb64i + U8Pb4 * (np.exp(l238U * t2nd) - np.exp(l238U * t1))
-    Pb74c_t1 = Pb74i + U8Pb4 / U85r * \
-        (np.exp(l235U * t2nd) - np.exp(l235U * t1))
+    Pb74c_t1 = Pb74i + U8Pb4 / U85r * (np.exp(l235U * t2nd) - np.exp(l235U * t1))
     Pb76c0 = Pb74c_t1 / Pb64c_t1
     return Pb76c0
 
@@ -1307,7 +1282,7 @@ def func_corPb76c(r68, r75, r76):
 # ------------------------------------------------
 # draw error ellipses of data points
 def plot_data_point_error_ellipse_disc(
-    ax, axn, X, Y, sigma_X, sigma_Y, cov_XY, cr, ind, outd, outd_disc, line
+    ax, axn, X, Y, sigma_X, sigma_Y, cov_XY, cr, ind, outd_ex, outd_disc, line
 ):
     for i in range(len(X)):
         dp_ell_x, dp_ell_y = myEllipse(
@@ -1320,7 +1295,7 @@ def plot_data_point_error_ellipse_disc(
             conf=cr,
         )
 
-        if i in outd:
+        if i in outd_ex:
             ax[axn].fill(
                 dp_ell_x,
                 dp_ell_y,
@@ -1357,10 +1332,8 @@ def plot_data_point_error_ellipse_disc(
 # ------------------------------------------------
 # draw error ellipses of data points
 def plot_data_point_error_ellipse(
-    ax, axn, X, Y, sigma_X, sigma_Y, cov_XY, cr, ind, outd, outd_disc
+    ax, axn, X, Y, sigma_X, sigma_Y, cov_XY, cr, ind, outd_ex, outd_disc
 ):
-
-    outd2 = np.setdiff1d(outd, outd_disc)
 
     for i in range(len(X)):
         dp_ell_x, dp_ell_y = myEllipse(
@@ -1372,8 +1345,7 @@ def plot_data_point_error_ellipse(
             cov_XY[i],
             conf=cr,
         )
-
-        if i in outd2:
+        if i in outd_ex:
             ax[axn].fill(
                 dp_ell_x,
                 dp_ell_y,
@@ -1437,7 +1409,7 @@ def plot_2D_wm(ax, axn, X, Y, sigma_X, sigma_Y, rho_XY, cr, legend_pos_x, legend
     ax[axn].text(
         legend_pos_x,
         legend_pos_y,
-        u"2D weighted mean [%d$\sigma$] (MSWD=%s)"
+        "2D weighted mean [%d$\sigma$] (MSWD=%s)"
         % (int(stats.norm.ppf(cr + (1 - cr) / 2.0)), format(MSWDwm, dignum)),
         transform=ax[axn].transAxes,
         verticalalignment="top",
@@ -1479,7 +1451,7 @@ def concordia_age(ctype, X, Y, sigma_X, sigma_Y, rho_XY, cr):
 
     conf95 = calc_conf95_errors(len(X) - 2, S_lsq, MSWDcomb, cr)
     print(
-        u"    Concordia age = %s ± %s [%dσ] / ± %s [tσ√MSWD] %s"
+        "    Concordia age = %s ± %s [%dσ] / ± %s [tσ√MSWD] %s"
         % (
             format(T_lsq / age_unit, dignum),
             format(S_lsq / age_unit, dignum),
@@ -1521,7 +1493,7 @@ def plot_concordia_age(
     ax[axn].text(
         legend_pos_x,
         legend_pos_y,
-        u"Concordia age = %s ± %s %s [%d$\sigma$]"
+        "Concordia age = %s ± %s %s [%d$\sigma$]"
         % (
             format(T_lsq / age_unit, dignum),
             format(S_lsq / age_unit, dignum),
@@ -1627,7 +1599,7 @@ def plot_concordia_intercept_age(
         ax[axn].text(
             legend_pos_x,
             legend_pos_y,
-            u"Intercept age = %s +%s -%s %s [%d$\sigma$]"
+            "Intercept age = %s +%s -%s %s [%d$\sigma$]"
             % (
                 format(tsi1[0], dignum),
                 format(tsi1[1] - tsi1[0], dignum),
@@ -1712,10 +1684,17 @@ def select_age_type(age_type):
 # ------------------------------------------------
 # Plot one-dimensional weighted mean, SD, and MSWD
 def plot_oneD_weighted_mean(
-    ax_1D, oneD_age_type, Tall, s1, ind, outd, outd_disc, cr, legend_pos_x, legend_pos_y
+    ax_1D,
+    oneD_age_type,
+    Tall,
+    s1,
+    ind,
+    outd_ex,
+    outd_disc,
+    cr,
+    legend_pos_x,
+    legend_pos_y,
 ):
-
-    outd2 = np.setdiff1d(outd, outd_disc)
 
     if oneD_yaxis_log == 1:
         ax_1D.set_yscale("log")
@@ -1724,8 +1703,7 @@ def plot_oneD_weighted_mean(
 
     if opt_oneD_wm:
         # confidence band of the weighted mean
-        ax_1D.axhspan(Twm - sm, Twm + sm, facecolor=oneD_band_fc,
-                      alpha=oneD_band_alpha)
+        ax_1D.axhspan(Twm - sm, Twm + sm, facecolor=oneD_band_fc, alpha=oneD_band_alpha)
 
         # plot 1D weighted mean
         ax_1D.plot(
@@ -1755,7 +1733,7 @@ def plot_oneD_weighted_mean(
                 yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
                 ecolor=dp1_bar_color,
                 linewidth=dp1_bar_line_width,
-                label='Accepted data' if n == np.min(ind) else ''
+                label="Accepted data" if n == np.min(ind) else "",
             )
             eb1[-1][0].set_linestyle(dp1_bar_line_style)
             ind_sort.append(n)
@@ -1766,18 +1744,18 @@ def plot_oneD_weighted_mean(
                 yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
                 ecolor=dp2_bar_color,
                 linewidth=dp2_bar_line_width,
-                label='Discordant data' if n == np.min(outd_disc) else ''
+                label="Discordant data" if n == np.min(outd_disc) else "",
             )
             eb2[-1][0].set_linestyle(dp2_bar_line_style)
             outd_disc_sort.append(n)
-        else:
+        elif len(np.intersect1d(i, outd_ex)) > 0:
             eb0 = ax_1D.errorbar(
                 n + 1,
                 t,
                 yerr=stats.norm.ppf(cr + (1 - cr) / 2.0) * s1[i],
                 ecolor=dp0_bar_color,
                 linewidth=dp0_bar_line_width,
-                label='Rejected data' if n == np.min(outd2) else ''
+                label="Rejected data" if n == np.min(outd_ex) else "",
             )
             eb0[-1][0].set_linestyle(dp0_bar_line_style)
             outd_sort.append(n)
@@ -1785,13 +1763,11 @@ def plot_oneD_weighted_mean(
     # plot data point
     if opt_data_point:
         plot_data_point(
-            ax_1D, np.where(Tall)[0] +
-            1, Tplot, ind_sort, outd_sort, outd_disc_sort
+            ax_1D, np.where(Tall)[0] + 1, Tplot, ind_sort, outd_sort, outd_disc_sort
         )
 
     # legend
-    legend_data_number(
-        ax, axn, legend_pos_x[0], legend_pos_y[0], ind, ctype="conv")
+    legend_data_number(ax, axn, legend_pos_x[0], legend_pos_y[0], ind, ctype="conv")
 
     oneD_xticks = np.arange(1, len(Tall) + 1, 1)
     ax_1D.set_xticks(oneD_xticks)
@@ -1803,7 +1779,7 @@ def plot_oneD_weighted_mean(
         ax_1D.text(
             legend_pos_x[0],
             legend_pos_y[legend_pos],
-            u"Weighted mean = %s ± %s %s [%d$\sigma$] (MSWD = %s)"
+            "Weighted mean = %s ± %s %s [%d$\sigma$] (MSWD = %s)"
             % (
                 format(Twm, dignum),
                 format(sm, dignum),
@@ -1825,8 +1801,7 @@ def plot_oneD_weighted_mean(
         fontsize=legend_font_size,
     )
 
-    chi2_red, res_chi2_red = calc_chi2_red(
-        Tall[ind], s1[ind], Twm, len(ind), opt=0)
+    chi2_red, res_chi2_red = calc_chi2_red(Tall[ind], s1[ind], Twm, len(ind), opt=0)
 
     ax_1D.text(
         legend_pos_x[0],
@@ -1839,7 +1814,7 @@ def plot_oneD_weighted_mean(
 
     conf95 = calc_conf95_errors(len(Tall[ind]) - 1, sm, MSWD, cr)
     print(
-        u"    1D weighted mean age = %s ± %s [%dσ] / ± %s [tσ√MSWD] %s (MSDW=%s)"
+        "    1D weighted mean age = %s ± %s [%dσ] / ± %s [tσ√MSWD] %s (MSDW=%s)"
         % (
             format(Twm, dignum),
             format(sm, dignum),
@@ -1858,15 +1833,14 @@ def plot_oneD_weighted_mean(
 # Descriminating between metamorphic and igneous origins
 # Uncetainty in Th/U is assumed to be ± 10%
 def plot_Th_U(
-    axb, Th_U, Th_U_e, Tall, s1, ind, outd, outd_disc, cr, range_hist_x, range_hist_y2
+    axb, Th_U, Th_U_e, Tall, s1, ind, outd_ex, outd_disc, cr, range_hist_x, range_hist_y2
 ):
     axb.set_xlim(range_hist_x[0], range_hist_x[1])
     axb.set_ylim(range_hist_y2[0], range_hist_y2[1])
     axb.set_ylabel("Th/U", fontsize=legend_font_size + 4)
-    outd2 = np.setdiff1d(outd, outd_disc)
 
     for i in range(len(Tall)):
-        if i in outd2:
+        if i in outd_ex:
             eb0 = axb.errorbar(
                 Tall[i],
                 Th_U[i],
@@ -1899,7 +1873,7 @@ def plot_Th_U(
 
     # plot data point
     if opt_data_point:
-        plot_data_point(axb, Tall, Th_U, ind, outd, outd_disc)
+        plot_data_point(axb, Tall, Th_U, ind, outd_ex, outd_disc)
 
 
 # ------------------------------------------------
@@ -1938,7 +1912,8 @@ def makefigures(pd):
         if opt_correct_common_Pb:
             figtitle += " (correct common Pb)"
 
-    fig.canvas.set_window_title("%s" % figtitle)
+    # fig.canvas.set_window_title("%s" % figtitle)  # Matplotlib 3.3
+    fig.canvas.manager.set_window_title("%s" % figtitle)  # Matplotlib > 3.4
     fig.suptitle("%s" % figtitle)
 
     return (fig, ax)
@@ -1956,6 +1931,8 @@ def plot_kde(ax_kde, rx, x, ii):
 
     kde_all = stats.gaussian_kde(x)
     xi = x[ii]
+    if np.min(xi) > rx[1] or np.max(xi) < rx[0]:
+        sys.exit("ERROR: Set an appropriate range of range_hist_x.")
     xi = xi[(xi > rx[0]) & (xi < rx[1])]
     kde = stats.gaussian_kde(xi)
 
@@ -1983,7 +1960,7 @@ def plot_hist(ax_hist, T, ii, od, oo):
     # T = Tall
     # ii = ind
     # od = outd_disc
-    # oo = outd
+    # oo = outd_ex
     ax_hist.set_ylabel("Number of samples", fontsize=legend_font_size + 4)
     n, bins, rects = ax_hist.hist(
         (T[ii], T[od], T[oo]),
@@ -2008,10 +1985,8 @@ def func_plot_diagrams(plot_diagrams, ptype):
             axn_title = "a"
         print("------------------------------------------------------------")
         print(("%s: Conventional concordia diagram") % axn_title)
-        ax[axn].set_xlabel("$^{207}$Pb* / $^{235}$U",
-                           fontsize=legend_font_size + 4)
-        ax[axn].set_ylabel("$^{206}$Pb* / $^{238}$U",
-                           fontsize=legend_font_size + 4)
+        ax[axn].set_xlabel("$^{207}$Pb* / $^{235}$U", fontsize=legend_font_size + 4)
+        ax[axn].set_ylabel("$^{206}$Pb* / $^{238}$U", fontsize=legend_font_size + 4)
 
     if ptype == "tw":
         if plot_diagrams[0] == 1:
@@ -2024,10 +1999,8 @@ def func_plot_diagrams(plot_diagrams, ptype):
             else:
                 axn_title = "a"
         print(("%s: Tera-Wasserburg concordia diagram") % axn_title)
-        ax[axn].set_xlabel("$^{238}$U / $^{206}$Pb*",
-                           fontsize=legend_font_size + 4)
-        ax[axn].set_ylabel("$^{207}$Pb* / $^{206}$Pb*",
-                           fontsize=legend_font_size + 4)
+        ax[axn].set_xlabel("$^{238}$U / $^{206}$Pb*", fontsize=legend_font_size + 4)
+        ax[axn].set_ylabel("$^{207}$Pb* / $^{206}$Pb*", fontsize=legend_font_size + 4)
 
     if ptype == "oneD":
         if np.sum(plot_diagrams[0:2]) == 2:
@@ -2070,6 +2043,14 @@ def func_plot_diagrams(plot_diagrams, ptype):
 if __name__ == "__main__":
 
     parser = OptionParser()
+    parser.add_option(
+        "-D",
+        "--debug",
+        help="Turn on/off debug",
+        default=1,
+        action="store_true",
+        dest="opt_debug",
+    )
     parser.add_option(
         "-i",
         "--in",
@@ -2291,12 +2272,10 @@ if __name__ == "__main__":
     disc_thres = config.getfloat("File", "discordance_percent_threshold")
     disc_type = config.getint("File", "disc_type")
     opt_outlier = config.getboolean("File", "opt_outlier")  # exclude outlier
-    outlier_alpha = config.getfloat(
-        "File", "outlier_alpha")  # significant level
+    outlier_alpha = config.getfloat("File", "outlier_alpha")  # significant level
     exclude_data_points = loads(config.get("File", "exclude_data_points"))
     opt_Th_U = config.getboolean("File", "opt_Th_U")
-    opt_correct_disequilibrium = config.getboolean(
-        "File", "opt_correct_disequilibrium")
+    opt_correct_disequilibrium = config.getboolean("File", "opt_correct_disequilibrium")
     f_Th_U = config.getfloat("File", "f_Th_U")
     f_Pa_U = config.getfloat("File", "f_Pa_U")
     opt_correct_common_Pb = config.getboolean("File", "opt_correct_common_Pb")
@@ -2313,8 +2292,7 @@ if __name__ == "__main__":
     range_automatic_cc = config.getboolean("Graph", "range_automatic_cc")
     range_xy_cc = loads(config.get("Graph", "range_xy_cc"))  # [[0,6],[0,0.35]]
     range_automatic_twc = config.getboolean("Graph", "range_automatic_twc")
-    range_xy_tw = loads(config.get("Graph", "range_xy_tw")
-                        )  # [[xmin,xmax],[ymin,ymax]]
+    range_xy_tw = loads(config.get("Graph", "range_xy_tw"))  # [[xmin,xmax],[ymin,ymax]]
     opt_data_point = config.getboolean("Graph", "opt_data_point")
     dp0_marker_type = config.get("Graph", "dp0_marker_type")  # = 'o'
     dp0_marker_size = config.getfloat("Graph", "dp0_marker_size")  # = 7
@@ -2367,8 +2345,7 @@ if __name__ == "__main__":
     ca_marker_ec = config.get("Graph", "ca_marker_edge_color")  # black
     ca_marker_ew = config.getfloat("Graph", "ca_marker_edge_width")  # 1.0
     ca_mswd = config.getint("Graph", "ca_mswd")  # 0, 1, or 2
-    opt_concordia_ia = config.getboolean(
-        "Graph", "opt_concordia_intercept_age")
+    opt_concordia_ia = config.getboolean("Graph", "opt_concordia_intercept_age")
     ia_line_width = config.getfloat("Graph", "ia_line_width")  # 1
     ia_line_color = config.get("Graph", "ia_line_color")  # blue
     ia_sigma = config.getfloat("Graph", "ia_sigma")  # 2
@@ -2418,10 +2395,10 @@ if __name__ == "__main__":
 
     # Define age unit
     if age_unit_name == "ka":
-        age_unit = 10 ** 3
+        age_unit = 10**3
         time = time_ka
     else:
-        age_unit = 10 ** 6
+        age_unit = 10**6
         time = time_ma
 
     # ################################################
@@ -2569,10 +2546,10 @@ if __name__ == "__main__":
     Sy = sigma_y / y
 
     # error correlation
-    rho_XY = (SX ** 2 + SY ** 2 - Sy ** 2) / (2 * SX * SY)
+    rho_XY = (SX**2 + SY**2 - Sy**2) / (2 * SX * SY)
     # rho_xy = (SY**2-SX**2*rho_XY)/Sy # Equation in p. 27 of Ludwig2012
     # rho_xy = (SY ** 2 - SX * SY * rho_XY) / (Sx * Sy) # A13 in Noda2017bgsj
-    rho_xy = (Sx ** 2 + Sy ** 2 - SX ** 2) / (2 * Sx * Sy)
+    rho_xy = (Sx**2 + Sy**2 - SX**2) / (2 * Sx * Sy)
 
     # covariance
     cov_XY = rho_XY * sigma_X * sigma_Y
@@ -2627,14 +2604,13 @@ if __name__ == "__main__":
     # Initialize list
     ind = np.array(range(len(x)))  # inliers
     outd_disc = []  # discordants
-    outd = []  # outliers
+    outd_ex = []  # outliers
 
     # ------------------------------------------------
     # Data points of additional exclusion
-    excluded_points = [i-1 for i in exclude_data_points if i is not None]
+    excluded_points = [i - 1 for i in exclude_data_points if i is not None]
     if excluded_points:
         outd_ex = np.unique(excluded_points)
-        ind_ex = np.delete(ind, outd)
     else:
         outd_ex = []
 
@@ -2664,16 +2640,17 @@ if __name__ == "__main__":
             )
             # # outd_disc = np.where((np.abs(disc_percent) >= disc_thres) | (disc_percent < 0))
             # if np.max(disc_percent) >= disc_thres:
+
+            # ind: concordant data (accepted)
+            # outd_ex: concordant data (manually excluded)
+            # outd_disc: discordant data (rejected)
+
             outd_disc = np.where(np.abs(disc_percent) >= disc_thres)[0]
-            outd = np.append(outd_disc, outd_ex)
-            outd = np.unique(outd)
-            # ind = np.delete(ind, outd)
-            ind = np.setdiff1d(ind, outd)
+            outd_ex = np.setdiff1d(outd_ex, outd_disc)
+            ind = np.setdiff1d(np.setdiff1d(ind, outd_disc), outd_ex)
     else:
         outd_disc = []
         ind = np.delete(ind, outd_ex)
-
-    print("ind = ", ind)
 
     # ################################################
     # List of the configurations
@@ -2732,8 +2709,7 @@ if __name__ == "__main__":
                 "Discordant data means that the error ellipses do not intersect the concordia line."
             )
         else:
-            print_discordant_data(disc_type, outd_disc,
-                                  disc_percent, input_error_sigma)
+            print_discordant_data(disc_type, outd_disc, disc_percent, input_error_sigma)
 
     else:
         print("Discordant data are not excluded from calculation")
@@ -2746,13 +2722,11 @@ if __name__ == "__main__":
     # Check correlation coefficient
     if rho_XY[ind].max() > 1:
         print("Correlation coefficient: rho_XY")
-        [print("%d %.2f" % (i, rho_XY[i]))
-         for i in range(len(rho_XY)) if rho_XY[i] > 1]
+        [print("%d %.2f" % (i, rho_XY[i])) for i in range(len(rho_XY)) if rho_XY[i] > 1]
         sys.exit("rho_XY is more than 1")
     elif rho_xy[ind].max() > 1:
         print("Correlation coefficient: rho_xy")
-        [print("%d %.2f" % (i, rho_xy[i]))
-         for i in range(len(rho_xy)) if rho_xy[i] > 1]
+        [print("%d %.2f" % (i, rho_xy[i])) for i in range(len(rho_xy)) if rho_xy[i] > 1]
         sys.exit("rho_xy is more than 1")
 
     # ################################################
@@ -2823,28 +2797,24 @@ if __name__ == "__main__":
 
         if len(ii) > 0:
             ind = ii
-            print("Concordants (accepted) are ", end=" ")
-            print(ind + 1)
-        if len(oo) > 0:
-            outd = np.unique(np.append(outd, oo))
-            print("Concordants (excluded) are ", end=" ")
-            print(outd + 1)
+            ind2 = np.setdiff1d(ind, outd_ex).astype(np.int32)
+            print("Concordants (accepted) are ", np.sort(ind2 + 1))
         if len(outd_disc) > 0:
-            print("Discordants are ", end=" ")
-            print(outd_disc + 1)
+            print("Discordants are ", np.sort(outd_disc + 1))
+        if len(oo) > 0:
+            outd_ex = np.unique(np.append(outd_ex, oo))
+            print("Concordants (excluded) are ", np.sort(outd_ex + 1))
     else:
-        print("Concordants (accepted) are ", end=" ")
-        print(ind)
-        print("Concordants (excluded) are ", end=" ")
-        print(outd)
-        print("Discordants are ", end=" ")
-        print(outd_disc)
+        ind2 = np.setdiff1d(ind, outd_ex).astype(np.int32)
+        outd_ex = np.setdiff1d(outd_ex, outd_disc).astype(np.int32)
+        print("Concordants (accepted) are ", ind2 + 1)
+        print("Concordants (excluded) are ", outd_ex + 1)
+        print("Discordants are ", outd_disc + 1)
 
     # excluded data points
-    if excluded_points:
-        # print('Manually excluded data points are'),  # python2
-        print("Manually excluded data points are", end=" ")  # python3
-        print(excluded_points)
+    # print('Manually excluded data points are'),  # python2
+    print("Manually excluded data points are", end=" ")  # python3
+    print(np.sort(outd_ex + 1))
 
     # ------------------------------------------------
     # Number of data points
@@ -2884,8 +2854,7 @@ if __name__ == "__main__":
 
         # draw error ellipses
         if opt_data_point_ee:
-            print("    Error ellipses are %d%% for data points" %
-                  (dp_ee_cr * 100))
+            print("    Error ellipses are %d%% for data points" % (dp_ee_cr * 100))
 
             if disc_type == 5:
                 line_cc = [[Xconv[i], Yconv[i]] for i, j in enumerate(Xconv)]
@@ -2899,7 +2868,7 @@ if __name__ == "__main__":
                     cov_XY,
                     dp_ee_cr,
                     ind,
-                    outd,
+                    outd_ex,
                     outd_disc,
                     line_cc,
                 )
@@ -2919,18 +2888,17 @@ if __name__ == "__main__":
                     cov_XY,
                     dp_ee_cr,
                     ind,
-                    outd,
+                    outd_ex,
                     outd_disc,
                 )
 
         # plot data point
         if opt_data_point:
-            plot_data_point(ax[axn], X, Y, ind, outd, outd_disc)
+            plot_data_point(ax[axn], X, Y, ind, outd_ex, outd_disc)
 
         # # weighted mean
         if opt_2D_wm:
-            print("    Error ellipse is %d%% for 2D weighted mean" %
-                  (twm_ee_cr * 100))
+            print("    Error ellipse is %d%% for 2D weighted mean" % (twm_ee_cr * 100))
             legend_pos += 1
             plot_2D_wm(
                 ax,
@@ -3057,7 +3025,7 @@ if __name__ == "__main__":
 
         # plot data point
         if opt_data_point:
-            plot_data_point(ax[axn], x, y, ind, outd, outd_disc)
+            plot_data_point(ax[axn], x, y, ind, outd_ex, outd_disc)
 
         # draw error ellipses
         if opt_data_point_ee:
@@ -3072,7 +3040,7 @@ if __name__ == "__main__":
                     cov_xy,
                     dp_ee_cr,
                     ind,
-                    outd,
+                    outd_ex,
                     outd_disc,
                     line_tw,
                 )
@@ -3092,7 +3060,7 @@ if __name__ == "__main__":
                     cov_xy,
                     dp_ee_cr,
                     ind,
-                    outd,
+                    outd_ex,
                     outd_disc,
                 )
 
@@ -3209,7 +3177,7 @@ if __name__ == "__main__":
         axn, axn_title = func_plot_diagrams(plot_diagrams, ptype="oneD")
         ax[axn].set_xlim([0, N + 1])
         ax[axn].set_ylim(range_oneD_y[0], range_oneD_y[1])
-        ax[axn].set_xlabel("Number of samples", fontsize=legend_font_size + 4)
+        ax[axn].set_xlabel("Sample number", fontsize=legend_font_size + 4)
         Tall, s1, label_selected = select_age_type(oneD_age_type)
         ax[axn].set_ylabel(label_selected, fontsize=legend_font_size + 4)
 
@@ -3223,7 +3191,7 @@ if __name__ == "__main__":
             Tall,
             s1,
             ind,
-            outd,
+            outd_ex,
             outd_disc,
             oneD_cr,
             legend_pos_x,
@@ -3233,16 +3201,14 @@ if __name__ == "__main__":
 
         if opt_correct_common_Pb:
             print(
-                u"    common 207Pb/206Pb = %s (%s %s)"
+                "    common 207Pb/206Pb = %s (%s %s)"
                 % (format(Pb76c_T_owm, ".5f"), format(T_owm, dignum), age_unit_name)
             )
 
         # reduced chi-squared (Spencer2016gf)
-        chi2_red, res_chi2_red = calc_chi2_red(
-            Tall[ind], s1[ind], T_owm, len(ind), opt=1)
+        chi2_red, res_chi2_red = calc_chi2_red(Tall[ind], s1[ind], T_owm, len(ind), opt=1)
         print(
-            u"    Reduced Chi-squared = %s (%s)"
-            % (format(chi2_red, dignum), res_chi2_red)
+            "    Reduced Chi-squared = %s (%s)" % (format(chi2_red, dignum), res_chi2_red)
         )
 
     # ------------------------------------------------
@@ -3266,7 +3232,7 @@ if __name__ == "__main__":
                 Tall,
                 s1,
                 ind,
-                outd,
+                outd_ex,
                 outd_disc,
                 oneD_cr,
                 range_hist_x,
