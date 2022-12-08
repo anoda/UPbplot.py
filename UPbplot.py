@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2022/12/07 15:26:03.
+# Last updated: 2022/12/08 13:26:51.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -391,7 +391,10 @@ def oneWM(X, s1, conf):
     Twm = np.sum(w * X)  # weight mean of age
     S = np.sum((X - Twm) ** 2 / s1**2)  # S
     # Mean Square of the Weighted Deviation
-    MSWD = S / (len(X) - 1)
+    if len(X) > 2:
+        MSWD = S / (len(X) - 1)
+    else:
+        MSWD = 0
     # standard deviation of the weighted mean [eq. 66]
     sm = stats.norm.ppf(conf + (1 - conf) / 2.0) * np.sqrt(1.0 / np.sum(s1 ** (-2)))
 
@@ -432,7 +435,10 @@ def twoWM(Xi, Yi, sXi, sYi, rhoXYi, conf):
     # eq(4)
     S = np.sum(((Ri**2.0) * o11) + ((ri**2.0) * o22) + (2.0 * Ri * ri * o12))
     # eq(8)
-    MSWD = S / (2 * N - 2)
+    if N > 1:
+        MSWD = S / (2 * N - 2)
+    else:
+        MSWD = 0
     # eq(9)
     sigma_x_bar = np.sqrt(np.sum(o22) / (np.sum(o11) * np.sum(o22) - np.sum(o12) ** 2))
     # eq(9)
@@ -488,7 +494,10 @@ def ConcAgeConv(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0**6, conf=0.95):
     S = FitFuncConv(T_leastsq, Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi)
 
     df_concordance = 1
-    df_equivalence = 2 * len(Xi) - 2
+    if len(Xi) > 1:
+        df_equivalence = 2 * len(Xi) - 2
+    else:
+        df_equivalence = 1
     df_combined = df_concordance + df_equivalence
     MSWD_concordance = S_bar / df_concordance
     MSWD_equivalence = S / df_equivalence
@@ -548,7 +557,10 @@ def ConcAgeTW(Xi, Yi, sigma_Xi, sigma_Yi, rhoXYi, Tinit=10.0**6, conf=0.95):
     S = FitFuncTW(T_leastsq, x, y, sigma_x, sigma_y, rhoxy)
 
     df_concordance = 1.0
-    df_equivalence = 2.0 * len(Xi) - 2
+    if len(Xi) > 1:
+        df_equivalence = 2.0 * len(Xi) - 2
+    else:
+        df_equivalence = 1
     df_combined = df_concordance + df_equivalence
     MSWD_concordance = S_bar / df_concordance
     MSWD_equivalence = S / df_equivalence
@@ -712,7 +724,8 @@ def calc_intercept_age(line1, ctype):
             tsi = calc_t68(1 / mp.x) / age_unit
 
     elif mp.geom_type == "MultiPoint":
-        xy = [[float(p.x), float(p.y)] for p in mp]
+        # xy = [[float(p.x), float(p.y)] for p in mp]
+        xy = [[float(p.x), float(p.y)] for p in mp.geoms]  # Shapely > 1.8
         if ctype == "conv":
             for j, pp in enumerate(xy):
                 tsi.append(calc_t68(pp[1]) / age_unit)
@@ -778,19 +791,24 @@ def calc_chi2_red(x, s1, wm, n, opt):
     # s1: errors (1 sigma) of each sample
     # wm: weighted mean age
     # n: number of sample
-    chi2_red = 1 / (n - 1) * np.sum((x - wm) ** 2 / s1**2)
-    error_min = 1 - 2 * np.sqrt(2 / (n - 1))
-    error_max = 1 + 2 * np.sqrt(2 / (n - 1))
-    if (chi2_red <= error_max) & (chi2_red >= error_min):
-        res = "Passed"
+    if n - 1 > 0:
+        chi2_red = 1 / (n - 1) * np.sum((x - wm) ** 2 / s1**2)
+        error_min = 1 - 2 * np.sqrt(2 / (n - 1))
+        error_max = 1 + 2 * np.sqrt(2 / (n - 1))
+        if (chi2_red <= error_max) & (chi2_red >= error_min):
+            res = "Passed"
+        else:
+            res = "Failed"
     else:
+        chi2_red = 0
+        error_min = 0
+        error_max = 0
+        res = "Failed"
         if opt:
             if chi2_red < error_min:
                 res = "Failed, under dispersion or uncertainties overestimated"
             else:
                 res = "Failed, over dispersion or uncertainties underestimated"
-        else:
-            res = "Failed"
     return (chi2_red, res)
 
 
@@ -1263,8 +1281,10 @@ def func_corPb76c(r68, r75, r76):
             x2 = res1.x
             y2 = res1.y
         elif res1.geom_type == "MultiPoint":
-            x2 = res1[1].x
-            y2 = res1[1].y
+            # x2 = res1[1].x      # Shapely < 1.8
+            # y2 = res1[1].y      # Shapely < 1.8
+            x2 = res1.geoms[1].x
+            y2 = res1.geoms[1].y  # Shapely > 1.8
         else:
             print("More than 2 points?")
         f = (y1 - y2) / (y0 - y2) * 100
@@ -1933,12 +1953,8 @@ def plot_kde(ax_kde, rx, x, ii):
     xi = x[ii]
     if np.min(xi) > rx[1] or np.max(xi) < rx[0]:
         sys.exit("ERROR: Set an appropriate range of range_hist_x.")
-    xi = xi[(xi > rx[0]) & (xi < rx[1])]
-    kde = stats.gaussian_kde(xi)
 
     kde_multi_all = len(x)  # replace len(ls) 20190606
-    kde_multi = len(xi)  # replace len(ls) 20190606
-
     ax_kde.plot(
         ls,
         kde_all(ls) * kde_multi_all,
@@ -1946,13 +1962,19 @@ def plot_kde(ax_kde, rx, x, ii):
         color=kde_line_color,
         linewidth=kde_line_width,
     )
-    ax_kde.plot(
-        ls,
-        kde(ls) * kde_multi,
-        linestyle="-",
-        color=kde_line_color,
-        linewidth=kde_line_width,
-    )
+
+    xi = xi[(xi > rx[0]) & (xi < rx[1])]
+    if len(xi) > 1:
+        kde = stats.gaussian_kde(xi)
+        kde_multi = len(xi)  # replace len(ls) 20190606
+
+        ax_kde.plot(
+            ls,
+            kde(ls) * kde_multi,
+            linestyle="-",
+            color=kde_line_color,
+            linewidth=kde_line_width,
+        )
 
 
 # plot histograms
@@ -2145,8 +2167,8 @@ if __name__ == "__main__":
             "exclude_data_points": "[]",
             "opt_Th_U": False,
             "opt_correct_disequilibrium": True,
-            "f_Th_U": "0.2",
-            "f_Pa_U": "3.4",
+            "f_Th_U": "0.194",
+            "f_Pa_U": "3.36",
             "opt_correct_common_Pb": False,
             "Th_U_inverse": False,
             "Th_U_row_num": "[8]",
@@ -2201,12 +2223,12 @@ if __name__ == "__main__":
             "dp0_marker_edge_width": "0.5",
             "dp1_marker_edge_width": "0.5",
             "dp2_marker_edge_width": "0.5",
-            "dp0_ee_alpha": "1.0",
-            "dp1_ee_alpha": "1.0",
-            "dp2_ee_alpha": "1.0",
-            "dp0_ee_face_color": "0.0",
-            "dp1_ee_face_color": "0.0",
-            "dp2_ee_face_color": "0.0",
+            "dp0_ee_alpha": "0.2",
+            "dp1_ee_alpha": "0.2",
+            "dp2_ee_alpha": "0.2",
+            "dp0_ee_face_color": "blue",
+            "dp1_ee_face_color": "red",
+            "dp2_ee_face_color": "green",
             "dp0_ee_edge_line_style": "dotted",
             "dp1_ee_edge_line_style": "solid",
             "dp2_ee_edge_line_style": "dashed",
@@ -2738,9 +2760,9 @@ if __name__ == "__main__":
         print("U-Pb ages (%s) [%dσ]" % (age_unit_name, ca_sigma))
 
     if opt_correct_common_Pb:
-        print("#\tf206%\tT68*\t+-s\tT75\t+-s\tT76*\t+s\t-s\t")
+        print("#\tf206%\tT68*\t+-2s\tT75\t+-2s\tT76*\t+2s\t-2s\t")
     else:
-        print("#\tT68\t+-s\tT75\t+-s\tT76\t+s\t-s\t")
+        print("#\tT68\t+-2s\tT75\t+-s\tT76\t+2s\t-2s\t")
 
     for i in range(len(y)):
 
@@ -2751,12 +2773,12 @@ if __name__ == "__main__":
                     i + 1,
                     format(d["f206p"].iloc[i], dignum),
                     format(d["t68"].iloc[i] / age_unit, dignum),
-                    format(d["t68e"].iloc[i] / age_unit, dignum),
+                    format(ca_sigma * d["t68e"].iloc[i] / age_unit, dignum),
                     format(d["t75"].iloc[i] / age_unit, dignum),
-                    format(d["t75e"].iloc[i] / age_unit, dignum),
+                    format(ca_sigma * d["t75e"].iloc[i] / age_unit, dignum),
                     format(d["t76"].iloc[i] / age_unit, dignum),
-                    format(d["t76e_plus"].iloc[i] / age_unit, dignum),
-                    format(d["t76e_minus"].iloc[i] / age_unit, dignum),
+                    format(ca_sigma * d["t76e_plus"].iloc[i] / age_unit, dignum),
+                    format(ca_sigma * d["t76e_minus"].iloc[i] / age_unit, dignum),
                 )
             )
         else:
@@ -2765,12 +2787,12 @@ if __name__ == "__main__":
                 % (
                     i + 1,
                     format(d["t68"].iloc[i] / age_unit, dignum),
-                    format(d["t68e"].iloc[i] / age_unit, dignum),
+                    format(ca_sigma * d["t68e"].iloc[i] / age_unit, dignum),
                     format(d["t75"].iloc[i] / age_unit, dignum),
-                    format(d["t75e"].iloc[i] / age_unit, dignum),
+                    format(ca_sigma * d["t75e"].iloc[i] / age_unit, dignum),
                     format(d["t76"].iloc[i] / age_unit, dignum),
-                    format(d["t76e_plus"].iloc[i] / age_unit, dignum),
-                    format(d["t76e_minus"].iloc[i] / age_unit, dignum),
+                    format(ca_sigma * d["t76e_plus"].iloc[i] / age_unit, dignum),
+                    format(ca_sigma * d["t76e_minus"].iloc[i] / age_unit, dignum),
                 )
             )
 
@@ -2805,16 +2827,20 @@ if __name__ == "__main__":
             outd_ex = np.unique(np.append(outd_ex, oo))
             print("Concordants (excluded) are ", np.sort(outd_ex + 1))
     else:
-        ind2 = np.setdiff1d(ind, outd_ex).astype(np.int32)
+        ind = np.setdiff1d(ind, outd_ex).astype(np.int32)
         outd_ex = np.setdiff1d(outd_ex, outd_disc).astype(np.int32)
-        print("Concordants (accepted) are ", ind2 + 1)
-        print("Concordants (excluded) are ", outd_ex + 1)
-        print("Discordants are ", outd_disc + 1)
+        if len(ind) > 0:
+            print("Concordants (accepted) are ", ind + 1)
+        if len(outd_ex) > 0:
+            print("Concordants (excluded) are ", outd_ex + 1)
+        if len(outd_disc) > 0:
+            print("Discordants are ", outd_disc + 1)
 
     # excluded data points
     # print('Manually excluded data points are'),  # python2
-    print("Manually excluded data points are", end=" ")  # python3
-    print(np.sort(outd_ex + 1))
+    print("Rejected data points are", end=" ")  # python3
+    if len(outd_ex) > 0:
+        print(np.sort(outd_ex + 1))
 
     # ------------------------------------------------
     # Number of data points
@@ -3239,7 +3265,7 @@ if __name__ == "__main__":
                 range_hist_y2,
             )
 
-        if opt_kde:
+        if opt_kde and len(ind) > 1:
             plot_kde(ax[axn], range_hist_x, Tall, ind)
 
     print("All done.")
