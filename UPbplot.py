@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2022/12/08 13:26:51.
+# Last updated: 2022/12/10 13:50:09.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -35,7 +35,8 @@
 # __version__ = "0.1.9"  # Dec/24/2020
 # __version__ = "0.2.0"  # Jan/05/2021
 # __version__ = "0.2.1"  # Jan/05/2021
-__version__ = "0.2.2"  # Dec/06/2022
+# __version__ = "0.2.2"  # Dec/06/2022
+__version__ = "0.2.3"  # Dec/10/2022
 
 # [Citation]
 #
@@ -838,7 +839,8 @@ def GESDtest(Tall, s1, ind, cr):
         tau = (n - 1) * t / np.sqrt(n * (n - 2) + n * t * t)
         xs_min, xs_max = np.min(x + ss * s), np.max(x - ss * s)
 
-        i_max = [i for i in ind if x0[i] - ss * s0[i] == xs_max]
+        # i_max = [i for i in ind if x0[i] - ss * s0[i] == xs_max]
+        i_max = [i for i in ii if x0[i] - ss * s0[i] == xs_max]
         # if data have the multiple maximum values, the datum with large error will be excluded.
         if len(i_max) > 1:
             smax = s0.min()
@@ -2760,41 +2762,79 @@ if __name__ == "__main__":
         print("U-Pb ages (%s) [%dσ]" % (age_unit_name, ca_sigma))
 
     if opt_correct_common_Pb:
-        print("#\tf206%\tT68*\t+-2s\tT75\t+-2s\tT76*\t+2s\t-2s\t")
+        if disc_type == 5:
+            print("#\tf206%\tT68*\t+-2s\tT75\t+-2s\tT76*\t+2s\t-2s")
+        else:
+            print("#\tf206%\tT68*\t+-2s\tT75\t+-2s\tT76*\t+2s\t-2s\tDisc[%]")
     else:
-        print("#\tT68\t+-2s\tT75\t+-s\tT76\t+2s\t-2s\t")
+        if disc_type == 5:
+            print("#\tT68\t+-2s\tT75\t+-2s\tT76\t+2s\t-2s")
+        else:
+            print("#\tT68\t+-2s\tT75\t+-2s\tT76\t+2s\t-2s\tDisc[%]")
 
     for i in range(len(y)):
-
         if opt_correct_common_Pb:
-            print(
-                "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s"
-                % (
-                    i + 1,
-                    format(d["f206p"].iloc[i], dignum),
-                    format(d["t68"].iloc[i] / age_unit, dignum),
-                    format(ca_sigma * d["t68e"].iloc[i] / age_unit, dignum),
-                    format(d["t75"].iloc[i] / age_unit, dignum),
-                    format(ca_sigma * d["t75e"].iloc[i] / age_unit, dignum),
-                    format(d["t76"].iloc[i] / age_unit, dignum),
-                    format(ca_sigma * d["t76e_plus"].iloc[i] / age_unit, dignum),
-                    format(ca_sigma * d["t76e_minus"].iloc[i] / age_unit, dignum),
+            if disc_type == 5:
+                print(
+                    "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s"
+                    % (
+                        i + 1,
+                        format(d["f206p"].iloc[i], dignum),
+                        format(d["t68"].iloc[i] / age_unit, dignum),
+                        format(ca_sigma * d["t68e"].iloc[i] / age_unit, dignum),
+                        format(d["t75"].iloc[i] / age_unit, dignum),
+                        format(ca_sigma * d["t75e"].iloc[i] / age_unit, dignum),
+                        format(d["t76"].iloc[i] / age_unit, dignum),
+                        format(ca_sigma * d["t76e_plus"].iloc[i] / age_unit, dignum),
+                        format(ca_sigma * d["t76e_minus"].iloc[i] / age_unit, dignum),
+                    )
                 )
-            )
+            else:
+                print(
+                    "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s"
+                    % (
+                        i + 1,
+                        format(d["f206p"].iloc[i], dignum),
+                        format(d["t68"].iloc[i] / age_unit, dignum),
+                        format(ca_sigma * d["t68e"].iloc[i] / age_unit, dignum),
+                        format(d["t75"].iloc[i] / age_unit, dignum),
+                        format(ca_sigma * d["t75e"].iloc[i] / age_unit, dignum),
+                        format(d["t76"].iloc[i] / age_unit, dignum),
+                        format(ca_sigma * d["t76e_plus"].iloc[i] / age_unit, dignum),
+                        format(ca_sigma * d["t76e_minus"].iloc[i] / age_unit, dignum),
+                        format(disc_percent[i], dignum),
+                    )
+                )
         else:
-            print(
-                "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s"
-                % (
-                    i + 1,
-                    format(d["t68"].iloc[i] / age_unit, dignum),
-                    format(ca_sigma * d["t68e"].iloc[i] / age_unit, dignum),
-                    format(d["t75"].iloc[i] / age_unit, dignum),
-                    format(ca_sigma * d["t75e"].iloc[i] / age_unit, dignum),
-                    format(d["t76"].iloc[i] / age_unit, dignum),
-                    format(ca_sigma * d["t76e_plus"].iloc[i] / age_unit, dignum),
-                    format(ca_sigma * d["t76e_minus"].iloc[i] / age_unit, dignum),
+            if disc_type == 5:
+                print(
+                    "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s"
+                    % (
+                        i + 1,
+                        format(d["t68"].iloc[i] / age_unit, dignum),
+                        format(ca_sigma * d["t68e"].iloc[i] / age_unit, dignum),
+                        format(d["t75"].iloc[i] / age_unit, dignum),
+                        format(ca_sigma * d["t75e"].iloc[i] / age_unit, dignum),
+                        format(d["t76"].iloc[i] / age_unit, dignum),
+                        format(ca_sigma * d["t76e_plus"].iloc[i] / age_unit, dignum),
+                        format(ca_sigma * d["t76e_minus"].iloc[i] / age_unit, dignum),
+                    )
                 )
-            )
+            else:
+                print(
+                    "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s"
+                    % (
+                        i + 1,
+                        format(d["t68"].iloc[i] / age_unit, dignum),
+                        format(ca_sigma * d["t68e"].iloc[i] / age_unit, dignum),
+                        format(d["t75"].iloc[i] / age_unit, dignum),
+                        format(ca_sigma * d["t75e"].iloc[i] / age_unit, dignum),
+                        format(d["t76"].iloc[i] / age_unit, dignum),
+                        format(ca_sigma * d["t76e_plus"].iloc[i] / age_unit, dignum),
+                        format(ca_sigma * d["t76e_minus"].iloc[i] / age_unit, dignum),
+                        format(disc_percent[i], dignum),
+                    )
+                )
 
     if opt_correct_common_Pb:
         print("* Correction for common Pb by 207Pb method")
@@ -2838,9 +2878,9 @@ if __name__ == "__main__":
 
     # excluded data points
     # print('Manually excluded data points are'),  # python2
-    print("Rejected data points are", end=" ")  # python3
-    if len(outd_ex) > 0:
-        print(np.sort(outd_ex + 1))
+    # print("Rejected data points are", end=" ")  # python3
+    # if len(outd_ex) > 0:
+    #     print(np.sort(outd_ex + 1))
 
     # ------------------------------------------------
     # Number of data points
