@@ -7,13 +7,13 @@ flist=(Chang2006ggg_Fig2.csv Christiansen2009a.csv Christiansen2009b.csv Gonzale
 
 for i in ${flist[@]}; do
 	echo $i
-	UPbplot.py -i ${i} -c ${i%.csv}.cfg -f > ${i%.csv}.log
+	../UPbplot.py -i ${i} -c ${i%.csv}.cfg -f > ${i%.csv}.log
 done
 
 
 for j in 1 2; do
 	for i in Hoshi2019chemg_Tf${j}*.cfg; do
 		echo $i
-		UPbplot.py -i Hoshi2019chemg_Tf${j}.csv -c $i -o ${i%.cfg}.pdf -f > ${i%.cfg}.log
+		../UPbplot.py -i Hoshi2019chemg_Tf${j}.csv -c $i -o ${i%.cfg}.pdf -f > ${i%.cfg}.log
 	done
 done
