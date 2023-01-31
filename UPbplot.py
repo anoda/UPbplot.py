@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2023/01/18 17:31:54.
+# Last updated: 2023/01/31 10:04:59.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -37,7 +37,8 @@
 # __version__ = "0.2.1"  # Jan/05/2021
 # __version__ = "0.2.2"  # Dec/06/2022
 # __version__ = "0.2.3"  # Dec/10/2022
-__version__ = "0.2.4"  # Jan/18/2023
+# __version__ = "0.2.4"  # Jan/18/2023
+__version__ = "0.2.5"  # Jan/31/2023
 
 # [Citation]
 #
@@ -1939,7 +1940,7 @@ def makefigures(pd):
     elif np.sum(pd) == 2:
         fig, ax = plt.subplots(1, 2, figsize=(12, 4))
     elif np.sum(pd) == 3:
-        fig, ax = plt.subplots(3, 1, figsize=(6, 12))
+        fig, ax = plt.subplots(1, 3, figsize=(16, 4))
     elif np.sum(pd) == 4:
         fig, ax = plt.subplots(2, 2, figsize=(12, 8))
     else:
@@ -1986,7 +1987,7 @@ def plot_kde(ax_kde, rx, x, ii):
     ax_kde.plot(
         ls,
         kde_all(ls) * kde_multi_all,
-        linestyle="--",
+        linestyle="-.",
         color=kde_line_color,
         linewidth=kde_line_width,
     )
@@ -2258,15 +2259,15 @@ if __name__ == "__main__":
             "dp0_ee_alpha": "0.2",
             "dp1_ee_alpha": "0.2",
             "dp2_ee_alpha": "0.2",
-            "dp0_ee_face_color": "blue",
-            "dp1_ee_face_color": "red",
+            "dp0_ee_face_color": "red",
+            "dp1_ee_face_color": "blue",
             "dp2_ee_face_color": "green",
             "dp0_ee_edge_line_style": "dotted",
             "dp1_ee_edge_line_style": "solid",
             "dp2_ee_edge_line_style": "dashed",
-            "dp0_ee_edge_color": "blue",
+            "dp0_ee_edge_color": "black",
             "dp1_ee_edge_color": "black",
-            "dp2_ee_edge_color": "red",
+            "dp2_ee_edge_color": "black",
             "dp0_ee_edge_width": "0.5",
             "dp1_ee_edge_width": "0.5",
             "dp2_ee_edge_width": "0.5",
@@ -2296,15 +2297,15 @@ if __name__ == "__main__":
             "dp0_bar_line_width": "0.5",
             "dp1_bar_line_width": "1.0",
             "dp2_bar_line_width": "0.5",
-            "dp0_bar_color": "blue",
-            "dp1_bar_color": "black",
-            "dp2_bar_color": "red",
+            "dp0_bar_color": "red",
+            "dp1_bar_color": "blue",
+            "dp2_bar_color": "green",
             "hist_bin_num": "20",
-            "hist_bin_color0": "white",
+            "hist_bin_color0": "red",
             "hist_bin_color1": "blue",
-            "hist_bin_color2": "0.5",
+            "hist_bin_color2": "green",
             "hist_bin_alpha": "0.5",
-            "kde_line_color": "green",
+            "kde_line_color": "0.5",
             "kde_line_width": "1.5",
         }
     )
@@ -2811,26 +2812,7 @@ if __name__ == "__main__":
 
     for i in range(len(y)):
         if opt_correct_common_Pb:
-            if disc_type == 5:
-                print(
-                    "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s"
-                    % (
-                        i + 1,
-                        format(d["f206p"].iloc[i], dignum),
-                        format(d["t68"].iloc[i] / age_unit, dignum),
-                        format(
-                            ca_sigma * d["t68e"].iloc[i] / age_unit, dignum),
-                        format(d["t75"].iloc[i] / age_unit, dignum),
-                        format(
-                            ca_sigma * d["t75e"].iloc[i] / age_unit, dignum),
-                        format(d["t76"].iloc[i] / age_unit, dignum),
-                        format(
-                            ca_sigma * d["t76e_plus"].iloc[i] / age_unit, dignum),
-                        format(
-                            ca_sigma * d["t76e_minus"].iloc[i] / age_unit, dignum),
-                    )
-                )
-            else:
+            if opt_exclude_disc and disc_type != 5:
                 print(
                     "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s"
                     % (
@@ -2850,12 +2832,12 @@ if __name__ == "__main__":
                         format(disc_percent[i], dignum),
                     )
                 )
-        else:
-            if disc_type == 5:
+            else:
                 print(
-                    "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s"
+                    "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s"
                     % (
                         i + 1,
+                        format(d["f206p"].iloc[i], dignum),
                         format(d["t68"].iloc[i] / age_unit, dignum),
                         format(
                             ca_sigma * d["t68e"].iloc[i] / age_unit, dignum),
@@ -2869,7 +2851,8 @@ if __name__ == "__main__":
                             ca_sigma * d["t76e_minus"].iloc[i] / age_unit, dignum),
                     )
                 )
-            else:
+        else:
+            if opt_exclude_disc and disc_type != 5:
                 print(
                     "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s"
                     % (
@@ -2886,6 +2869,24 @@ if __name__ == "__main__":
                         format(
                             ca_sigma * d["t76e_minus"].iloc[i] / age_unit, dignum),
                         format(disc_percent[i], dignum),
+                    )
+                )
+            else:
+                print(
+                    "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s"
+                    % (
+                        i + 1,
+                        format(d["t68"].iloc[i] / age_unit, dignum),
+                        format(
+                            ca_sigma * d["t68e"].iloc[i] / age_unit, dignum),
+                        format(d["t75"].iloc[i] / age_unit, dignum),
+                        format(
+                            ca_sigma * d["t75e"].iloc[i] / age_unit, dignum),
+                        format(d["t76"].iloc[i] / age_unit, dignum),
+                        format(
+                            ca_sigma * d["t76e_plus"].iloc[i] / age_unit, dignum),
+                        format(
+                            ca_sigma * d["t76e_minus"].iloc[i] / age_unit, dignum),
                     )
                 )
 
@@ -2919,6 +2920,9 @@ if __name__ == "__main__":
         if len(oo) > 0:
             outd_ex = np.unique(np.append(outd_ex, oo))
             print("Concordants (excluded) are ", np.sort(outd_ex + 1))
+        if len(outd_ex) > 0:
+            print("Manually excluded points are ", outd_ex + 1)
+
     else:
         ind = np.setdiff1d(ind, outd_ex).astype(np.int32)
         outd_ex = np.setdiff1d(outd_ex, outd_disc).astype(np.int32)
