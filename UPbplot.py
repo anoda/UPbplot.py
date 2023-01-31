@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2023/01/31 10:04:59.
+# Last updated: 2023/01/31 17:00:41.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -38,7 +38,8 @@
 # __version__ = "0.2.2"  # Dec/06/2022
 # __version__ = "0.2.3"  # Dec/10/2022
 # __version__ = "0.2.4"  # Jan/18/2023
-__version__ = "0.2.5"  # Jan/31/2023
+# __version__ = "0.2.5"  # Jan/31/2023
+__version__ = "0.2.6"  # Jan/31/2023
 
 # [Citation]
 #
@@ -2912,9 +2913,9 @@ if __name__ == "__main__":
         ii, oo = GESDtest(Tall, s1, ind, outlier_alpha)
 
         if len(ii) > 0:
-            ind = ii
-            ind2 = np.setdiff1d(ind, outd_ex).astype(np.int32)
-            print("Concordants (accepted) are ", np.sort(ind2 + 1))
+            ind2 = ii
+            ind = np.setdiff1d(ind2, outd_ex).astype(np.int32)
+            print("Concordants (accepted) are ", np.sort(ind + 1))
         if len(outd_disc) > 0:
             print("Discordants are ", np.sort(outd_disc + 1))
         if len(oo) > 0:
