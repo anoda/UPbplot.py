@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2023/01/31 17:00:41.
+# Last updated: 2023/04/01 10:57:47.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -39,7 +39,8 @@
 # __version__ = "0.2.3"  # Dec/10/2022
 # __version__ = "0.2.4"  # Jan/18/2023
 # __version__ = "0.2.5"  # Jan/31/2023
-__version__ = "0.2.6"  # Jan/31/2023
+# __version__ = "0.2.6"  # Jan/31/2023
+__version__ = "0.2.7"  # Apr/1/2023
 
 # [Citation]
 #
@@ -1970,7 +1971,7 @@ def makefigures(pd):
 
 
 # plot KDE curves for all and accepted data
-def plot_kde(ax_kde, rx, x, ii):
+def plot_kde(ax_kde, rx, x, ii, kde_bw):
     # rx = range_hist_x
     # T = Tall
     # ii = ind
@@ -1979,7 +1980,7 @@ def plot_kde(ax_kde, rx, x, ii):
     if len(x) == 0:
         sys.exit("Please set appropriate axis age range in configuration file.")
 
-    kde_all = stats.gaussian_kde(x)
+    kde_all = stats.gaussian_kde(x, bw_method=kde_bw)
     xi = x[ii]
     if np.min(xi) > rx[1] or np.max(xi) < rx[0]:
         sys.exit("ERROR: Set an appropriate range of range_hist_x.")
@@ -2306,6 +2307,7 @@ if __name__ == "__main__":
             "hist_bin_color1": "blue",
             "hist_bin_color2": "green",
             "hist_bin_alpha": "0.5",
+            "kde_bw": "0.05",
             "kde_line_color": "0.5",
             "kde_line_width": "1.5",
         }
@@ -2442,6 +2444,7 @@ if __name__ == "__main__":
     hist_bin_alpha = config.getfloat("Graph", "hist_bin_alpha")  # 0.75
     opt_kde = config.getboolean("Graph", "opt_kde")  # 1
     kde_line_color = config.get("Graph", "kde_line_color")  # red
+    kde_bw = config.getfloat("Graph", "kde_bw_method")  # 0.05
     kde_line_width = config.get("Graph", "kde_line_width")  # 2
 
     # cumulative probability density
@@ -3368,7 +3371,7 @@ if __name__ == "__main__":
             )
 
         if opt_kde and len(ind) > 1:
-            plot_kde(ax[axn], range_hist_x, Tall, ind)
+            plot_kde(ax[axn], range_hist_x, Tall, ind, kde_bw)
 
     print("All done.")
 
