@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2023/04/01 10:57:47.
+# Last updated: 2023/04/01 11:15:47.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -1996,7 +1996,7 @@ def plot_kde(ax_kde, rx, x, ii, kde_bw):
 
     xi = xi[(xi > rx[0]) & (xi < rx[1])]
     if len(xi) > 1:
-        kde = stats.gaussian_kde(xi)
+        kde = stats.gaussian_kde(xi, bw_method=kde_bw)
         kde_multi = len(xi)  # replace len(ls) 20190606
 
         ax_kde.plot(
@@ -2307,7 +2307,7 @@ if __name__ == "__main__":
             "hist_bin_color1": "blue",
             "hist_bin_color2": "green",
             "hist_bin_alpha": "0.5",
-            "kde_bw": "0.05",
+            "kde_bw": "0.1",
             "kde_line_color": "0.5",
             "kde_line_width": "1.5",
         }
@@ -2444,7 +2444,7 @@ if __name__ == "__main__":
     hist_bin_alpha = config.getfloat("Graph", "hist_bin_alpha")  # 0.75
     opt_kde = config.getboolean("Graph", "opt_kde")  # 1
     kde_line_color = config.get("Graph", "kde_line_color")  # red
-    kde_bw = config.getfloat("Graph", "kde_bw_method")  # 0.05
+    kde_bw = config.getfloat("Graph", "kde_bw_method")  # 0.1
     kde_line_width = config.get("Graph", "kde_line_width")  # 2
 
     # cumulative probability density
