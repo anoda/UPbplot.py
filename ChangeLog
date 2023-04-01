@@ -1,3 +1,9 @@
+2023-04-01 Version 0.2.8
+
+	* Main script
+
+	Height of the KDE plot is now automatically adjusted to that of the histogram
+	
 2023-04-01 Version 0.2.7
 
 	* Main script
