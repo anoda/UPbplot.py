@@ -4,7 +4,7 @@
 # This is a script for calculation and visualization tool of U-Pb age
 # data.  The script was written in Python 3.6.6
 
-# Last updated: 2023/04/01 11:15:47.
+# Last updated: 2023/04/01 13:42:44.
 # Written by Atsushi Noda
 # License: Apache License, Version 2.0
 
@@ -40,7 +40,8 @@
 # __version__ = "0.2.4"  # Jan/18/2023
 # __version__ = "0.2.5"  # Jan/31/2023
 # __version__ = "0.2.6"  # Jan/31/2023
-__version__ = "0.2.7"  # Apr/1/2023
+# __version__ = "0.2.7"  # Apr/1/2023
+__version__ = "0.2.8"  # Apr/1/2023
 
 # [Citation]
 #
@@ -1971,7 +1972,7 @@ def makefigures(pd):
 
 
 # plot KDE curves for all and accepted data
-def plot_kde(ax_kde, rx, x, ii, kde_bw):
+def plot_kde(ax_kde, rx, x, ii, kde_bw, hn):
     # rx = range_hist_x
     # T = Tall
     # ii = ind
@@ -1980,28 +1981,30 @@ def plot_kde(ax_kde, rx, x, ii, kde_bw):
     if len(x) == 0:
         sys.exit("Please set appropriate axis age range in configuration file.")
 
+    # Check height of histogram
+    hh = np.max(hn[2, :])
     kde_all = stats.gaussian_kde(x, bw_method=kde_bw)
     xi = x[ii]
     if np.min(xi) > rx[1] or np.max(xi) < rx[0]:
         sys.exit("ERROR: Set an appropriate range of range_hist_x.")
 
-    kde_multi_all = len(x)  # replace len(ls) 20190606
+    kde_multi_all = kde_bw/0.1 * len(x)  # replace len(ls) 20190606
     ax_kde.plot(
         ls,
-        kde_all(ls) * kde_multi_all,
-        linestyle="-.",
+        kde_all(ls) * hh/np.max(kde_all(ls)),
+        linestyle="--",
         color=kde_line_color,
         linewidth=kde_line_width,
     )
 
+    hh = np.max(hn[0, :])
     xi = xi[(xi > rx[0]) & (xi < rx[1])]
     if len(xi) > 1:
         kde = stats.gaussian_kde(xi, bw_method=kde_bw)
-        kde_multi = len(xi)  # replace len(ls) 20190606
 
         ax_kde.plot(
             ls,
-            kde(ls) * kde_multi,
+            kde(ls) * hh/np.max(kde(ls)),
             linestyle="-",
             color=kde_line_color,
             linewidth=kde_line_width,
@@ -3350,7 +3353,8 @@ if __name__ == "__main__":
         ax[axn].set_xlim(range_hist_x[0], range_hist_x[1])
         Tall, s1, label_selected = select_age_type(hist_age_type)
         ax[axn].set_xlabel(label_selected, fontsize=legend_font_size + 4)
-        plot_hist(ax[axn], Tall, ind, outd_disc, outd_ex)
+        hn, hbins, hrects = plot_hist(ax[axn], Tall, ind, outd_disc, outd_ex)
+        ax[axn].set_ylim(0, np.max(hn[2, :])+2)
 
         # Optional: Th/U ratio
         if opt_Th_U:
@@ -3371,7 +3375,7 @@ if __name__ == "__main__":
             )
 
         if opt_kde and len(ind) > 1:
-            plot_kde(ax[axn], range_hist_x, Tall, ind, kde_bw)
+            plot_kde(ax[axn], range_hist_x, Tall, ind, kde_bw, hn)
 
     print("All done.")
 
